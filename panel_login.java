@@ -1,13 +1,14 @@
 import javax.swing.*;
+import admin.escritorio_admin;
 import java.awt.*;
 // import java.awt.event.*; No se usa por ahora
 
-public class login_frame extends JFrame {
+public class panel_login extends JFrame {
     private JTextField txtUsuario;
     private JPasswordField txtPassword;
     private JButton btnLogin;
 
-    public login_frame() {
+    public panel_login() {
         setTitle("Login - Sistema Librería");
         setSize(400, 250);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -18,7 +19,7 @@ public class login_frame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         // Componentes
-        panel.add(new JLabel("Usuario/Email:"));
+        panel.add(new JLabel("Email:"));
         txtUsuario = new JTextField();
         panel.add(txtUsuario);
 
@@ -45,7 +46,7 @@ public class login_frame extends JFrame {
         if (valido) {
             JOptionPane.showMessageDialog(this, "Bienvenido " + usuario);
             dispose();
-            new dashboard_frame().setVisible(true);
+            new escritorio_admin().setVisible(true);
         } else {
             JOptionPane.showMessageDialog(this, "Credenciales incorrectas");
         }

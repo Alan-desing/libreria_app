@@ -1,11 +1,12 @@
+package admin;
 import javax.swing.*;
 import java.awt.*;
 //import java.awt.event.*;  No se usa por ahora
 
-public class dashboard_frame extends JFrame {
+public class escritorio_admin extends JFrame {
     private JPanel panelCentral;
 
-    public dashboard_frame() {
+    public escritorio_admin() {
         setTitle("Gestión de Inventario - Admin");
         setSize(900, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
