@@ -14,8 +14,8 @@ public class estilos {
     public static final Color COLOR_BOTON  = Color.decode("#798D48");
 
     // 📝 Fuentes
-    public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 36);
-    public static final Font FUENTE_TEXTO  = new Font("SansSerif", Font.PLAIN, 16);
+    public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 40);
+    public static final Font FUENTE_TEXTO  = new Font("SansSerif", Font.PLAIN, 20);
     public static final Font FUENTE_INPUT  = new Font("SansSerif", Font.PLAIN, 16);
     public static final Font FUENTE_BOTON  = new Font("SansSerif", Font.BOLD, 14);
 

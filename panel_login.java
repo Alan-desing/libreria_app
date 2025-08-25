@@ -95,7 +95,7 @@ public class panel_login extends JFrame {
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ===== Párrafo =====
-        JLabel parrafo = new JLabel("<html><div style='width:" + contentWidth + "px'>"
+        JLabel parrafo = new JLabel("<html><div style='width:" + contentWidth + "px; text-align:center;'>"
                 + "Bienvenido a tu sistema de gestión de inventario.<br>"
                 + "Mantén el control de tus productos, ventas y pedidos de forma fácil y rápida."
                 + "</div></html>");
@@ -131,9 +131,10 @@ public class panel_login extends JFrame {
 
         bloque.add(titulo);
         bloque.add(Box.createVerticalStrut(14));
-        bloque.add(parrafo);
+        bloque.add(parrafo);     
         bloque.add(Box.createVerticalStrut(20));
         bloque.add(form);
+
 
         cont.add(bloque, gbc);
 
