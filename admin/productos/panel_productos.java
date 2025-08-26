@@ -6,6 +6,12 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
+/**
+ * Productos — versión “card” centrada, similar a la web.
+ * - Contenedor central con GridBagLayout para centrar horizontalmente.
+ * - Tarjeta (card) con borde, radios y padding.
+ * - Encabezado, buscador, acciones y tabla con estilo crema.
+ */
 public class panel_productos extends JPanel {
 
     private JTable tabla;
@@ -14,87 +20,112 @@ public class panel_productos extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ===== Header =====
+        // ===== Título (fuera de la card, como en la web) =====
         JLabel h1 = new JLabel("Productos");
-        h1.setFont(estilos.FUENTE_TITULO.deriveFont(Font.BOLD, 32f));
+        h1.setFont(new Font("Arial", Font.BOLD, 28));
         h1.setForeground(estilos.COLOR_TITULO);
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        header.setBorder(BorderFactory.createEmptyBorder(24, 32, 8, 32));
+        header.setBorder(BorderFactory.createEmptyBorder(22, 28, 8, 28));
         header.add(h1, BorderLayout.WEST);
         add(header, BorderLayout.NORTH);
 
-        // ===== Contenido =====
-        JPanel content = new JPanel();
-        content.setOpaque(false);
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.setBorder(BorderFactory.createEmptyBorder(0, 32, 32, 32));
-        add(content, BorderLayout.CENTER);
+        // ===== Shell que centra la “card” =====
+        JPanel shell = new JPanel(new GridBagLayout());
+        shell.setOpaque(false);
 
-        // Fila superior: botón + filtrar
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.PAGE_START;
+
+        // ===== Card =====
+        JPanel card = new JPanel();
+        card.setOpaque(true);
+        card.setBackground(new Color(0xFF, 0xF9, 0xEF));                 // #fff9ef
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true), // borde crema redondeado
+                BorderFactory.createEmptyBorder(14, 14, 16, 14)                         // padding
+        ));
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        // ancho máximo parecido al de la web
+        card.setMaximumSize(new Dimension(980, Integer.MAX_VALUE));
+        card.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // ===== Fila superior: acciones (botón + filtrar) =====
         JPanel filaTop = new JPanel();
         filaTop.setOpaque(false);
         filaTop.setLayout(new BoxLayout(filaTop, BoxLayout.X_AXIS));
+        filaTop.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton btnAgregar = estilos.botonRedondeado("+Añadir Producto");
-        btnAgregar.setPreferredSize(new Dimension(220, 44));
-        btnAgregar.setMaximumSize(new Dimension(220, 44));
+        JButton btnAgregar = estilos.botonRedondeado("+ Añadir Producto");
+        btnAgregar.setPreferredSize(new Dimension(220, 40));
+        btnAgregar.setMaximumSize(new Dimension(240, 40));
 
         JButton btnFiltrar = new JButton("Filtrar");
         btnFiltrar.setFocusPainted(false);
-        btnFiltrar.setFont(estilos.FUENTE_TEXTO);
+        btnFiltrar.setFont(new Font("Arial", Font.BOLD, 13));
         btnFiltrar.setBackground(Color.WHITE);
         btnFiltrar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 210, 170)),
-                BorderFactory.createEmptyBorder(8, 18, 8, 18)
+                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true),  // redondeado
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
 
-        filaTop.add(Box.createHorizontalGlue());
+        filaTop.add(Box.createHorizontalGlue()); // empuja a la derecha
         filaTop.add(btnAgregar);
-        filaTop.add(Box.createHorizontalStrut(16));
+        filaTop.add(Box.createHorizontalStrut(10));
         filaTop.add(btnFiltrar);
 
-        // Buscador con placeholder
+        // ===== Buscador (≈ mitad del card) =====
         PlaceholderTextField txtBuscar = new PlaceholderTextField("Buscar…");
         estilos.estilizarCampo(txtBuscar);
-        txtBuscar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        txtBuscar.setPreferredSize(new Dimension(520, 40));
+        txtBuscar.setMaximumSize(new Dimension(520, 40));
         txtBuscar.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Tabla
-        String[] cols = {"ID", "Nombre", "Categoria", "Stock", "Precio"};
+        // ===== Tabla =====
+        String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
+
         tabla = new JTable(model);
-        tabla.setFillsViewportHeight(true);
+        tabla.setFont(new Font("Arial", Font.PLAIN, 14));
         tabla.setRowHeight(26);
+        tabla.setFillsViewportHeight(true);
         tabla.getTableHeader().setReorderingAllowed(false);
-        tabla.getTableHeader().setFont(estilos.FUENTE_TEXTO.deriveFont(Font.BOLD, 14f));
-        tabla.setFont(estilos.FUENTE_TEXTO);
+        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        tabla.getTableHeader().setBackground(new Color(0xFF,0xF3,0xD9)); // header crema
+        tabla.getTableHeader().setOpaque(true);
 
         JScrollPane sc = new JScrollPane(tabla);
         sc.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 210, 170)),
+                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true),  // redondeado
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)
         ));
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 380));
 
-        // Ensamble
-        content.add(filaTop);
-        content.add(Box.createVerticalStrut(16));
-        content.add(txtBuscar);
-        content.add(Box.createVerticalStrut(16));
-        content.add(sc);
+        // ===== Ensamble dentro de la card =====
+        card.add(filaTop);
+        card.add(Box.createVerticalStrut(10));
+        card.add(txtBuscar);
+        card.add(Box.createVerticalStrut(10));
+        card.add(sc);
+
+        // agregar card al shell centrado
+        shell.add(card, gbc);
+        add(shell, BorderLayout.CENTER);
     }
 
-    // ===== Campo con placeholder (igual que en login) =====
+    // ===== Placeholder en JTextField =====
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
             this.placeholder = placeholder;
-            setFont(estilos.FUENTE_INPUT);
+            setFont(new Font("Arial", Font.PLAIN, 14));
             setOpaque(true);
         }
         @Override protected void paintComponent(Graphics g) {
@@ -103,7 +134,7 @@ public class panel_productos extends JPanel {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                         RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2.setColor(new Color(160,160,160));
+                g2.setColor(new Color(155, 142, 127)); // gris marrón suave
                 g2.setFont(getFont());
                 Insets in = getInsets();
                 int x = in.left + 4;
