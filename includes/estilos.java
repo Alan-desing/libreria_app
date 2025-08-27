@@ -8,11 +8,15 @@ import javax.swing.text.JTextComponent;
 public class estilos {
 
     // 🎨 Colores
-    public static final Color COLOR_FONDO  = Color.decode("#FFF4D8");
-    public static final Color COLOR_BARRA  = Color.decode("#ECBA73");
-    public static final Color COLOR_TITULO = Color.decode("#7B6C6C");
-    public static final Color COLOR_BOTON  = Color.decode("#798D48");
+    public static final Color COLOR_FONDO       = Color.decode("#FFF4D8");
+    public static final Color COLOR_BARRA       = Color.decode("#ECBA73");
+    public static final Color COLOR_TITULO      = Color.decode("#7B6C6C");
+    public static final Color COLOR_BOTON       = Color.decode("#798D48");
     public static final Color COLOR_BOTON_HOVER = Color.decode("#7C8A65"); // oliva más oscuro (web)
+
+    // extras para componentes
+    public static final Color COLOR_BORDE_CREMA = new Color(0xE6,0xD9,0xBF);
+    public static final int   RADIO             = 12;
 
     // 📝 Fuentes
     public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 40);
@@ -39,7 +43,7 @@ public class estilos {
                 Color fill = getModel().isRollover() ? COLOR_BOTON_HOVER : COLOR_BOTON;
                 if (getModel().isPressed()) fill = fill.darker();
                 g2.setColor(fill);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIO, RADIO);
                 g2.dispose();
                 super.paintComponent(g); // dibuja el texto
             }
@@ -52,6 +56,39 @@ public class estilos {
         btn.setBorder(new EmptyBorder(10, 24, 10, 24));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
+    }
+
+    // ✅ Botón blanco "Filtrar" (borde redondeado + hover suave)
+    public static JButton botonBlanco(String texto){
+        JButton b = new JButton(texto);
+        b.setFocusPainted(false);
+        b.setFont(FUENTE_BOTON);
+        b.setBackground(Color.WHITE);
+        b.setOpaque(true);
+        b.setBorder(new CompoundBorder(
+                new LineBorder(COLOR_BORDE_CREMA, 1, true),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        b.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                b.setBackground(new Color(0xFF,0xFE,0xF9)); // #fffef9
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                b.setBackground(Color.WHITE);
+            }
+        });
+        return b;
+    }
+
+    // ✅ Estilo para JComboBox (borde redondeado y padding)
+    public static <T> void estilizarCombo(JComboBox<T> combo){
+        combo.setFont(FUENTE_INPUT);
+        combo.setBackground(Color.WHITE);
+        combo.setBorder(new CompoundBorder(
+                new LineBorder(COLOR_BORDE_CREMA, 1, true),
+                new EmptyBorder(4, 8, 4, 8)
+        ));
     }
 
     // ✏️ Estilo base para campos de texto (bordes redondeados y padding)

@@ -50,8 +50,7 @@ public class panel_productos extends JPanel {
                 BorderFactory.createEmptyBorder(14, 14, 16, 14)                         // padding
         ));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        // ancho máximo parecido al de la web
-        card.setMaximumSize(new Dimension(980, Integer.MAX_VALUE));
+        card.setMaximumSize(new Dimension(980, Integer.MAX_VALUE));      // ancho como en la web
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ===== Fila superior: acciones (botón + filtrar) =====
@@ -64,19 +63,13 @@ public class panel_productos extends JPanel {
         btnAgregar.setPreferredSize(new Dimension(220, 40));
         btnAgregar.setMaximumSize(new Dimension(240, 40));
 
-        JButton btnFiltrar = new JButton("Filtrar");
-        btnFiltrar.setFocusPainted(false);
-        btnFiltrar.setFont(new Font("Arial", Font.BOLD, 13));
-        btnFiltrar.setBackground(Color.WHITE);
-        btnFiltrar.setBorder(BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true),  // redondeado
-                BorderFactory.createEmptyBorder(8, 16, 8, 16)
-        ));
+        // usar helper de botón blanco (hover suave + borde redondeado)
+        JButton btnFiltrarTop = estilos.botonBlanco("Filtrar");
 
         filaTop.add(Box.createHorizontalGlue()); // empuja a la derecha
         filaTop.add(btnAgregar);
         filaTop.add(Box.createHorizontalStrut(10));
-        filaTop.add(btnFiltrar);
+        filaTop.add(btnFiltrarTop);
 
         // ===== Buscador (≈ mitad del card) =====
         PlaceholderTextField txtBuscar = new PlaceholderTextField("Buscar…");
@@ -84,6 +77,42 @@ public class panel_productos extends JPanel {
         txtBuscar.setPreferredSize(new Dimension(520, 40));
         txtBuscar.setMaximumSize(new Dimension(520, 40));
         txtBuscar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // ===== Fila de filtros (buscador + categoría + stock + filtrar) =====
+        JPanel filaFiltros = new JPanel(new GridBagLayout());
+        filaFiltros.setOpaque(false);
+        filaFiltros.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
+
+        // 1) buscador
+        g.gridx = 0; g.weightx = 1.0;
+        filaFiltros.add(txtBuscar, g);
+
+        // 2) categoría
+        String[] categorias = {"Todas las categorías", "Arte y Dibujo", "Libros", "Papelería"};
+        JComboBox<String> cbCategoria = new JComboBox<>(categorias);
+        estilos.estilizarCombo(cbCategoria);
+        cbCategoria.setPreferredSize(new Dimension(220, 38));
+        cbCategoria.setMinimumSize(new Dimension(180, 38));
+        g.gridx = 1; g.weightx = 0;
+        filaFiltros.add(cbCategoria, g);
+
+        // 3) stock
+        String[] stocks = {"Stock: Todos", "Bajo (≤ mínimo)", "Sin stock"};
+        JComboBox<String> cbStock = new JComboBox<>(stocks);
+        estilos.estilizarCombo(cbStock);
+        cbStock.setPreferredSize(new Dimension(200, 38));
+        cbStock.setMinimumSize(new Dimension(160, 38));
+        g.gridx = 2;
+        filaFiltros.add(cbStock, g);
+
+        // 4) botón Filtrar (de la fila)
+        JButton btnFiltrarFila = estilos.botonBlanco("FILTRAR");
+        btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
+        g.gridx = 3;
+        filaFiltros.add(btnFiltrarFila, g);
 
         // ===== Tabla =====
         String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio"};
@@ -111,7 +140,7 @@ public class panel_productos extends JPanel {
         // ===== Ensamble dentro de la card =====
         card.add(filaTop);
         card.add(Box.createVerticalStrut(10));
-        card.add(txtBuscar);
+        card.add(filaFiltros);                // <<--- fila nueva con los filtros
         card.add(Box.createVerticalStrut(10));
         card.add(sc);
 
