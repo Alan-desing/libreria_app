@@ -22,21 +22,12 @@ public class panel_productos extends JPanel {
     private JButton btnFiltrarFila;
     private JButton btnAgregar;
 
+    // mínimos por fila (para colorear “Stock”)
     private final List<Integer> minsFila = new ArrayList<>();
 
     public panel_productos() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
-
-        // ===== Título principal centrado (como la web) =====
-        JLabel tituloMain = new JLabel("Panel administrativo- Productos", SwingConstants.CENTER);
-        tituloMain.setForeground(estilos.COLOR_TITULO);
-        tituloMain.setFont(new Font("Arial", Font.BOLD, 22));
-        JPanel topTitle = new JPanel(new BorderLayout());
-        topTitle.setOpaque(false);
-        topTitle.setBorder(BorderFactory.createEmptyBorder(14, 0, 6, 0));
-        topTitle.add(tituloMain, BorderLayout.CENTER);
-        add(topTitle, BorderLayout.NORTH);
 
         // ===== Shell centrado =====
         JPanel shell = new JPanel(new GridBagLayout());
@@ -87,9 +78,11 @@ public class panel_productos extends JPanel {
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
 
+        // busqueda
         g.gridx = 0; g.weightx = 1.0;
         filaFiltros.add(txtBuscar, g);
 
+        // categoría
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(220, 38));
@@ -97,6 +90,7 @@ public class panel_productos extends JPanel {
         g.gridx = 1; g.weightx = 0;
         filaFiltros.add(cbCategoria, g);
 
+        // stock
         String[] stocks = {"Stock: Todos", "Bajo (≤ mínimo)", "Sin stock"};
         cbStock = new JComboBox<>(stocks);
         estilos.estilizarCombo(cbStock);
@@ -105,6 +99,7 @@ public class panel_productos extends JPanel {
         g.gridx = 2;
         filaFiltros.add(cbStock, g);
 
+        // botón Filtrar
         btnFiltrarFila = estilos.botonBlanco("FILTRAR");
         btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
         g.gridx = 3;
@@ -143,10 +138,12 @@ public class panel_productos extends JPanel {
         tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
         tabla.getColumnModel().getColumn(6).setPreferredWidth(90);
 
+        // alineación izquierda por defecto
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
+        // ID como "#22"
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -157,19 +154,25 @@ public class panel_productos extends JPanel {
             }
         });
 
+        // Stock pill
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
-        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // editar (oliva)
-        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(true));  // eliminar (rojo)
+
+        // Botones por fila
+        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // editar
+        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(true));  // eliminar
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEliminar(id), true));
 
-        JScrollPane sc = new JScrollPane(tabla);
+        // ===== Scroll (altura fija para forzar scrollbar) =====
+        JScrollPane sc = new JScrollPane(tabla,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         sc.setBorder(BorderFactory.createCompoundBorder(
                 new javax.swing.border.LineBorder(estilos.COLOR_BORDE_CREMA, 1, true),
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)
         ));
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sc.setPreferredSize(new Dimension(0, 420));
+        sc.setPreferredSize(new Dimension(0, 420)); // altura fija => scroll vertical
 
         // ===== Ensamble =====
         card.add(head);
@@ -182,7 +185,7 @@ public class panel_productos extends JPanel {
 
         // ==== Eventos ====
         btnFiltrarFila.addActionListener(e -> cargarTabla());
-        txtBuscar.addActionListener(e -> cargarTabla());
+        txtBuscar.addActionListener(e -> cargarTabla()); // Enter
 
         // ==== Carga inicial ====
         cargarCategorias();
@@ -418,11 +421,7 @@ public class panel_productos extends JPanel {
 
             int w = getWidth(), h = getHeight();
             int arc = h;
-            if (selected){
-                g2.setColor(new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 230));
-            }else{
-                g2.setColor(bg);
-            }
+            g2.setColor(selected ? new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 230) : bg);
             g2.fillRoundRect(4, (h-20)/2, w-8, 20, arc, arc);
             g2.setColor(border);
             g2.drawRoundRect(4, (h-20)/2, w-8, 20, arc, arc);
