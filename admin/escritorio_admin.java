@@ -1,12 +1,14 @@
 package admin;
+
 import includes.estilos;
 
 import javax.swing.*;
+import javax.swing.border.*;  // <-- IMPORTANTE para CompoundBorder/LineBorder/EmptyBorder
 import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// ⬇️ Importa cada panel según tu árbol de carpetas
+// Panels
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
 import admin.pedidos.panel_pedidos;
@@ -21,7 +23,8 @@ public class escritorio_admin extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel panelCentral = new JPanel(cards);
 
-    // claves de las vistas
+    private JLabel lblTitulo; // título centrado (web-like)
+
     private static final String V_PRODUCTOS    = "productos";
     private static final String V_CATEGORIAS   = "categorias";
     private static final String V_PEDIDOS      = "pedidos";
@@ -32,30 +35,20 @@ public class escritorio_admin extends JFrame {
     private static final String V_REPORTES     = "reportes";
 
     public escritorio_admin() {
-        setTitle("Gestión de Inventario - Admin");
+        setTitle("Los Lapicitos — Admin");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
-        // ===== Top bar =====
-        JLabel titulo = new JLabel("Gestión de Inventario", SwingConstants.CENTER);
-        titulo.setFont(estilos.FUENTE_TITULO.deriveFont(Font.BOLD, 22f));
-        titulo.setOpaque(true);
-        titulo.setBackground(estilos.COLOR_BARRA);
-        titulo.setForeground(new Color(95, 86, 86)); // similar al mock
-        titulo.setPreferredSize(new Dimension(0, 56));
-        add(titulo, BorderLayout.NORTH);
+        // ===== Top (franja + título centrado) =====
+        add(crearTop(), BorderLayout.NORTH);
 
         // ===== Sidebar =====
-        JPanel panelMenu = construirSidebar();
-        add(panelMenu, BorderLayout.WEST);
+        add(construirSidebar(), BorderLayout.WEST);
 
-        // ===== Centro con CardLayout =====
+        // ===== Centro (CardLayout) =====
         panelCentral.setBackground(estilos.COLOR_FONDO);
-
-        // Vistas reales (instancia cada panel de su paquete)  👇 CAMBIADO: (String, Component)
-        // Vistas reales (CardLayout)  ✅ componente primero
         panelCentral.add(new panel_productos(),   V_PRODUCTOS);
         panelCentral.add(new panel_categorias(),  V_CATEGORIAS);
         panelCentral.add(new panel_pedidos(),     V_PEDIDOS);
@@ -64,42 +57,72 @@ public class escritorio_admin extends JFrame {
         panelCentral.add(new panel_usuarios(),    V_USUARIOS);
         panelCentral.add(new panel_sucursales(),  V_SUCURSALES);
         panelCentral.add(new panel_reportes(),    V_REPORTES);
-
-
         add(panelCentral, BorderLayout.CENTER);
 
-        // vista inicial
         cards.show(panelCentral, V_PRODUCTOS);
-        }
+        actualizarTitulo("Productos");
+    }
+
+    private JComponent crearTop() {
+        JPanel wrap = new JPanel(new BorderLayout());
+        wrap.setBackground(estilos.COLOR_FONDO);
+
+        // Franja amarilla (sin texto)
+        JPanel barra = new JPanel();
+        barra.setBackground(estilos.COLOR_BARRA);
+        barra.setPreferredSize(new Dimension(0, 48));
+        wrap.add(barra, BorderLayout.NORTH);
+
+        // Título centrado tipo web
+        lblTitulo = new JLabel("", SwingConstants.CENTER);
+        lblTitulo.setFont(estilos.FUENTE_TEXTO.deriveFont(Font.BOLD, 22f));
+        lblTitulo.setForeground(estilos.COLOR_TITULO);
+        lblTitulo.setBorder(new EmptyBorder(12, 0, 10, 0));
+        wrap.add(lblTitulo, BorderLayout.CENTER);
+
+        return wrap;
+    }
+
+    private void actualizarTitulo(String seccion){
+        lblTitulo.setText("Panel administrativo- " + seccion);
+    }
 
     private JPanel construirSidebar() {
-        JPanel side = new JPanel();
-        side.setBackground(new Color(0xF6,0xE7,0xB5)); // beige suave (similar boceto)
-        side.setLayout(new GridBagLayout());
-        side.setPreferredSize(new Dimension(220, 0));
+        JPanel side = new JPanel(new GridBagLayout());
+        side.setBackground(estilos.COLOR_FONDO);           // mismo color que el fondo
+        side.setPreferredSize(new Dimension(240, 0));
+
+        // Contenedor blanco (tarjeta) como en la web
+        JPanel box = new JPanel();
+        box.setOpaque(true);
+        box.setBackground(Color.WHITE);
+        box.setBorder(new CompoundBorder(
+                new LineBorder(estilos.COLOR_BORDE_SUAVE, 1, true),
+                new EmptyBorder(12, 12, 12, 12)
+        ));
+        box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
         String[][] items = {
-                {"Productos",    V_PRODUCTOS},
-                {"Categorías",   V_CATEGORIAS},
-                {"Pedidos",      V_PEDIDOS},
-                {"Inventario",   V_INVENTARIO},
-                {"Proveedores",  V_PROVEEDORES},
-                {"Usuarios",     V_USUARIOS},
-                {"Sucursales",   V_SUCURSALES},
-                {"Reportes",     V_REPORTES}
+                {"inicio",          "inicio"},
+                {"Productos",       V_PRODUCTOS},
+                {"categorias",      V_CATEGORIAS},
+                {"Inventario",      V_INVENTARIO},
+                {"Pedidos",         V_PEDIDOS},
+                {"Alertas",         "alertas"},
+                {"Reportes",        V_REPORTES},
+                {"Ventas",          "ventas"},
+                {"Usuarios",        V_USUARIOS},
+                {"Roles y permisos","roles"},
+                {"Ajustes",         "ajustes"},
+                {"Salir",           "salir"}
         };
-
-        JPanel col = new JPanel();
-        col.setOpaque(false);
-        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
-        col.setBorder(BorderFactory.createEmptyBorder(24, 16, 24, 16));
 
         ButtonGroup grupo = new ButtonGroup();
         Map<String, JToggleButton> mapa = new LinkedHashMap<>();
 
         for (String[] it : items) {
-            String texto = it[0];
-            String clave = it[1];
+            final String texto = it[0];
+            final String clave = it[1];
 
             JToggleButton btn = new JToggleButton(texto);
             btn.setFocusPainted(false);
@@ -107,42 +130,69 @@ public class escritorio_admin extends JFrame {
             btn.setFont(estilos.FUENTE_TEXTO.deriveFont(16f));
             btn.setHorizontalAlignment(SwingConstants.LEFT);
             btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
-            btn.setBackground(new Color(0xF6,0xE7,0xB5));
-            btn.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 10));
+            btn.setBackground(Color.WHITE);
+            btn.setBorder(new CompoundBorder(
+                    new LineBorder(new Color(0,0,0,0), 1, true),
+                    new EmptyBorder(10, 12, 10, 12)
+            ));
 
-            // estilo "selected" similar al boceto
+            // Hover suave
+            btn.addMouseListener(new java.awt.event.MouseAdapter(){
+                @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                    if (!btn.isSelected()) btn.setBackground(new Color(0xFF,0xFE,0xF9));
+                }
+                @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                    if (!btn.isSelected()) btn.setBackground(Color.WHITE);
+                }
+            });
+
+            // Estado seleccionado tipo web
             btn.addChangeListener(e -> {
                 if (btn.isSelected()) {
-                    btn.setBackground(Color.WHITE);
-                    btn.setBorder(BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(new Color(230, 210, 170)),
-                            BorderFactory.createEmptyBorder(10, 14, 10, 10)
+                    btn.setBackground(new Color(0xFF,0xF7,0xE8));
+                    btn.setBorder(new CompoundBorder(
+                            new LineBorder(new Color(0xF1,0xD5,0xA3), 1, true),
+                            new EmptyBorder(10, 12, 10, 12)
                     ));
+                    actualizarTitulo(texto.substring(0,1).toUpperCase() + texto.substring(1).toLowerCase());
                 } else {
-                    btn.setBackground(new Color(0xF6,0xE7,0xB5));
-                    btn.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 10));
+                    btn.setBackground(Color.WHITE);
+                    btn.setBorder(new CompoundBorder(
+                            new LineBorder(new Color(0,0,0,0), 1, true),
+                            new EmptyBorder(10, 12, 10, 12)
+                    ));
                 }
             });
 
             btn.addActionListener(ev -> {
-                cards.show(panelCentral, clave);
+                // Sólo cambiamos de vista para los que existan
+                switch (clave){
+                    case V_PRODUCTOS, V_CATEGORIAS, V_PEDIDOS, V_INVENTARIO,
+                         V_PROVEEDORES, V_USUARIOS, V_SUCURSALES, V_REPORTES -> {
+                        cards.show(panelCentral, clave);
+                    }
+                    default -> {} // “inicio/alertas/ventas/roles/ajustes/salir” los veremos luego
+                }
+                // marcar el actual y desactivar el resto
                 mapa.values().forEach(b -> b.setSelected(false));
                 btn.setSelected(true);
             });
 
             grupo.add(btn);
             mapa.put(clave, btn);
-            col.add(btn);
-            col.add(Box.createVerticalStrut(12));
+            box.add(btn);
+            box.add(Box.createVerticalStrut(8));
         }
 
-        // marcar “Productos” por defecto
+        // Selección inicial
         SwingUtilities.invokeLater(() -> mapa.get(V_PRODUCTOS).setSelected(true));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1; gbc.weighty = 1;
+        gbc.insets = new Insets(14, 14, 14, 14);
         gbc.fill = GridBagConstraints.BOTH;
-        side.add(col, gbc);
+        side.add(box, gbc);
+
         return side;
     }
 }

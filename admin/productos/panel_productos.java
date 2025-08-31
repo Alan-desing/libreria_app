@@ -3,12 +3,13 @@ package admin.productos;
 import includes.estilos;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class panel_productos extends JPanel {
 
@@ -16,30 +17,28 @@ public class panel_productos extends JPanel {
     private DefaultTableModel model;
 
     private PlaceholderTextField txtBuscar;
-    private JComboBox<Item> cbCategoria;  // Item(id, nombre)
+    private JComboBox<Item> cbCategoria;
     private JComboBox<String> cbStock;
     private JButton btnFiltrarFila;
     private JButton btnAgregar;
 
-    // guardo los mínimos por fila para colorear el stock (no se muestran)
     private final List<Integer> minsFila = new ArrayList<>();
 
     public panel_productos() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ===== Título (fuera de la card, como en la web) =====
-        JLabel h1 = new JLabel("Productos");
-        h1.setFont(new Font("Arial", Font.BOLD, 28));
-        h1.setForeground(estilos.COLOR_TITULO);
+        // ===== Título principal centrado (como la web) =====
+        JLabel tituloMain = new JLabel("Panel administrativo- Productos", SwingConstants.CENTER);
+        tituloMain.setForeground(estilos.COLOR_TITULO);
+        tituloMain.setFont(new Font("Arial", Font.BOLD, 22));
+        JPanel topTitle = new JPanel(new BorderLayout());
+        topTitle.setOpaque(false);
+        topTitle.setBorder(BorderFactory.createEmptyBorder(14, 0, 6, 0));
+        topTitle.add(tituloMain, BorderLayout.CENTER);
+        add(topTitle, BorderLayout.NORTH);
 
-        JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
-        header.setBorder(BorderFactory.createEmptyBorder(22, 28, 8, 28));
-        header.add(h1, BorderLayout.WEST);
-        add(header, BorderLayout.NORTH);
-
-        // ===== Shell que centra la “card” =====
+        // ===== Shell centrado =====
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -48,39 +47,39 @@ public class panel_productos extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // ===== Card =====
+        // ===== Card (blanca como la web) =====
         JPanel card = new JPanel();
         card.setOpaque(true);
-        card.setBackground(new Color(0xFF, 0xF9, 0xEF));                 // #fff9ef
+        card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true),
-                BorderFactory.createEmptyBorder(14, 14, 16, 14)
+                new javax.swing.border.LineBorder(estilos.COLOR_BORDE_CREMA, 1, true),
+                BorderFactory.createEmptyBorder(16, 16, 18, 16)
         ));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setMaximumSize(new Dimension(980, Integer.MAX_VALUE));
+        card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Fila superior: SOLO “+ Añadir Producto” =====
-        JPanel filaTop = new JPanel();
-        filaTop.setOpaque(false);
-        filaTop.setLayout(new BoxLayout(filaTop, BoxLayout.X_AXIS));
-        filaTop.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // ===== Head de la card: “Productos” + botón verde =====
+        JPanel head = new JPanel(new BorderLayout());
+        head.setOpaque(false);
+        JLabel h1 = new JLabel("Productos");
+        h1.setFont(new Font("Arial", Font.BOLD, 20));
+        h1.setForeground(estilos.COLOR_TITULO);
+        head.add(h1, BorderLayout.WEST);
 
         btnAgregar = estilos.botonRedondeado("+ Añadir Producto");
         btnAgregar.setPreferredSize(new Dimension(220, 40));
         btnAgregar.setMaximumSize(new Dimension(240, 40));
+        head.add(btnAgregar, BorderLayout.EAST);
+        head.setAlignmentX(Component.LEFT_ALIGNMENT);
+        head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        filaTop.add(Box.createHorizontalGlue());
-        filaTop.add(btnAgregar);
-
-        // ===== Buscador =====
+        // ===== Filtros =====
         txtBuscar = new PlaceholderTextField("Buscar…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
         txtBuscar.setMaximumSize(new Dimension(520, 40));
-        txtBuscar.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // ===== Fila de filtros (buscador + categoría + stock + FILTRAR) =====
         JPanel filaFiltros = new JPanel(new GridBagLayout());
         filaFiltros.setOpaque(false);
         filaFiltros.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -88,11 +87,9 @@ public class panel_productos extends JPanel {
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
 
-        // 1) buscador
         g.gridx = 0; g.weightx = 1.0;
         filaFiltros.add(txtBuscar, g);
 
-        // 2) categoría (cargada desde BD)
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(220, 38));
@@ -100,7 +97,6 @@ public class panel_productos extends JPanel {
         g.gridx = 1; g.weightx = 0;
         filaFiltros.add(cbCategoria, g);
 
-        // 3) stock
         String[] stocks = {"Stock: Todos", "Bajo (≤ mínimo)", "Sin stock"};
         cbStock = new JComboBox<>(stocks);
         estilos.estilizarCombo(cbStock);
@@ -109,92 +105,76 @@ public class panel_productos extends JPanel {
         g.gridx = 2;
         filaFiltros.add(cbStock, g);
 
-        // 4) botón Filtrar
         btnFiltrarFila = estilos.botonBlanco("FILTRAR");
         btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
         // ===== Tabla =====
-        String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio"};
+        String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio", "editar", "eliminar"};
         model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
             @Override public Class<?> getColumnClass(int columnIndex) {
-                return String.class; // todo como texto para forzar alineación izquierda
+                return (columnIndex == 5 || columnIndex == 6) ? JButton.class : Object.class;
             }
         };
 
         tabla = new JTable(model);
-        tabla.setFont(new Font("Arial", Font.PLAIN, 17));  // celdas más grandes
-        tabla.setRowHeight(32);                           // filas más altas
-        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 17)); // cabecera más grande
+        tabla.setFont(new Font("Arial", Font.PLAIN, 17));
+        tabla.setRowHeight(32);
+        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 17));
         tabla.getTableHeader().setReorderingAllowed(false);
-        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-        tabla.getTableHeader().setBackground(new Color(0xFF,0xF3,0xD9)); // header crema
+        JTableHeader th = tabla.getTableHeader();
+        th.setBackground(new Color(0xFF,0xF3,0xD9)); // header crema
 
-        // apariencia más "ligera" tipo web
         tabla.setShowVerticalLines(false);
         tabla.setShowHorizontalLines(true);
-        tabla.setGridColor(new Color(0xEDE3D2));          // línea suave
-        tabla.setIntercellSpacing(new Dimension(0, 1));   // separador fino
+        tabla.setGridColor(new Color(0xEDE3D2));
+        tabla.setIntercellSpacing(new Dimension(0, 1));
         tabla.setRowMargin(0);
-        tabla.setSelectionBackground(new Color(0xF2E7D6)); // selección suave
-        tabla.setSelectionForeground(new Color(0x333333));
+        tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
+        tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        // anchos
         tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
         tabla.getColumnModel().getColumn(1).setPreferredWidth(260);
         tabla.getColumnModel().getColumn(2).setPreferredWidth(200);
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(120);
         tabla.getColumnModel().getColumn(4).setPreferredWidth(120);
+        tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
+        tabla.getColumnModel().getColumn(6).setPreferredWidth(90);
 
-        // renderer general: alineación a la IZQUIERDA para todas las columnas
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // renderer de "Stock" con color (usa minsFila oculto)
-        DefaultTableCellRenderer stockRenderer = new DefaultTableCellRenderer() {
+        tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus,
-                                                           int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                ((JLabel)c).setHorizontalAlignment(SwingConstants.LEFT);
-                c.setForeground(table.getForeground());
-                c.setFont(table.getFont());
-                if (!isSelected) {
-                    int stock;
-                    try { stock = Integer.parseInt(String.valueOf(value).replaceAll("\\D","")); }
-                    catch (Exception e) { stock = 0; }
-                    int min = (row >= 0 && row < minsFila.size()) ? minsFila.get(row) : 0;
-
-                    if (stock <= 0) {
-                        c.setForeground(new Color(180, 40, 40));   // rojo
-                        c.setFont(c.getFont().deriveFont(Font.BOLD));
-                    } else if (stock <= min) {
-                        c.setForeground(new Color(180, 120, 20));  // ámbar
-                        c.setFont(c.getFont().deriveFont(Font.BOLD));
-                    }
-                }
+                setText("#" + String.valueOf(value));
+                setHorizontalAlignment(SwingConstants.LEFT);
                 return c;
             }
-        };
-        tabla.getColumnModel().getColumn(3).setCellRenderer(stockRenderer); // aplicar a "Stock"
+        });
+
+        tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
+        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // editar (oliva)
+        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(true));  // eliminar (rojo)
+        tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
+        tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEliminar(id), true));
 
         JScrollPane sc = new JScrollPane(tabla);
         sc.setBorder(BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(new Color(0xE6,0xD9,0xBF), 1, true),
+                new javax.swing.border.LineBorder(estilos.COLOR_BORDE_CREMA, 1, true),
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)
         ));
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sc.setPreferredSize(new Dimension(0, 380));
+        sc.setPreferredSize(new Dimension(0, 420));
 
         // ===== Ensamble =====
-        card.add(filaTop);
-        card.add(Box.createVerticalStrut(10));
+        card.add(head);
         card.add(filaFiltros);
-        card.add(Box.createVerticalStrut(10));
+        card.add(Box.createVerticalStrut(8));
         card.add(sc);
 
         shell.add(card, gbc);
@@ -202,7 +182,7 @@ public class panel_productos extends JPanel {
 
         // ==== Eventos ====
         btnFiltrarFila.addActionListener(e -> cargarTabla());
-        txtBuscar.addActionListener(e -> cargarTabla()); // Enter filtra
+        txtBuscar.addActionListener(e -> cargarTabla());
 
         // ==== Carga inicial ====
         cargarCategorias();
@@ -233,10 +213,10 @@ public class panel_productos extends JPanel {
         Item cat = (Item) cbCategoria.getSelectedItem();
         int idCat = (cat == null) ? 0 : cat.id();
         String stockSel = (String) cbStock.getSelectedItem();
-        String stockFlag = ""; // "", "bajo", "sin"
+        String stockFlag = "";
         if (stockSel != null) {
             if (stockSel.startsWith("Bajo")) stockFlag = "bajo";
-            else if (stockSel.startsWith("Sin")) stockFlag = "sin";
+            else if (stockSel.startsWith("Sin"))  stockFlag = "sin";
         }
 
         String baseFrom = """
@@ -286,7 +266,6 @@ public class panel_productos extends JPanel {
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            // bind dinámico
             for (int i = 0; i < params.size(); i++) {
                 Object v = params.get(i);
                 if (v instanceof Integer iv) ps.setInt(i+1, iv);
@@ -302,10 +281,8 @@ public class panel_productos extends JPanel {
                     int min   = rs.getInt("stock_min");
                     double precio = rs.getDouble("precio_venta");
 
-                    // guardo el mínimo (para colorear el stock) pero no lo muestro
                     minsFila.add(min);
 
-                    // Precio formateado ($ 1.234,56) como texto para que quede a la IZQUIERDA
                     String precioTxt = "$ " + String.format("%,.2f", precio)
                             .replace(',', 'X').replace('.', ',').replace('X','.');
 
@@ -314,7 +291,9 @@ public class panel_productos extends JPanel {
                             nm,
                             (catNom==null? "—" : catNom),
                             String.valueOf(stock),
-                            precioTxt
+                            precioTxt,
+                            "Editar",
+                            "Eliminar"
                     });
                 }
             }
@@ -326,12 +305,42 @@ public class panel_productos extends JPanel {
         }
     }
 
+    private void onEditar(int idProducto){
+        JOptionPane.showMessageDialog(this,
+                "Abrir pantalla de edición para ID: " + idProducto,
+                "Editar", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void onEliminar(int idProducto){
+        int r = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar el producto #" + idProducto + "?\nEsta acción no se puede deshacer.",
+                "Eliminar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (r!=JOptionPane.YES_OPTION) return;
+
+        String sql = "DELETE FROM producto WHERE id_producto = ?";
+        try (Connection cn = DB.get();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setInt(1, idProducto);
+            int n = ps.executeUpdate();
+            if (n>0){
+                JOptionPane.showMessageDialog(this, "Producto eliminado.");
+                cargarTabla();
+            }else{
+                JOptionPane.showMessageDialog(this, "No se eliminó (¿ID inexistente?)");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo eliminar:\n" + ex.getMessage(),
+                    "BD", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     /* ====== Helper: conexión simple a MySQL ====== */
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
             String user = "root";
-            String pass = ""; // tu clave si la tenés
+            String pass = "";
             return DriverManager.getConnection(url, user, pass);
         }
     }
@@ -361,11 +370,123 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ===== Item para combo categoría (id, nombre) =====
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
         int id(){ return id; }
         public String toString(){ return nombre; }
+    }
+
+    // ===== Renderer de badge de stock (píldora) =====
+    class StockBadgeRenderer implements TableCellRenderer {
+        private final PillLabel lbl = new PillLabel();
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            int stock = 0;
+            try { stock = Integer.parseInt(String.valueOf(value).replaceAll("\\D","")); }
+            catch (Exception ignore){}
+            int min = (row >= 0 && row < minsFila.size()) ? minsFila.get(row) : 0;
+
+            if (stock <= 0){
+                lbl.configure(String.valueOf(stock), estilos.BADGE_NO_BG, estilos.BADGE_NO_BORDER, estilos.BADGE_NO_FG);
+            } else if (stock <= min){
+                lbl.configure(String.valueOf(stock), estilos.BADGE_WARN_BG, estilos.BADGE_WARN_BORDER, estilos.BADGE_WARN_FG);
+            } else {
+                lbl.configure(String.valueOf(stock), estilos.BADGE_OK_BG, estilos.BADGE_OK_BORDER, estilos.BADGE_OK_FG);
+            }
+            lbl.setSelection(isSelected);
+            return lbl;
+        }
+    }
+
+    // ===== Píldora =====
+    static class PillLabel extends JComponent {
+        private String text = "";
+        private Color bg = Color.LIGHT_GRAY, border = Color.GRAY, fg = Color.BLACK;
+        private boolean selected = false;
+
+        void configure(String t, Color bg, Color border, Color fg){
+            this.text = t; this.bg = bg; this.border = border; this.fg = fg;
+            setPreferredSize(new Dimension(52, 24));
+        }
+        void setSelection(boolean b){ this.selected = b; }
+
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int w = getWidth(), h = getHeight();
+            int arc = h;
+            if (selected){
+                g2.setColor(new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 230));
+            }else{
+                g2.setColor(bg);
+            }
+            g2.fillRoundRect(4, (h-20)/2, w-8, 20, arc, arc);
+            g2.setColor(border);
+            g2.drawRoundRect(4, (h-20)/2, w-8, 20, arc, arc);
+
+            g2.setColor(fg);
+            g2.setFont(getFont().deriveFont(Font.BOLD, 12f));
+            FontMetrics fm = g2.getFontMetrics();
+            int tw = fm.stringWidth(text);
+            int tx = (w - tw)/2;
+            int ty = h/2 + fm.getAscent()/2 - 3;
+            g2.drawString(text, Math.max(8, tx), ty);
+            g2.dispose();
+        }
+    }
+
+    // ===== Botón renderer =====
+    static class ButtonCellRenderer extends JButton implements TableCellRenderer {
+        private final boolean danger;
+        ButtonCellRenderer(boolean danger){
+            this.danger = danger;
+            setOpaque(true);
+            setBorderPainted(false);
+            setFocusPainted(false);
+        }
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            return danger ? estilos.botonSmDanger(String.valueOf(value))
+                          : estilos.botonSm(String.valueOf(value));
+        }
+    }
+
+    // ===== Botón editor =====
+    static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
+        private final JTable table;
+        private final JButton button;
+        private final Consumer<Integer> onClick;
+
+        ButtonCellEditor(JTable table, Consumer<Integer> onClick, boolean danger) {
+            this.table = table;
+            this.onClick = onClick;
+            this.button = danger ? estilos.botonSmDanger("Eliminar")
+                                 : estilos.botonSm("Editar");
+            this.button.addActionListener(this::handle);
+        }
+
+        private void handle(ActionEvent e){
+            int viewRow = table.getEditingRow();
+            if (viewRow >= 0){
+                int modelRow = table.convertRowIndexToModel(viewRow);
+                Object idObj = table.getModel().getValueAt(modelRow, 0);
+                int id = 0;
+                try { id = Integer.parseInt(String.valueOf(idObj)); } catch (Exception ignore){}
+                onClick.accept(id);
+            }
+            fireEditingStopped();
+        }
+
+        @Override public Object getCellEditorValue() { return null; }
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+                                                     int row, int column) {
+            button.setText(String.valueOf(value));
+            return button;
+        }
     }
 }
