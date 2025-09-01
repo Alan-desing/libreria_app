@@ -12,24 +12,30 @@ import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
 import admin.pedidos.panel_pedidos;
 import admin.inventario.panel_inventario;
-import admin.proveedores.panel_proveedores;
-import admin.usuarios.panel_usuarios;
-import admin.sucursales.panel_sucursales;
 import admin.reportes.panel_reportes;
+import admin.usuarios.panel_usuarios;
 
 public class escritorio_admin extends JFrame {
 
     private final CardLayout cards = new CardLayout();
     private final JPanel panelCentral = new JPanel(cards);
 
-    private static final String V_PRODUCTOS    = "productos";
-    private static final String V_CATEGORIAS   = "categorias";
-    private static final String V_PEDIDOS      = "pedidos";
-    private static final String V_INVENTARIO   = "inventario";
-    private static final String V_PROVEEDORES  = "proveedores";
-    private static final String V_USUARIOS     = "usuarios";
-    private static final String V_SUCURSALES   = "sucursales";
-    private static final String V_REPORTES     = "reportes";
+    // Claves de vistas (según tu barra)
+    private static final String V_INICIO      = "inicio";
+    private static final String V_PRODUCTOS   = "productos";
+    private static final String V_CATEGORIAS  = "categorias";
+    private static final String V_INVENTARIO  = "inventario";
+    private static final String V_PEDIDOS     = "pedidos";
+    private static final String V_ALERTAS     = "alertas";
+    private static final String V_REPORTES    = "reportes";
+    private static final String V_VENTAS      = "ventas";
+    private static final String V_USUARIOS    = "usuarios";
+    private static final String V_ROLES       = "roles";
+    private static final String V_AJUSTES     = "ajustes";
+    private static final String V_SALIR       = "salir";
+
+    // Título superior (común a todas las vistas)
+    private JLabel lblTituloVista;
 
     public escritorio_admin() {
         setTitle("Los Lapicitos — Admin");
@@ -38,7 +44,7 @@ public class escritorio_admin extends JFrame {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
-        // ===== Top (solo franja amarilla, sin texto) =====
+        // ===== Top (franja + título centrado) =====
         add(crearTop(), BorderLayout.NORTH);
 
         // ===== Sidebar =====
@@ -46,19 +52,30 @@ public class escritorio_admin extends JFrame {
 
         // ===== Centro (CardLayout) =====
         panelCentral.setBackground(estilos.COLOR_FONDO);
-        panelCentral.add(new panel_productos(),   V_PRODUCTOS);
-        panelCentral.add(new panel_categorias(),  V_CATEGORIAS);
-        panelCentral.add(new panel_pedidos(),     V_PEDIDOS);
-        panelCentral.add(new panel_inventario(),  V_INVENTARIO);
-        panelCentral.add(new panel_proveedores(), V_PROVEEDORES);
-        panelCentral.add(new panel_usuarios(),    V_USUARIOS);
-        panelCentral.add(new panel_sucursales(),  V_SUCURSALES);
-        panelCentral.add(new panel_reportes(),    V_REPORTES);
+
+        // Vistas reales
+        panelCentral.add(new PanelInicio(),     V_INICIO);
+        panelCentral.add(new panel_productos(), V_PRODUCTOS);
+        panelCentral.add(new panel_categorias(),V_CATEGORIAS);
+        panelCentral.add(new panel_inventario(),V_INVENTARIO);
+        panelCentral.add(new panel_pedidos(),   V_PEDIDOS);
+        panelCentral.add(new panel_reportes(),  V_REPORTES);
+        panelCentral.add(new panel_usuarios(),  V_USUARIOS);
+
+        // Placeholders para mantener la barra completa operativa
+        panelCentral.add(new Placeholder("Alertas"),        V_ALERTAS);
+        panelCentral.add(new Placeholder("Ventas"),         V_VENTAS);
+        panelCentral.add(new Placeholder("Roles y permisos"), V_ROLES);
+        panelCentral.add(new Placeholder("Ajustes"),        V_AJUSTES);
+
         add(panelCentral, BorderLayout.CENTER);
 
-        cards.show(panelCentral, V_PRODUCTOS);
+        // Vista inicial
+        setTituloVista("Inicio");
+        cards.show(panelCentral, V_INICIO);
     }
 
+    /** Encabezado superior: franja + título centrado de la vista */
     private JComponent crearTop() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setBackground(estilos.COLOR_FONDO);
@@ -69,7 +86,22 @@ public class escritorio_admin extends JFrame {
         barra.setPreferredSize(new Dimension(0, 48));
         wrap.add(barra, BorderLayout.NORTH);
 
+        // Título centrado (ocupa el mismo NORTH del frame que el sidebar)
+        lblTituloVista = new JLabel("Panel administrativo — Inicio", SwingConstants.CENTER);
+        lblTituloVista.setForeground(estilos.COLOR_TITULO);
+        lblTituloVista.setFont(new Font("Arial", Font.BOLD, 22));
+
+        JPanel tituloWrap = new JPanel(new BorderLayout());
+        tituloWrap.setOpaque(false);
+        tituloWrap.setBorder(new EmptyBorder(8, 0, 8, 0));
+        tituloWrap.add(lblTituloVista, BorderLayout.CENTER);
+
+        wrap.add(tituloWrap, BorderLayout.CENTER);
         return wrap;
+    }
+
+    private void setTituloVista(String nombreSeccion){
+        lblTituloVista.setText("Panel administrativo — " + nombreSeccion);
     }
 
     private JPanel construirSidebar() {
@@ -86,15 +118,20 @@ public class escritorio_admin extends JFrame {
         ));
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
+        // === Ítems EXACTOS como tu captura ===
         String[][] items = {
-                {"Productos",       V_PRODUCTOS},
-                {"Categorías",      V_CATEGORIAS},
-                {"Inventario",      V_INVENTARIO},
-                {"Pedidos",         V_PEDIDOS},
-                {"Proveedores",     V_PROVEEDORES},
-                {"Usuarios",        V_USUARIOS},
-                {"Sucursales",      V_SUCURSALES},
-                {"Reportes",        V_REPORTES}
+                {"inicio",             V_INICIO},
+                {"Productos",          V_PRODUCTOS},
+                {"categorias",         V_CATEGORIAS},
+                {"Inventario",         V_INVENTARIO},
+                {"Pedidos",            V_PEDIDOS},
+                {"Alertas",            V_ALERTAS},
+                {"Reportes",           V_REPORTES},
+                {"Ventas",             V_VENTAS},
+                {"Usuarios",           V_USUARIOS},
+                {"Roles y permisos",   V_ROLES},
+                {"Ajustes",            V_AJUSTES},
+                {"Salir",              V_SALIR}
         };
 
         ButtonGroup grupo = new ButtonGroup();
@@ -133,12 +170,33 @@ public class escritorio_admin extends JFrame {
             });
 
             btn.addActionListener(ev -> {
-                switch (clave){
-                    case V_PRODUCTOS, V_CATEGORIAS, V_PEDIDOS, V_INVENTARIO,
-                         V_PROVEEDORES, V_USUARIOS, V_SUCURSALES, V_REPORTES -> {
-                        cards.show(panelCentral, clave);
-                    }
+                if (V_SALIR.equals(clave)) {
+                    int r = JOptionPane.showConfirmDialog(this,
+                            "¿Salir del panel administrativo?",
+                            "Confirmar salida", JOptionPane.YES_NO_OPTION);
+                    if (r == JOptionPane.YES_OPTION) dispose();
+                    return;
                 }
+                // cambiar vista
+                cards.show(panelCentral, clave);
+                // actualizar título superior
+                String nombre = switch (clave) {
+                    case V_INICIO     -> "Inicio";
+                    case V_PRODUCTOS  -> "Productos";
+                    case V_CATEGORIAS -> "Categorías";
+                    case V_INVENTARIO -> "Inventario";
+                    case V_PEDIDOS    -> "Pedidos";
+                    case V_ALERTAS    -> "Alertas";
+                    case V_REPORTES   -> "Reportes";
+                    case V_VENTAS     -> "Ventas";
+                    case V_USUARIOS   -> "Usuarios";
+                    case V_ROLES      -> "Roles y permisos";
+                    case V_AJUSTES    -> "Ajustes";
+                    default           -> "Admin";
+                };
+                setTituloVista(nombre);
+
+                // marcar seleccionado
                 mapa.values().forEach(b -> b.setSelected(false));
                 btn.setSelected(true);
             });
@@ -149,7 +207,8 @@ public class escritorio_admin extends JFrame {
             box.add(Box.createVerticalStrut(8));
         }
 
-        SwingUtilities.invokeLater(() -> mapa.get(V_PRODUCTOS).setSelected(true));
+        // Selección por defecto
+        SwingUtilities.invokeLater(() -> mapa.get(V_INICIO).setSelected(true));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1; gbc.weighty = 1;
@@ -158,5 +217,37 @@ public class escritorio_admin extends JFrame {
         side.add(box, gbc);
 
         return side;
+    }
+
+    /* ===== Panel de inicio simple ===== */
+    static class PanelInicio extends JPanel {
+        PanelInicio(){
+            setLayout(new GridBagLayout());
+            setBackground(estilos.COLOR_FONDO);
+            JPanel card = new JPanel();
+            card.setBackground(Color.WHITE);
+            card.setBorder(new CompoundBorder(
+                    new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true),
+                    new EmptyBorder(24,24,24,24)
+            ));
+            card.add(new JLabel("Bienvenido al Panel Administrativo"));
+            add(card, new GridBagConstraints());
+        }
+    }
+
+    /* ===== Placeholders genéricos ===== */
+    static class Placeholder extends JPanel {
+        Placeholder(String nombre){
+            setLayout(new GridBagLayout());
+            setBackground(estilos.COLOR_FONDO);
+            JPanel card = new JPanel();
+            card.setBackground(Color.WHITE);
+            card.setBorder(new CompoundBorder(
+                    new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true),
+                    new EmptyBorder(24,24,24,24)
+            ));
+            card.add(new JLabel(nombre + " — En construcción"));
+            add(card, new GridBagConstraints());
+        }
     }
 }
