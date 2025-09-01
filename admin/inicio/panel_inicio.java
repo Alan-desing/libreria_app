@@ -55,15 +55,12 @@ public class panel_inicio extends JPanel {
         scroll.setBorder(null);
         add(scroll, BorderLayout.CENTER);
 
-        /*  Título principal  */
-        JLabel titulo = new JLabel("Panel administrativo", SwingConstants.CENTER);
-        titulo.setForeground(estilos.COLOR_TITULO);
-        titulo.setFont(new Font("Arial", Font.BOLD, 24));
-        JPanel tituloBox = new JPanel(new BorderLayout());
-        tituloBox.setOpaque(false);
-        tituloBox.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
-        tituloBox.add(titulo, BorderLayout.CENTER);
-        content.add(tituloBox);
+        Color crema = estilos.COLOR_FONDO;
+        content.setOpaque(true);
+        content.setBackground(crema);
+        scroll.getViewport().setOpaque(true);
+        scroll.getViewport().setBackground(crema);
+        scroll.setBackground(crema);
 
         /*  KPIs  */
         content.add(crearFilaKPIs());
