@@ -8,6 +8,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import admin.inicio.panel_inicio;              // <<--- IMPORTA TU PANEL REAL
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
 import admin.pedidos.panel_pedidos;
@@ -54,19 +55,19 @@ public class escritorio_admin extends JFrame {
         panelCentral.setBackground(estilos.COLOR_FONDO);
 
         // Vistas reales
-        panelCentral.add(new PanelInicio(),     V_INICIO);
-        panelCentral.add(new panel_productos(), V_PRODUCTOS);
-        panelCentral.add(new panel_categorias(),V_CATEGORIAS);
-        panelCentral.add(new panel_inventario(),V_INVENTARIO);
-        panelCentral.add(new panel_pedidos(),   V_PEDIDOS);
-        panelCentral.add(new panel_reportes(),  V_REPORTES);
-        panelCentral.add(new panel_usuarios(),  V_USUARIOS);
+        panelCentral.add(new panel_inicio(),     V_INICIO);       // <<--- USA TU PANEL
+        panelCentral.add(new panel_productos(),  V_PRODUCTOS);
+        panelCentral.add(new panel_categorias(), V_CATEGORIAS);
+        panelCentral.add(new panel_inventario(), V_INVENTARIO);
+        panelCentral.add(new panel_pedidos(),    V_PEDIDOS);
+        panelCentral.add(new panel_reportes(),   V_REPORTES);
+        panelCentral.add(new panel_usuarios(),   V_USUARIOS);
 
         // Placeholders para mantener la barra completa operativa
-        panelCentral.add(new Placeholder("Alertas"),        V_ALERTAS);
-        panelCentral.add(new Placeholder("Ventas"),         V_VENTAS);
-        panelCentral.add(new Placeholder("Roles y permisos"), V_ROLES);
-        panelCentral.add(new Placeholder("Ajustes"),        V_AJUSTES);
+        panelCentral.add(new Placeholder("Alertas"),            V_ALERTAS);
+        panelCentral.add(new Placeholder("Ventas"),             V_VENTAS);
+        panelCentral.add(new Placeholder("Roles y permisos"),   V_ROLES);
+        panelCentral.add(new Placeholder("Ajustes"),            V_AJUSTES);
 
         add(panelCentral, BorderLayout.CENTER);
 
@@ -217,22 +218,6 @@ public class escritorio_admin extends JFrame {
         side.add(box, gbc);
 
         return side;
-    }
-
-    /* ===== Panel de inicio simple ===== */
-    static class PanelInicio extends JPanel {
-        PanelInicio(){
-            setLayout(new GridBagLayout());
-            setBackground(estilos.COLOR_FONDO);
-            JPanel card = new JPanel();
-            card.setBackground(Color.WHITE);
-            card.setBorder(new CompoundBorder(
-                    new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true),
-                    new EmptyBorder(24,24,24,24)
-            ));
-            card.add(new JLabel("Bienvenido al Panel Administrativo"));
-            add(card, new GridBagConstraints());
-        }
     }
 
     /* ===== Placeholders genéricos ===== */
