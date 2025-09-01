@@ -1,4 +1,3 @@
-// admin/inventario/panel_inventario.java
 package admin.inventario;
 
 import includes.estilos;
@@ -18,7 +17,7 @@ public class panel_inventario extends JPanel {
     private DefaultTableModel model;
 
     private PlaceholderTextField txtBuscar;
-    private JComboBox<Item> cbCategoria;  // id, nombre
+    private JComboBox<Item> cbCategoria;  
     private JComboBox<String> cbStock;
     private JButton btnFiltrarFila;
 
@@ -28,14 +27,14 @@ public class panel_inventario extends JPanel {
     private JButton btnExpCSV;
     private JButton btnImpCSV;
 
-    // guardamos el mínimo por fila para colorear stock
+    
     private final List<Integer> minsFila = new ArrayList<>();
 
     public panel_inventario() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ===== Shell centrado =====
+        
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
@@ -45,7 +44,7 @@ public class panel_inventario extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // ===== Card =====
+        
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -57,7 +56,7 @@ public class panel_inventario extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Header de la card: título + botones a la derecha =====
+        
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
 
@@ -83,7 +82,7 @@ public class panel_inventario extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // ===== Filtros =====
+        // Filtros
         txtBuscar = new PlaceholderTextField("Buscar por nombre o ID…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -121,7 +120,7 @@ public class panel_inventario extends JPanel {
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // ===== Tabla =====
+        // Tabla
         String[] cols = {"ID", "Producto", "Categoría", "Stock", "Mínimo", "Ajustar", "Movimientos"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
@@ -154,12 +153,11 @@ public class panel_inventario extends JPanel {
         tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
         tabla.getColumnModel().getColumn(6).setPreferredWidth(110);
 
-        // alineación izquierda por defecto
+        // alineación izq
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // ID con # (ej: #22)
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -170,11 +168,10 @@ public class panel_inventario extends JPanel {
             }
         });
 
-        // Stock badge (usa minsFila)
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
-        // Botones por fila
-        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // Ajustar (oliva)
-        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); // Ver (oliva)
+        
+        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); 
+        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); 
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onAjustar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onVerMovimientos(id), false));
 
@@ -189,7 +186,6 @@ public class panel_inventario extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
-        // ===== Ensamble =====
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
@@ -198,7 +194,6 @@ public class panel_inventario extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Eventos
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
         btnBajo.addActionListener(e -> JOptionPane.showMessageDialog(this,"Listar productos con stock bajo.","Bajo stock",JOptionPane.INFORMATION_MESSAGE));
@@ -206,12 +201,10 @@ public class panel_inventario extends JPanel {
         btnExpCSV.addActionListener(e -> JOptionPane.showMessageDialog(this,"Exportar CSV (pendiente).","CSV",JOptionPane.INFORMATION_MESSAGE));
         btnImpCSV.addActionListener(e -> JOptionPane.showMessageDialog(this,"Importar CSV (pendiente).","CSV",JOptionPane.INFORMATION_MESSAGE));
 
-        // Carga inicial
         cargarCategorias();
         cargarTabla();
     }
 
-    // ======================= Cargar categorías
     private void cargarCategorias() {
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -229,7 +222,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ======================= Cargar tabla (BD + filtros)
     private void cargarTabla() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
         Item cat = (Item) cbCategoria.getSelectedItem();
@@ -251,7 +243,7 @@ public class panel_inventario extends JPanel {
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder();
         if (!q.isEmpty()) {
-            // buscar por nombre o ID exacto
+            
             where.append(where.length()==0 ? " WHERE " : " AND ");
             where.append("(p.nombre LIKE ? OR p.id_producto = ?)");
             params.add("%"+q+"%");
@@ -290,7 +282,6 @@ public class panel_inventario extends JPanel {
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            // bind dinámico
             int bind = 1;
             for (Object v : params) {
                 if (v instanceof Integer iv) ps.setInt(bind++, iv);
@@ -326,7 +317,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ==== Acciones ====
     private void onAjustar(int idProd){
         JOptionPane.showMessageDialog(this,
                 "Abrir pantalla de AJUSTE de stock para ID: " + idProd,
@@ -338,7 +328,7 @@ public class panel_inventario extends JPanel {
                 "Movimientos", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /* ====== Conexión ====== */
+    // Conexión
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -348,7 +338,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===== Placeholder =====
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -373,7 +362,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===== Item para combo categorías =====
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
@@ -381,7 +369,6 @@ public class panel_inventario extends JPanel {
         public String toString(){ return nombre; }
     }
 
-    // ===== Renderer de badge para “Stock” =====
     class StockBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -408,7 +395,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===== Píldora (reutilizable) =====
     static class PillLabel extends JComponent {
         private String text = "";
         private Color bg = Color.LIGHT_GRAY, border = Color.GRAY, fg = Color.BLACK;
@@ -442,7 +428,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===== Botón en tabla (renderer) =====
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -459,7 +444,6 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===== Botón en tabla (editor con acción) =====
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
         private final JButton button;
@@ -489,7 +473,7 @@ public class panel_inventario extends JPanel {
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
                                                      int row, int column) {
-            button.setText(String.valueOf(value)); // “Ajustar” / “Ver”
+            button.setText(String.valueOf(value)); 
             return button;
         }
     }

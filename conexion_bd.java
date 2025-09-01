@@ -7,12 +7,12 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class conexion_bd {
 
-    // Datos de conexión (ajustá si tu usuario/clave es distinto)
+    // Datos conexión 
     private static final String URL = "jdbc:mysql://localhost:3306/libreria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
-    // Devuelve conexión
+    
     public static Connection getConnection() {
         try {
             return DriverManager.getConnection(URL, USER, PASSWORD);
@@ -22,7 +22,7 @@ public class conexion_bd {
         }
     }
 
-    // Verifica login contra tabla usuario (singular)
+    // Verifica con la tabala 
     public static boolean verificarLogin(String emailOUser, String passwordPlano) {
         final String sql = "SELECT password, contrasena FROM usuario "
                          + "WHERE email = ? AND id_estado_usuario = 1 LIMIT 1";
@@ -38,11 +38,11 @@ public class conexion_bd {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) {
-                        // No existe el email o está inactivo
+                        // No existe el email
                         return false;
                     }
 
-                    // En tu tabla hay dos posibles columnas: password y contrasena
+                    
                     String hash = rs.getString("password");
                     if (hash == null || hash.isEmpty()) {
                         hash = rs.getString("contrasena");
@@ -51,14 +51,12 @@ public class conexion_bd {
                         return false;
                     }
 
-                    // Normalizar $2y$ -> $2a$ para que jBCrypt lo entienda
                     String normalized = hash.replaceFirst("^\\$2y\\$", "\\$2a\\$");
 
-                    // Validar con bcrypt
                     if (normalized.startsWith("$2a$") || normalized.startsWith("$2b$")) {
                         return BCrypt.checkpw(passwordPlano, normalized);
                     } else {
-                        // fallback si alguna vez se guardó plano
+
                         return passwordPlano.equals(hash);
                     }
                 }

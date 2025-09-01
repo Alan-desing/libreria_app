@@ -11,25 +11,19 @@ import java.awt.*;
 import java.sql.*;
 import java.time.LocalDate;
 
-/**
- * Panel "Inicio" — Dashboard resumido (como la web)
- * Reproduce títulos, bloques, filtros y tablas.
- * Alineado con el sidebar (margen 14,14,14,14) como panel_inventario.
- * + Scroll general para todo el contenido.
- */
 public class panel_inicio extends JPanel {
 
-    // ====== KPI labels
+    //  labels
     private JLabel kpiProdTotal, kpiProdSin;
     private JLabel kpiCatTotal, kpiSubcatTotal;
     private JLabel kpiProvTotal, kpiStockTotal;
     private JLabel kpiVentasHoy, kpiBajoStock;
 
-    // ====== Rango de fecha
+    // fecha
     private JTextField tfDesde, tfHasta;
     private JButton btnAplicar, btnLimpiar;
 
-    // ====== Modelos de tablas
+
     private DefaultTableModel mdlVentasMes;
     private DefaultTableModel mdlTopProd;
     private DefaultTableModel mdlVentasRec;
@@ -43,13 +37,11 @@ public class panel_inicio extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        /* =================== SCROLL GENERAL =================== */
-        // content contendrá TODO lo que antes metías en shell/cardWrap
         JPanel content = new JPanel();
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
-        // ancho máximo tipo "container" web: centrado y con máximo
+        // ancho máximo 
         content.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
         content.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -63,7 +55,7 @@ public class panel_inicio extends JPanel {
         scroll.setBorder(null);
         add(scroll, BorderLayout.CENTER);
 
-        /* ===== Título principal ===== */
+        /*  Título principal  */
         JLabel titulo = new JLabel("Panel administrativo", SwingConstants.CENTER);
         titulo.setForeground(estilos.COLOR_TITULO);
         titulo.setFont(new Font("Arial", Font.BOLD, 24));
@@ -73,25 +65,25 @@ public class panel_inicio extends JPanel {
         tituloBox.add(titulo, BorderLayout.CENTER);
         content.add(tituloBox);
 
-        /* ===== KPIs ===== */
+        /*  KPIs  */
         content.add(crearFilaKPIs());
 
-        /* ===== Filtro de rango ===== */
+        /*  Filtro  */
         content.add(crearFiltroRango());
 
-        /* ===== FILA 1 ===== */
+        /*  filas */
         content.add(crearFilaDos(crearCardVentasMes(), crearCardTopProd()));
-        /* ===== FILA 2 ===== */
+       
         content.add(crearFilaDos(crearCardVentasRec(), crearCardStockCat()));
-        /* ===== FILA 3 ===== */
+       
         content.add(crearFilaDos(crearCardLowList(), crearCardPedPend()));
-        /* ===== FILA 4 ===== */
+        
         content.add(crearFilaDos(crearCardMovRec(), crearCardAlertas()));
-        /* ===== Acciones rápidas ===== */
+        /* Acciones */
         content.add(crearCardAcciones());
-        content.add(Box.createVerticalStrut(12)); // respiro al final
+        content.add(Box.createVerticalStrut(12)); 
 
-        // Fechas por defecto
+        // Fechas 
         LocalDate hoy = LocalDate.now();
         tfHasta.setText(hoy.toString());
         tfDesde.setText(hoy.minusDays(30).toString());
@@ -108,9 +100,6 @@ public class panel_inicio extends JPanel {
         cargarTodo();
     }
 
-    /* ==========================================================
-     * Construcción de bloques
-     * ========================================================== */
 
     private JPanel crearFilaKPIs() {
         JPanel fila = new JPanel(new GridLayout(1,4,16,16));
@@ -268,9 +257,7 @@ public class panel_inicio extends JPanel {
         return makeCard("Acciones rápidas", null, body);
     }
 
-    /* ==========================================================
-     * Carga de datos
-     * ========================================================== */
+    /*  Carga de datos */
 
     private void cargarTodo() {
         cargarKPIs();
@@ -542,9 +529,6 @@ public class panel_inicio extends JPanel {
         if (mdlAlertas.getRowCount()==0) mdlAlertas.addRow(new Object[]{"", "Sin alertas registradas.", "", ""});
     }
 
-    /* ==========================================================
-     * Helpers UI
-     * ========================================================== */
     private JPanel cardShell() {
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -658,7 +642,6 @@ public class panel_inicio extends JPanel {
         return l;
     }
 
-    // Badge rojo (igual criterio que web) para Stock
     static class BadgeNoRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -695,9 +678,6 @@ public class panel_inicio extends JPanel {
         }
     }
 
-    /* ==========================================================
-     * Helpers DB / formato
-     * ========================================================== */
     private static int getInt(Connection cn, String sql, Object[] params) throws Exception {
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
             if (params!=null) for (int i=0;i<params.length;i++) ps.setObject(i+1, params[i]);
@@ -719,7 +699,7 @@ public class panel_inicio extends JPanel {
         JOptionPane.showMessageDialog(this, "Error: "+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
     }
 
-    /* ====== Conexión ====== */
+    /* Conexión  */
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

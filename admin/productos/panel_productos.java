@@ -22,15 +22,14 @@ public class panel_productos extends JPanel {
     private JButton btnFiltrarFila;
     private JButton btnAgregar;
 
-    // mínimos por fila (para colorear “Stock”)
+    // mínimos por fila 
     private final List<Integer> minsFila = new ArrayList<>();
 
     public panel_productos() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ===== Shell centrado =====
-        JPanel shell = new JPanel(new GridBagLayout());
+            JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
         GridBagConstraints gbc = new GridBagConstraints();
@@ -39,7 +38,7 @@ public class panel_productos extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // ===== Card (blanca como la web) =====
+        //tarjeta
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -51,7 +50,7 @@ public class panel_productos extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Head de la card: “Productos” + botón verde =====
+        //  Head de tarjeta productos
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Productos");
@@ -66,7 +65,7 @@ public class panel_productos extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // ===== Filtros =====
+        // Filtros
         txtBuscar = new PlaceholderTextField("Buscar…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -106,7 +105,7 @@ public class panel_productos extends JPanel {
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // ===== Tabla =====
+        //  Tabla 
         String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio", "editar", "eliminar"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
@@ -139,12 +138,12 @@ public class panel_productos extends JPanel {
         tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
         tabla.getColumnModel().getColumn(6).setPreferredWidth(90);
 
-        // alineación izquierda por defecto
+        // alineación izq
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // ID como "#22"
+        
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -155,16 +154,16 @@ public class panel_productos extends JPanel {
             }
         });
 
-        // Stock pill
+        // Stock 
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
 
-        // Botones por fila
+        // Botones 
         tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // editar
         tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(true));  // eliminar
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEliminar(id), true));
 
-        // ===== Scroll (altura fija para forzar scrollbar) =====
+        // Scroll 
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -173,9 +172,9 @@ public class panel_productos extends JPanel {
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)
         ));
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sc.setPreferredSize(new Dimension(0, 420)); // altura fija => scroll vertical
+        sc.setPreferredSize(new Dimension(0, 420)); // scroll
 
-        // ===== Ensamble =====
+    
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
@@ -184,16 +183,15 @@ public class panel_productos extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // ==== Eventos ====
+        //  Eventos 
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla()); // Enter
 
-        // ==== Carga inicial ====
         cargarCategorias();
         cargarTabla();
     }
 
-    // ======================= Cargar categorías (BD)
+
     private void cargarCategorias() {
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -211,7 +209,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ======================= Cargar tabla (BD + filtros)
+    
     private void cargarTabla() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
         Item cat = (Item) cbCategoria.getSelectedItem();
@@ -339,7 +337,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    /* ====== Helper: conexión simple a MySQL ====== */
+    
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -349,7 +347,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ===== Placeholder en JTextField =====
+    
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -381,7 +379,7 @@ public class panel_productos extends JPanel {
         public String toString(){ return nombre; }
     }
 
-    // ===== Renderer de badge de stock (píldora) =====
+    
     class StockBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -404,7 +402,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ===== Píldora =====
+
     static class PillLabel extends JComponent {
         private String text = "";
         private Color bg = Color.LIGHT_GRAY, border = Color.GRAY, fg = Color.BLACK;
@@ -438,7 +436,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ===== Botón renderer =====
+
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -455,7 +453,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // ===== Botón editor =====
+    //  Botón editor
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
         private final JButton button;

@@ -8,7 +8,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import admin.inicio.panel_inicio;              // <<--- IMPORTA TU PANEL REAL
+import admin.inicio.panel_inicio;              
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
 import admin.pedidos.panel_pedidos;
@@ -21,7 +21,6 @@ public class escritorio_admin extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel panelCentral = new JPanel(cards);
 
-    // Claves de vistas (según tu barra)
     private static final String V_INICIO      = "inicio";
     private static final String V_PRODUCTOS   = "productos";
     private static final String V_CATEGORIAS  = "categorias";
@@ -35,7 +34,7 @@ public class escritorio_admin extends JFrame {
     private static final String V_AJUSTES     = "ajustes";
     private static final String V_SALIR       = "salir";
 
-    // Título superior (común a todas las vistas)
+    // Título 
     private JLabel lblTituloVista;
 
     public escritorio_admin() {
@@ -45,17 +44,17 @@ public class escritorio_admin extends JFrame {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
-        // ===== Top (franja + título centrado) =====
+        // encabezado 
         add(crearTop(), BorderLayout.NORTH);
 
-        // ===== Sidebar =====
+        
         add(construirSidebar(), BorderLayout.WEST);
 
-        // ===== Centro (CardLayout) =====
+        // Centro
         panelCentral.setBackground(estilos.COLOR_FONDO);
 
-        // Vistas reales
-        panelCentral.add(new panel_inicio(),     V_INICIO);       // <<--- USA TU PANEL
+        // Vistas 
+        panelCentral.add(new panel_inicio(),     V_INICIO);      
         panelCentral.add(new panel_productos(),  V_PRODUCTOS);
         panelCentral.add(new panel_categorias(), V_CATEGORIAS);
         panelCentral.add(new panel_inventario(), V_INVENTARIO);
@@ -63,7 +62,7 @@ public class escritorio_admin extends JFrame {
         panelCentral.add(new panel_reportes(),   V_REPORTES);
         panelCentral.add(new panel_usuarios(),   V_USUARIOS);
 
-        // Placeholders para mantener la barra completa operativa
+        
         panelCentral.add(new Placeholder("Alertas"),            V_ALERTAS);
         panelCentral.add(new Placeholder("Ventas"),             V_VENTAS);
         panelCentral.add(new Placeholder("Roles y permisos"),   V_ROLES);
@@ -76,18 +75,18 @@ public class escritorio_admin extends JFrame {
         cards.show(panelCentral, V_INICIO);
     }
 
-    /** Encabezado superior: franja + título centrado de la vista */
+    
     private JComponent crearTop() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setBackground(estilos.COLOR_FONDO);
 
-        // Franja amarilla
+        // linea amarilla
         JPanel barra = new JPanel();
         barra.setBackground(estilos.COLOR_BARRA);
         barra.setPreferredSize(new Dimension(0, 48));
         wrap.add(barra, BorderLayout.NORTH);
 
-        // Título centrado (ocupa el mismo NORTH del frame que el sidebar)
+        // Título 
         lblTituloVista = new JLabel("Panel administrativo — Inicio", SwingConstants.CENTER);
         lblTituloVista.setForeground(estilos.COLOR_TITULO);
         lblTituloVista.setFont(new Font("Arial", Font.BOLD, 22));
@@ -119,7 +118,7 @@ public class escritorio_admin extends JFrame {
         ));
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
-        // === Ítems EXACTOS como tu captura ===
+        // items
         String[][] items = {
                 {"inicio",             V_INICIO},
                 {"Productos",          V_PRODUCTOS},
@@ -180,7 +179,7 @@ public class escritorio_admin extends JFrame {
                 }
                 // cambiar vista
                 cards.show(panelCentral, clave);
-                // actualizar título superior
+                // actualizar título 
                 String nombre = switch (clave) {
                     case V_INICIO     -> "Inicio";
                     case V_PRODUCTOS  -> "Productos";
@@ -220,7 +219,7 @@ public class escritorio_admin extends JFrame {
         return side;
     }
 
-    /* ===== Placeholders genéricos ===== */
+    
     static class Placeholder extends JPanel {
         Placeholder(String nombre){
             setLayout(new GridBagLayout());

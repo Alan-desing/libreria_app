@@ -8,11 +8,7 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.net.URL;
 
-/**
- * Login a pantalla completa, con placeholders y alineación ajustada
- * - Usa includes.estilos para colores/fuentes/botón
- * - Mantiene la lógica de verificación con conexion_bd
- */
+
 public class panel_login extends JFrame {
 
     private static final String IMG_PATH = "includes/img/libro.png";
@@ -30,12 +26,11 @@ public class panel_login extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH); // pantalla completa
         getContentPane().setBackground(estilos.COLOR_FONDO);
 
-        // ===== Barra superior (más gruesa) =====
+        // Barra superior 
         JPanel barraSuperior = new JPanel();
         barraSuperior.setBackground(estilos.COLOR_BARRA);
         barraSuperior.setPreferredSize(new Dimension(0, 64));
 
-        // ===== Split principal (izq: contenido / der: imagen) =====
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         split.setDividerSize(0);
         split.setEnabled(false);
@@ -47,16 +42,14 @@ public class panel_login extends JFrame {
 
         split.setLeftComponent(izquierda);
         split.setRightComponent(derecha);
-        split.setResizeWeight(0.58); // más espacio a la izquierda
+        split.setResizeWeight(0.58);
 
-        // ===== Root =====
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(estilos.COLOR_FONDO);
         root.add(barraSuperior, BorderLayout.NORTH);
         root.add(split, BorderLayout.CENTER);
         setContentPane(root);
 
-        // Mantener proporción + reescalar imagen en resize
         addComponentListener(new ComponentAdapter() {
             @Override public void componentResized(ComponentEvent e) {
                 split.setDividerLocation(0.58);
@@ -64,13 +57,10 @@ public class panel_login extends JFrame {
             }
         });
 
-        // Acción de login
         btnLogin.addActionListener(e -> verificarLogin());
     }
 
-    /**
-     * Construye la columna izquierda (centrada y con margen izquierdo).
-     */
+    
     private JPanel construirColumnaIzquierda() {
         JPanel cont = new JPanel(new GridBagLayout());
         cont.setBackground(estilos.COLOR_FONDO);
@@ -79,7 +69,7 @@ public class panel_login extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(0, 80, 0, 0); // margen a la izquierda
+        gbc.insets = new Insets(0, 80, 0, 0); 
 
         final int contentWidth = 540;
         JPanel bloque = new JPanel();
@@ -88,13 +78,13 @@ public class panel_login extends JFrame {
         bloque.setMaximumSize(new Dimension(contentWidth, Integer.MAX_VALUE));
         bloque.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Título =====
+        // Título
         JLabel titulo = new JLabel("Librería Los Lapicitos");
         titulo.setFont(estilos.FUENTE_TITULO.deriveFont(Font.BOLD, 48f));
         titulo.setForeground(estilos.COLOR_TITULO);
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Párrafo =====
+        // Párrafo
         JLabel parrafo = new JLabel("<html><div style='width:" + contentWidth + "px; text-align:center;'>"
                 + "Bienvenido a tu sistema de gestión de inventario.<br>"
                 + "Mantén el control de tus productos, ventas y pedidos de forma fácil y rápida."
@@ -103,7 +93,7 @@ public class panel_login extends JFrame {
         parrafo.setForeground(new Color(70,70,70));
         parrafo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Formulario =====
+        // Formulario 
         JPanel form = new JPanel();
         form.setOpaque(false);
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
@@ -141,9 +131,7 @@ public class panel_login extends JFrame {
         return cont;
     }
 
-    /**
-     * Construye columna derecha con imagen escalada sin distorsión.
-     */
+    
     private JPanel construirColumnaDerecha() {
         JPanel cont = new JPanel(new BorderLayout());
         cont.setBackground(estilos.COLOR_FONDO);
@@ -152,7 +140,7 @@ public class panel_login extends JFrame {
         lblImagen = new JLabel("", SwingConstants.CENTER);
         lblImagen.setOpaque(false);
 
-        // carga imagen
+        // imagen
         URL res = getClass().getClassLoader().getResource(IMG_PATH);
         if (res != null) {
             imgOriginal = new ImageIcon(res).getImage();
@@ -181,7 +169,6 @@ public class panel_login extends JFrame {
         return cont;
     }
 
-    /** Escala manteniendo proporción. */
     private void escalarImagenSinDistorsion() {
         if (imgOriginal == null || lblImagen == null) return;
 
@@ -201,7 +188,6 @@ public class panel_login extends JFrame {
         lblImagen.repaint();
     }
 
-    // ---------- Lógica de login ----------
     private void verificarLogin() {
         String usuario = txtUsuario.getText().trim();
         String pass    = new String(txtPassword.getPassword());
@@ -217,7 +203,6 @@ public class panel_login extends JFrame {
         }
     }
 
-    // ---------- Campos con placeholder ----------
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {

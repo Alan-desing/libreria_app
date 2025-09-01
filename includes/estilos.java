@@ -7,7 +7,7 @@ import javax.swing.text.JTextComponent;
 
 public class estilos {
 
-    // 🎨 Paleta (igual que la web)
+    // colores
     public static final Color COLOR_FONDO       = Color.decode("#FFF4D8");
     public static final Color COLOR_BARRA       = Color.decode("#ECBA73");
     public static final Color COLOR_TITULO      = Color.decode("#7B6C6C");
@@ -19,7 +19,7 @@ public class estilos {
     public static final Color COLOR_BORDE_SUAVE = new Color(0,0,0,35); // borde gris muy suave
     public static final int   RADIO             = 12;
 
-    // Badges (stock)
+    //stock
     public static final Color BADGE_OK_BG     = new Color(0xE6,0xF6,0xEA);
     public static final Color BADGE_OK_BORDER = new Color(0xC6,0xE9,0xD0);
     public static final Color BADGE_OK_FG     = new Color(0x22,0x6B,0x3D);
@@ -32,13 +32,13 @@ public class estilos {
     public static final Color BADGE_WARN_BORDER = new Color(0xF1,0xD5,0xA3);
     public static final Color BADGE_WARN_FG     = new Color(0x9A,0x68,0x1A);
 
-    // 📝 Fuentes
+    // Fuentes
     public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 40);
     public static final Font FUENTE_TEXTO  = new Font("SansSerif", Font.PLAIN, 20);
     public static final Font FUENTE_INPUT  = new Font("SansSerif", Font.PLAIN, 16);
     public static final Font FUENTE_BOTON  = new Font("SansSerif", Font.BOLD, 14);
 
-    // (Opcional) FlatLaf
+    
     public static void initLookAndFeel() {
         try {
             Class<?> lafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
@@ -48,7 +48,7 @@ public class estilos {
         UIManager.put("Panel.background", COLOR_FONDO);
     }
 
-    // 🔘 Botón grande (oliva)
+    // Botón grande 
     public static JButton botonRedondeado(String texto) {
         JButton btn = new JButton(texto) {
             @Override protected void paintComponent(Graphics g) {
@@ -72,7 +72,7 @@ public class estilos {
         return btn;
     }
 
-    // ✅ Botón blanco (FILTRAR)
+    //  Botón  (FILTRAR)
     public static JButton botonBlanco(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -91,7 +91,7 @@ public class estilos {
         return b;
     }
 
-    // ✅ Botón chico (Editar)
+    // Botón  (Editar)
     public static JButton botonSm(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -111,7 +111,7 @@ public class estilos {
         return b;
     }
 
-    // ✅ Botón chico (Eliminar)
+    // Botón  (Eliminar)
     public static JButton botonSmDanger(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -131,7 +131,7 @@ public class estilos {
         return b;
     }
 
-    // ✅ Combo redondeado
+    
     public static <T> void estilizarCombo(JComboBox<T> combo){
         combo.setFont(FUENTE_INPUT);
         combo.setBackground(Color.WHITE);
@@ -141,7 +141,7 @@ public class estilos {
         ));
     }
 
-    // ✏️ Campo de texto redondeado
+    //  redondeo del texto
     public static void estilizarCampo(JTextComponent c) {
         c.setFont(FUENTE_INPUT);
         Border line   = new LineBorder(new Color(0xD9,0xD9,0xD9), 1, true);

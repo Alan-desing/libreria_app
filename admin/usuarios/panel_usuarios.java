@@ -26,7 +26,6 @@ public class panel_usuarios extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ===== Shell centrado (alineado con sidebar) =====
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
@@ -36,7 +35,7 @@ public class panel_usuarios extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // ===== Card =====
+        // Card 
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -48,7 +47,7 @@ public class panel_usuarios extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Header: “Usuarios” + botón verde =====
+        // Header
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Usuarios");
@@ -63,7 +62,7 @@ public class panel_usuarios extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // ===== Filtros =====
+        // Filtros
         txtBuscar = new PlaceholderTextField("Buscar por nombre o email…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -100,7 +99,7 @@ public class panel_usuarios extends JPanel {
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // ===== Tabla =====
+        // Tabla 
         String[] cols = {"ID", "Nombre", "Email", "Rol", "Estado", "Creado", "Editar", "eliminar"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 6 || c == 7; }
@@ -125,7 +124,6 @@ public class panel_usuarios extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        // anchos
         tabla.getColumnModel().getColumn(0).setPreferredWidth(80);   // ID
         tabla.getColumnModel().getColumn(1).setPreferredWidth(220);  // Nombre
         tabla.getColumnModel().getColumn(2).setPreferredWidth(260);  // Email
@@ -135,12 +133,11 @@ public class panel_usuarios extends JPanel {
         tabla.getColumnModel().getColumn(6).setPreferredWidth(90);   // Editar
         tabla.getColumnModel().getColumn(7).setPreferredWidth(90);   // eliminar
 
-        // alineación izquierda por defecto
+        // alineación izq
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // ID con # (ej: #2)
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -151,7 +148,6 @@ public class panel_usuarios extends JPanel {
             }
         });
 
-        // Botones por fila
         tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); // Editar
         tabla.getColumnModel().getColumn(7).setCellRenderer(new ButtonCellRenderer(true));  // eliminar
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
@@ -168,7 +164,6 @@ public class panel_usuarios extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
-        // ===== Ensamble =====
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
@@ -177,17 +172,14 @@ public class panel_usuarios extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Eventos
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
 
-        // Cargas iniciales
         cargarRoles();
         cargarEstados();
         cargarTabla();
     }
 
-    // ======================= Cargar catálogos
     private void cargarRoles() {
         cbRol.removeAllItems();
         cbRol.addItem(new Item(0, "Rol: Todos"));
@@ -222,7 +214,6 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // ======================= Cargar tabla (BD + filtros)
     private void cargarTabla() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
 
@@ -274,7 +265,6 @@ public class panel_usuarios extends JPanel {
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-            // bind dinámico
             int bind = 1;
             for (Object v : params) {
                 if (v instanceof Integer iv) ps.setInt(bind++, iv);
@@ -310,7 +300,6 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // ==== Acciones ====
     private void onEditar(int idUsuario){
         JOptionPane.showMessageDialog(this,
                 "Abrir pantalla de edición para Usuario #" + idUsuario,
@@ -341,7 +330,7 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    /* ====== Conexión ====== */
+    // Conexión 
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -351,7 +340,6 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // ===== Placeholder =====
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -376,7 +364,6 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // ===== Item genérico (id, nombre) =====
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
@@ -384,7 +371,6 @@ public class panel_usuarios extends JPanel {
         public String toString(){ return nombre; }
     }
 
-    // ===== Botón en tabla (renderer) =====
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -401,7 +387,6 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // ===== Botón en tabla (editor con acción) =====
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
         private final JButton button;
