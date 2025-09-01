@@ -29,9 +29,20 @@ public class panel_productos extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
+        // ===== Título principal centrado =====
+        JLabel tituloMain = new JLabel("Panel administrativo — Productos", SwingConstants.CENTER);
+        tituloMain.setForeground(estilos.COLOR_TITULO);
+        tituloMain.setFont(new Font("Arial", Font.BOLD, 22));
+        JPanel topTitle = new JPanel(new BorderLayout());
+        topTitle.setOpaque(false);
+        topTitle.setBorder(BorderFactory.createEmptyBorder(8, 0, 6, 0));
+        topTitle.add(tituloMain, BorderLayout.CENTER);
+        add(topTitle, BorderLayout.NORTH);
+
         // ===== Shell centrado =====
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
+        shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;

@@ -3,12 +3,11 @@ package admin;
 import includes.estilos;
 
 import javax.swing.*;
-import javax.swing.border.*;  // <-- IMPORTANTE para CompoundBorder/LineBorder/EmptyBorder
+import javax.swing.border.*;
 import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// Panels
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
 import admin.pedidos.panel_pedidos;
@@ -22,8 +21,6 @@ public class escritorio_admin extends JFrame {
 
     private final CardLayout cards = new CardLayout();
     private final JPanel panelCentral = new JPanel(cards);
-
-    private JLabel lblTitulo; // título centrado (web-like)
 
     private static final String V_PRODUCTOS    = "productos";
     private static final String V_CATEGORIAS   = "categorias";
@@ -41,7 +38,7 @@ public class escritorio_admin extends JFrame {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
-        // ===== Top (franja + título centrado) =====
+        // ===== Top (solo franja amarilla, sin texto) =====
         add(crearTop(), BorderLayout.NORTH);
 
         // ===== Sidebar =====
@@ -60,39 +57,26 @@ public class escritorio_admin extends JFrame {
         add(panelCentral, BorderLayout.CENTER);
 
         cards.show(panelCentral, V_PRODUCTOS);
-        actualizarTitulo("Productos");
     }
 
     private JComponent crearTop() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setBackground(estilos.COLOR_FONDO);
 
-        // Franja amarilla (sin texto)
+        // Franja amarilla
         JPanel barra = new JPanel();
         barra.setBackground(estilos.COLOR_BARRA);
         barra.setPreferredSize(new Dimension(0, 48));
         wrap.add(barra, BorderLayout.NORTH);
 
-        // Título centrado tipo web
-        lblTitulo = new JLabel("", SwingConstants.CENTER);
-        lblTitulo.setFont(estilos.FUENTE_TEXTO.deriveFont(Font.BOLD, 22f));
-        lblTitulo.setForeground(estilos.COLOR_TITULO);
-        lblTitulo.setBorder(new EmptyBorder(12, 0, 10, 0));
-        wrap.add(lblTitulo, BorderLayout.CENTER);
-
         return wrap;
-    }
-
-    private void actualizarTitulo(String seccion){
-        lblTitulo.setText("Panel administrativo- " + seccion);
     }
 
     private JPanel construirSidebar() {
         JPanel side = new JPanel(new GridBagLayout());
-        side.setBackground(estilos.COLOR_FONDO);           // mismo color que el fondo
+        side.setBackground(estilos.COLOR_FONDO);
         side.setPreferredSize(new Dimension(240, 0));
 
-        // Contenedor blanco (tarjeta) como en la web
         JPanel box = new JPanel();
         box.setOpaque(true);
         box.setBackground(Color.WHITE);
@@ -103,18 +87,14 @@ public class escritorio_admin extends JFrame {
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
         String[][] items = {
-                {"inicio",          "inicio"},
                 {"Productos",       V_PRODUCTOS},
-                {"categorias",      V_CATEGORIAS},
+                {"Categorías",      V_CATEGORIAS},
                 {"Inventario",      V_INVENTARIO},
                 {"Pedidos",         V_PEDIDOS},
-                {"Alertas",         "alertas"},
-                {"Reportes",        V_REPORTES},
-                {"Ventas",          "ventas"},
+                {"Proveedores",     V_PROVEEDORES},
                 {"Usuarios",        V_USUARIOS},
-                {"Roles y permisos","roles"},
-                {"Ajustes",         "ajustes"},
-                {"Salir",           "salir"}
+                {"Sucursales",      V_SUCURSALES},
+                {"Reportes",        V_REPORTES}
         };
 
         ButtonGroup grupo = new ButtonGroup();
@@ -136,17 +116,6 @@ public class escritorio_admin extends JFrame {
                     new EmptyBorder(10, 12, 10, 12)
             ));
 
-            // Hover suave
-            btn.addMouseListener(new java.awt.event.MouseAdapter(){
-                @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                    if (!btn.isSelected()) btn.setBackground(new Color(0xFF,0xFE,0xF9));
-                }
-                @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                    if (!btn.isSelected()) btn.setBackground(Color.WHITE);
-                }
-            });
-
-            // Estado seleccionado tipo web
             btn.addChangeListener(e -> {
                 if (btn.isSelected()) {
                     btn.setBackground(new Color(0xFF,0xF7,0xE8));
@@ -154,7 +123,6 @@ public class escritorio_admin extends JFrame {
                             new LineBorder(new Color(0xF1,0xD5,0xA3), 1, true),
                             new EmptyBorder(10, 12, 10, 12)
                     ));
-                    actualizarTitulo(texto.substring(0,1).toUpperCase() + texto.substring(1).toLowerCase());
                 } else {
                     btn.setBackground(Color.WHITE);
                     btn.setBorder(new CompoundBorder(
@@ -165,15 +133,12 @@ public class escritorio_admin extends JFrame {
             });
 
             btn.addActionListener(ev -> {
-                // Sólo cambiamos de vista para los que existan
                 switch (clave){
                     case V_PRODUCTOS, V_CATEGORIAS, V_PEDIDOS, V_INVENTARIO,
                          V_PROVEEDORES, V_USUARIOS, V_SUCURSALES, V_REPORTES -> {
                         cards.show(panelCentral, clave);
                     }
-                    default -> {} // “inicio/alertas/ventas/roles/ajustes/salir” los veremos luego
                 }
-                // marcar el actual y desactivar el resto
                 mapa.values().forEach(b -> b.setSelected(false));
                 btn.setSelected(true);
             });
@@ -184,7 +149,6 @@ public class escritorio_admin extends JFrame {
             box.add(Box.createVerticalStrut(8));
         }
 
-        // Selección inicial
         SwingUtilities.invokeLater(() -> mapa.get(V_PRODUCTOS).setSelected(true));
 
         GridBagConstraints gbc = new GridBagConstraints();
