@@ -11,6 +11,7 @@ import java.util.Map;
 import admin.inicio.panel_inicio;              
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
+import admin.subcategorias.panel_subcategorias;   // <-- NUEVO
 import admin.pedidos.panel_pedidos;
 import admin.inventario.panel_inventario;
 import admin.reportes.panel_reportes;
@@ -21,18 +22,19 @@ public class escritorio_admin extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel panelCentral = new JPanel(cards);
 
-    private static final String V_INICIO      = "inicio";
-    private static final String V_PRODUCTOS   = "productos";
-    private static final String V_CATEGORIAS  = "categorias";
-    private static final String V_INVENTARIO  = "inventario";
-    private static final String V_PEDIDOS     = "pedidos";
-    private static final String V_ALERTAS     = "alertas";
-    private static final String V_REPORTES    = "reportes";
-    private static final String V_VENTAS      = "ventas";
-    private static final String V_USUARIOS    = "usuarios";
-    private static final String V_ROLES       = "roles";
-    private static final String V_AJUSTES     = "ajustes";
-    private static final String V_SALIR       = "salir";
+    private static final String V_INICIO       = "inicio";
+    private static final String V_PRODUCTOS    = "productos";
+    private static final String V_CATEGORIAS   = "categorias";
+    private static final String V_SUBCATS      = "subcategorias";   // <-- NUEVO
+    private static final String V_INVENTARIO   = "inventario";
+    private static final String V_PEDIDOS      = "pedidos";
+    private static final String V_ALERTAS      = "alertas";
+    private static final String V_REPORTES     = "reportes";
+    private static final String V_VENTAS       = "ventas";
+    private static final String V_USUARIOS     = "usuarios";
+    private static final String V_ROLES        = "roles";
+    private static final String V_AJUSTES      = "ajustes";
+    private static final String V_SALIR        = "salir";
 
     // Título 
     private JLabel lblTituloVista;
@@ -47,22 +49,23 @@ public class escritorio_admin extends JFrame {
         // encabezado 
         add(crearTop(), BorderLayout.NORTH);
 
-        
+        // sidebar
         add(construirSidebar(), BorderLayout.WEST);
 
         // Centro
         panelCentral.setBackground(estilos.COLOR_FONDO);
 
         // Vistas 
-        panelCentral.add(new panel_inicio(),     V_INICIO);      
-        panelCentral.add(new panel_productos(),  V_PRODUCTOS);
-        panelCentral.add(new panel_categorias(), V_CATEGORIAS);
-        panelCentral.add(new panel_inventario(), V_INVENTARIO);
-        panelCentral.add(new panel_pedidos(),    V_PEDIDOS);
-        panelCentral.add(new panel_reportes(),   V_REPORTES);
-        panelCentral.add(new panel_usuarios(),   V_USUARIOS);
+        panelCentral.add(new panel_inicio(),         V_INICIO);      
+        panelCentral.add(new panel_productos(),      V_PRODUCTOS);
+        panelCentral.add(new panel_categorias(),     V_CATEGORIAS);
+        panelCentral.add(new panel_subcategorias(),  V_SUBCATS);       // <-- NUEVO
+        panelCentral.add(new panel_inventario(),     V_INVENTARIO);
+        panelCentral.add(new panel_pedidos(),        V_PEDIDOS);
+        panelCentral.add(new panel_reportes(),       V_REPORTES);
+        panelCentral.add(new panel_usuarios(),       V_USUARIOS);
 
-        
+        // Placeholders
         panelCentral.add(new Placeholder("Alertas"),            V_ALERTAS);
         panelCentral.add(new Placeholder("Ventas"),             V_VENTAS);
         panelCentral.add(new Placeholder("Roles y permisos"),   V_ROLES);
@@ -75,7 +78,6 @@ public class escritorio_admin extends JFrame {
         cards.show(panelCentral, V_INICIO);
     }
 
-    
     private JComponent crearTop() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setBackground(estilos.COLOR_FONDO);
@@ -123,6 +125,7 @@ public class escritorio_admin extends JFrame {
                 {"inicio",             V_INICIO},
                 {"Productos",          V_PRODUCTOS},
                 {"categorias",         V_CATEGORIAS},
+                {"subcategorias",      V_SUBCATS},     // <-- NUEVO (debajo de categorías)
                 {"Inventario",         V_INVENTARIO},
                 {"Pedidos",            V_PEDIDOS},
                 {"Alertas",            V_ALERTAS},
@@ -181,18 +184,19 @@ public class escritorio_admin extends JFrame {
                 cards.show(panelCentral, clave);
                 // actualizar título 
                 String nombre = switch (clave) {
-                    case V_INICIO     -> "Inicio";
-                    case V_PRODUCTOS  -> "Productos";
-                    case V_CATEGORIAS -> "Categorías";
-                    case V_INVENTARIO -> "Inventario";
-                    case V_PEDIDOS    -> "Pedidos";
-                    case V_ALERTAS    -> "Alertas";
-                    case V_REPORTES   -> "Reportes";
-                    case V_VENTAS     -> "Ventas";
-                    case V_USUARIOS   -> "Usuarios";
-                    case V_ROLES      -> "Roles y permisos";
-                    case V_AJUSTES    -> "Ajustes";
-                    default           -> "Admin";
+                    case V_INICIO      -> "Inicio";
+                    case V_PRODUCTOS   -> "Productos";
+                    case V_CATEGORIAS  -> "Categorías";
+                    case V_SUBCATS     -> "Subcategorías";   // <-- NUEVO
+                    case V_INVENTARIO  -> "Inventario";
+                    case V_PEDIDOS     -> "Pedidos";
+                    case V_ALERTAS     -> "Alertas";
+                    case V_REPORTES    -> "Reportes";
+                    case V_VENTAS      -> "Ventas";
+                    case V_USUARIOS    -> "Usuarios";
+                    case V_ROLES       -> "Roles y permisos";
+                    case V_AJUSTES     -> "Ajustes";
+                    default            -> "Admin";
                 };
                 setTituloVista(nombre);
 
@@ -219,7 +223,6 @@ public class escritorio_admin extends JFrame {
         return side;
     }
 
-    
     static class Placeholder extends JPanel {
         Placeholder(String nombre){
             setLayout(new GridBagLayout());
