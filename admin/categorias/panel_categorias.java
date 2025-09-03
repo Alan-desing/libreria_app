@@ -25,7 +25,6 @@ public class panel_categorias extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
@@ -35,7 +34,6 @@ public class panel_categorias extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -130,7 +128,6 @@ public class panel_categorias extends JPanel {
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-    
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -161,7 +158,6 @@ public class panel_categorias extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
-    
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
@@ -169,6 +165,14 @@ public class panel_categorias extends JPanel {
 
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
+
+        // === NUEVO === abrir diálogo de creación y refrescar al guardar
+        btnAgregar.addActionListener(e -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            crear dlg = new crear(owner);
+            dlg.setVisible(true);
+            if (dlg.fueGuardado()) cargarTabla();
+        });
 
         // Eventos
         btnFiltrarFila.addActionListener(e -> cargarTabla());
@@ -227,7 +231,6 @@ public class panel_categorias extends JPanel {
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
-        
             for (int i = 0; i < params.size(); i++) {
                 Object v = params.get(i);
                 if (v instanceof Integer iv) ps.setInt(i+1, iv);
@@ -240,7 +243,7 @@ public class panel_categorias extends JPanel {
                     String nombre   = rs.getString("nombre");
                     int subcats     = rs.getInt("subcategorias");
                     int productos   = rs.getInt("productos");
-                    int stockTotal  = rs.getInt("stock_total");
+                    int stockTotal  = rs.getInt("stock_total"); // ← igual que el original
 
                     model.addRow(new Object[]{
                             String.valueOf(id),
@@ -263,32 +266,16 @@ public class panel_categorias extends JPanel {
 
     //  Acciones 
     private void onEditar(int idCat){
-        JOptionPane.showMessageDialog(this,
-                "Abrir pantalla de edición para Categoría ID: " + idCat,
-                "Editar", JOptionPane.INFORMATION_MESSAGE);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        editar dlg = new editar(owner, idCat);
+        dlg.setVisible(true);
+        if (dlg.fueGuardado()) cargarTabla();
     }
     private void onEliminar(int idCat){
-        int r = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar la categoría #" + idCat + "?\nEsta acción no se puede deshacer.",
-                "Eliminar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (r!=JOptionPane.YES_OPTION) return;
-
-        String sql = "DELETE FROM categoria WHERE id_categoria = ?";
-        try (Connection cn = DB.get();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            ps.setInt(1, idCat);
-            int n = ps.executeUpdate();
-            if (n>0){
-                JOptionPane.showMessageDialog(this, "Categoría eliminada.");
-                cargarTabla();
-            }else{
-                JOptionPane.showMessageDialog(this, "No se eliminó (¿ID inexistente?)");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo eliminar:\n" + ex.getMessage(),
-                    "BD", JOptionPane.ERROR_MESSAGE);
-        }
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        eliminar dlg = new eliminar(owner, idCat);
+        dlg.setVisible(true);
+        if (dlg.fueEliminado()) cargarTabla();
     }
 
     /*  Conexión*/
@@ -326,7 +313,6 @@ public class panel_categorias extends JPanel {
         }
     }
 
-
     static class StockTotalBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -347,7 +333,6 @@ public class panel_categorias extends JPanel {
             return lbl;
         }
     }
-
 
     static class PillLabel extends JComponent {
         private String text = "";
@@ -382,7 +367,6 @@ public class panel_categorias extends JPanel {
         }
     }
 
-
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -398,7 +382,6 @@ public class panel_categorias extends JPanel {
                           : estilos.botonSm(String.valueOf(value));
         }
     }
-
 
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
