@@ -149,4 +149,19 @@ public class estilos {
         c.setBorder(new CompoundBorder(line, margin));
         c.setBackground(Color.WHITE);
     }
+
+    public static JButton botonSmBlanco(String txt){
+    JButton b = new JButton(txt);
+    b.setFocusPainted(false);
+    b.setFont(new Font("Arial", Font.PLAIN, 14));
+    b.setBackground(Color.WHITE); // fondo blanco
+    b.setForeground(new Color(0x444444)); // texto gris oscuro
+    b.setBorder(new CompoundBorder(
+        new LineBorder(COLOR_BORDE_CREMA, 1, true), // borde crema
+        new EmptyBorder(8, 14, 8, 14)               // padding interno
+    ));
+    b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    return b;
+}
+
 }
