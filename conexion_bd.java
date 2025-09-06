@@ -8,7 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class conexion_bd {
 
     // Datos conexión 
-    private static final String URL = "jdbc:mysql://localhost:3306/libreria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String URL = "jdbc:mysql://localhost:3306/librerial?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
