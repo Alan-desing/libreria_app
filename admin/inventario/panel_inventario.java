@@ -17,34 +17,32 @@ public class panel_inventario extends JPanel {
     private DefaultTableModel model;
 
     private PlaceholderTextField txtBuscar;
-    private JComboBox<Item> cbCategoria;  
+    private JComboBox<Item> cbCategoria;  // id_categoria, nombre
     private JComboBox<String> cbStock;
     private JButton btnFiltrarFila;
 
-    // botones superiores
+    // botones superiores (como la web: Bajo / Mínimos)
     private JButton btnBajo;
     private JButton btnMinimos;
-    private JButton btnExpCSV;
-    private JButton btnImpCSV;
 
-    
+    // guardo los mínimos por fila para pintar el badge de stock
     private final List<Integer> minsFila = new ArrayList<>();
 
     public panel_inventario() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        
+        // ======== Shell ========
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
-        shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
+        shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        
+        // ======== Card ========
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -56,7 +54,7 @@ public class panel_inventario extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        
+        // ======== Header ========
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
 
@@ -70,19 +68,15 @@ public class panel_inventario extends JPanel {
 
         btnBajo    = estilos.botonSm("Bajo stock");
         btnMinimos = estilos.botonSm("Mínimos (lote)");
-        btnExpCSV  = estilos.botonSm("Exportar CSV");
-        btnImpCSV  = estilos.botonSm("Importar CSV");
 
         headRight.add(btnBajo);
         headRight.add(btnMinimos);
-        headRight.add(btnExpCSV);
-        headRight.add(btnImpCSV);
 
         head.add(headRight, BorderLayout.EAST);
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // Filtros
+        // ======== Filtros ========
         txtBuscar = new PlaceholderTextField("Buscar por nombre o ID…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -120,7 +114,7 @@ public class panel_inventario extends JPanel {
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // Tabla
+        // ======== Tabla ========
         String[] cols = {"ID", "Producto", "Categoría", "Stock", "Mínimo", "Ajustar", "Movimientos"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
@@ -145,19 +139,20 @@ public class panel_inventario extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(260);
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(200);
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(120);
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(120);
-        tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
-        tabla.getColumnModel().getColumn(6).setPreferredWidth(110);
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);   // ID
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(260);  // Producto
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(200);  // Categoría
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(120);  // Stock
+        tabla.getColumnModel().getColumn(4).setPreferredWidth(120);  // Mínimo
+        tabla.getColumnModel().getColumn(5).setPreferredWidth(90);   // Ajustar
+        tabla.getColumnModel().getColumn(6).setPreferredWidth(110);  // Movimientos
 
-        // alineación izq
+        // alineación izq por defecto
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
+        // ID con "#"
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -168,14 +163,16 @@ public class panel_inventario extends JPanel {
             }
         });
 
+        // badge para "Stock"
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
-        
-        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); 
-        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); 
+
+        // botones por fila
+        tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // Ajustar
+        tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); // Movimientos
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onAjustar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onVerMovimientos(id), false));
 
-        // Scroll
+        // ======== Scroll ========
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -186,6 +183,7 @@ public class panel_inventario extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
+        // armar card
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
@@ -194,17 +192,38 @@ public class panel_inventario extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
+        // ======== Acciones ========
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
-        btnBajo.addActionListener(e -> JOptionPane.showMessageDialog(this,"Listar productos con stock bajo.","Bajo stock",JOptionPane.INFORMATION_MESSAGE));
-        btnMinimos.addActionListener(e -> JOptionPane.showMessageDialog(this,"Ajuste masivo de mínimos (lote).","Mínimos (lote)",JOptionPane.INFORMATION_MESSAGE));
-        btnExpCSV.addActionListener(e -> JOptionPane.showMessageDialog(this,"Exportar CSV (pendiente).","CSV",JOptionPane.INFORMATION_MESSAGE));
-        btnImpCSV.addActionListener(e -> JOptionPane.showMessageDialog(this,"Importar CSV (pendiente).","CSV",JOptionPane.INFORMATION_MESSAGE));
 
+        btnBajo.addActionListener(e -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            try {
+                bajo dlg = new bajo(owner);        // listado de stock bajo
+                dlg.setVisible(true);
+                if (dlg.huboCambios()) cargarTabla();
+            } catch (Throwable ex) {
+                JOptionPane.showMessageDialog(this, "Pantalla 'Bajo stock' no disponible:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnMinimos.addActionListener(e -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            try {
+                minimos dlg = new minimos(owner);  // mínimos en lote
+                dlg.setVisible(true);
+                if (dlg.huboCambios()) cargarTabla();
+            } catch (Throwable ex) {
+                JOptionPane.showMessageDialog(this, "Pantalla 'Mínimos (lote)' no disponible:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // cargar combos y tabla
         cargarCategorias();
         cargarTabla();
     }
 
+    // ===================== Datos =====================
     private void cargarCategorias() {
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -243,7 +262,6 @@ public class panel_inventario extends JPanel {
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder();
         if (!q.isEmpty()) {
-            
             where.append(where.length()==0 ? " WHERE " : " AND ");
             where.append("(p.nombre LIKE ? OR p.id_producto = ?)");
             params.add("%"+q+"%");
@@ -310,6 +328,10 @@ public class panel_inventario extends JPanel {
                 }
             }
 
+            if (model.getRowCount()==0){
+                model.addRow(new Object[]{"","Sin resultados.","","","","",""});
+            }
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error cargando inventario:\n" + ex.getMessage(),
@@ -317,18 +339,28 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // ===================== Acciones por fila =====================
     private void onAjustar(int idProd){
-        JOptionPane.showMessageDialog(this,
-                "Abrir pantalla de AJUSTE de stock para ID: " + idProd,
-                "Ajustar", JOptionPane.INFORMATION_MESSAGE);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        try {
+            ajustar dlg = new ajustar(owner, idProd);
+            dlg.setVisible(true);
+            if (dlg.fueGuardado()) cargarTabla();
+        } catch (Throwable ex) {
+            JOptionPane.showMessageDialog(this, "No se pudo abrir Ajustar:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
+        }
     }
     private void onVerMovimientos(int idProd){
-        JOptionPane.showMessageDialog(this,
-                "Abrir MOVIMIENTOS para ID: " + idProd,
-                "Movimientos", JOptionPane.INFORMATION_MESSAGE);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        try {
+            movimientos dlg = new movimientos(owner, idProd);
+            dlg.setVisible(true);
+        } catch (Throwable ex) {
+            JOptionPane.showMessageDialog(this, "No se pudo abrir Movimientos:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    // Conexión
+    // ===================== Conexión =====================
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -338,6 +370,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // ===================== UI Helpers =====================
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -473,7 +506,7 @@ public class panel_inventario extends JPanel {
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
                                                      int row, int column) {
-            button.setText(String.valueOf(value)); 
+            button.setText(String.valueOf(value)); // "Ajustar" / "Ver"
             return button;
         }
     }
