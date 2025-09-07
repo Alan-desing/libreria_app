@@ -35,7 +35,6 @@ public class panel_usuarios extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // Card 
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -75,31 +74,26 @@ public class panel_usuarios extends JPanel {
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
 
-        // buscador
         g.gridx = 0; g.weightx = 1.0;
         filaFiltros.add(txtBuscar, g);
 
-        // Rol
         cbRol = new JComboBox<>();
         estilos.estilizarCombo(cbRol);
         cbRol.setPreferredSize(new Dimension(180, 38));
         g.gridx = 1; g.weightx = 0;
         filaFiltros.add(cbRol, g);
 
-        // Estado
         cbEstado = new JComboBox<>();
         estilos.estilizarCombo(cbEstado);
         cbEstado.setPreferredSize(new Dimension(180, 38));
         g.gridx = 2;
         filaFiltros.add(cbEstado, g);
 
-        // botón Filtrar
         btnFiltrarFila = estilos.botonBlanco("FILTRAR");
         btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // Tabla 
         String[] cols = {"ID", "Nombre", "Email", "Rol", "Estado", "Creado", "Editar", "eliminar"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 6 || c == 7; }
@@ -114,7 +108,7 @@ public class panel_usuarios extends JPanel {
         tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 17));
         tabla.getTableHeader().setReorderingAllowed(false);
         JTableHeader th = tabla.getTableHeader();
-        th.setBackground(new Color(0xFF,0xF3,0xD9)); // header crema
+        th.setBackground(new Color(0xFF,0xF3,0xD9));
 
         tabla.setShowVerticalLines(false);
         tabla.setShowHorizontalLines(true);
@@ -124,16 +118,15 @@ public class panel_usuarios extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);   // ID
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(220);  // Nombre
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(260);  // Email
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(160);  // Rol
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(140);  // Estado
-        tabla.getColumnModel().getColumn(5).setPreferredWidth(160);  // Creado
-        tabla.getColumnModel().getColumn(6).setPreferredWidth(90);   // Editar
-        tabla.getColumnModel().getColumn(7).setPreferredWidth(90);   // eliminar
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(220);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(260);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(160);
+        tabla.getColumnModel().getColumn(4).setPreferredWidth(140);
+        tabla.getColumnModel().getColumn(5).setPreferredWidth(160);
+        tabla.getColumnModel().getColumn(6).setPreferredWidth(90);
+        tabla.getColumnModel().getColumn(7).setPreferredWidth(90);
 
-        // alineación izq
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
@@ -153,7 +146,6 @@ public class panel_usuarios extends JPanel {
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
         tabla.getColumnModel().getColumn(7).setCellEditor(new ButtonCellEditor(tabla, id -> onEliminar(id), true));
 
-        // Scroll
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -171,6 +163,14 @@ public class panel_usuarios extends JPanel {
 
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
+
+        // === Integración de diálogos ===
+        btnAgregar.addActionListener(e -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            crear dlg = new crear(owner);
+            dlg.setVisible(true);
+            if (dlg.fueGuardado()) cargarTabla();
+        });
 
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
@@ -293,6 +293,10 @@ public class panel_usuarios extends JPanel {
                 }
             }
 
+            if (model.getRowCount()==0){
+                model.addRow(new Object[]{"","Sin resultados.","","","","","",""});
+            }
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error cargando usuarios:\n" + ex.getMessage(),
@@ -301,36 +305,20 @@ public class panel_usuarios extends JPanel {
     }
 
     private void onEditar(int idUsuario){
-        JOptionPane.showMessageDialog(this,
-                "Abrir pantalla de edición para Usuario #" + idUsuario,
-                "Editar", JOptionPane.INFORMATION_MESSAGE);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        editar dlg = new editar(owner, idUsuario);
+        dlg.setVisible(true);
+        if (dlg.fueActualizado()) cargarTabla();
     }
 
     private void onEliminar(int idUsuario){
-        int r = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar el usuario #" + idUsuario + "?\nEsta acción no se puede deshacer.",
-                "eliminar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (r!=JOptionPane.YES_OPTION) return;
-
-        String sql = "DELETE FROM usuario WHERE id_usuario = ?";
-        try (Connection cn = DB.get();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            ps.setInt(1, idUsuario);
-            int n = ps.executeUpdate();
-            if (n>0){
-                JOptionPane.showMessageDialog(this, "Usuario eliminado.");
-                cargarTabla();
-            }else{
-                JOptionPane.showMessageDialog(this, "No se eliminó (¿ID inexistente?)");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo eliminar:\n" + ex.getMessage(),
-                    "BD", JOptionPane.ERROR_MESSAGE);
-        }
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        eliminar dlg = new eliminar(owner, idUsuario);
+        dlg.setVisible(true);
+        if (dlg.fueEliminado()) cargarTabla();
     }
 
-    // Conexión 
+    // Conexión
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

@@ -1,0 +1,159 @@
+package admin.usuarios;
+
+import includes.estilos;
+
+import javax.swing.*;
+import javax.swing.border.*;
+import java.awt.*;
+import java.sql.*;
+
+public class eliminar extends JDialog {
+
+    private final int idUsuario;
+    private boolean eliminado = false;
+
+    public eliminar(Window owner, int idUsuario) {
+        super(owner, "Eliminar usuario", ModalityType.APPLICATION_MODAL);
+        this.idUsuario = idUsuario;
+
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(560, 360);
+        setLocationRelativeTo(owner);
+        getContentPane().setBackground(estilos.COLOR_FONDO);
+        setLayout(new GridBagLayout());
+
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(new CompoundBorder(
+                new LineBorder(estilos.COLOR_BORDE_SUAVE, 1, true),
+                new EmptyBorder(18,18,18,18)
+        ));
+
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.insets = new Insets(6,6,6,6);
+        gc.anchor = GridBagConstraints.WEST;
+        gc.fill   = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1;
+
+        JLabel title = new JLabel("Confirmar eliminación");
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        gc.gridx=0; gc.gridy=0;
+        card.add(title, gc);
+
+        JTextArea info = new JTextArea();
+        info.setEditable(false);
+        info.setOpaque(false);
+        info.setLineWrap(true);
+        info.setWrapStyleWord(true);
+        info.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        // Datos y validaciones previas
+        String nombre = "—", email = "—", rolNombre = "—";
+        int idRol = 0;
+        int admins = 0, ventas = 0;
+        final int ADMIN_ROLE_ID = 1;
+
+        try (Connection cn = DB.get()){
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "SELECT u.id_usuario, u.nombre, u.email, u.id_rol, r.nombre_rol " +
+                    "FROM usuario u LEFT JOIN rol r ON r.id_rol=u.id_rol WHERE u.id_usuario=?")){
+                ps.setInt(1, idUsuario);
+                try (ResultSet rs = ps.executeQuery()){
+                    if (!rs.next()){
+                        JOptionPane.showMessageDialog(this, "Usuario no encontrado");
+                        dispose();
+                        return;
+                    }
+                    nombre = rs.getString("nombre");
+                    email  = rs.getString("email");
+                    idRol  = rs.getInt("id_rol");
+                    rolNombre = rs.getString("nombre_rol");
+                }
+            }
+            try (PreparedStatement ps = cn.prepareStatement("SELECT COUNT(*) c FROM usuario WHERE id_rol=?")){
+                ps.setInt(1, ADMIN_ROLE_ID);
+                try (ResultSet rs = ps.executeQuery()){
+                    if (rs.next()) admins = rs.getInt(1);
+                }
+            }
+            try (PreparedStatement ps = cn.prepareStatement("SELECT COUNT(*) c FROM venta WHERE id_usuario=?")){
+                ps.setInt(1, idUsuario);
+                try (ResultSet rs = ps.executeQuery()){
+                    if (rs.next()) ventas = rs.getInt(1);
+                }
+            }
+        } catch (Exception ex){
+            JOptionPane.showMessageDialog(this, "Error verificando datos:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
+            dispose();
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Vas a eliminar al usuario: ").append(nombre).append(" (").append(email).append(").\n\n")
+          .append("Rol: ").append(rolNombre==null?"—":rolNombre).append("\n")
+          .append("Administradores activos: ").append(admins).append("\n")
+          .append("Ventas asociadas: ").append(ventas).append("\n\n");
+
+        boolean bloqueado = false;
+        if (idRol==ADMIN_ROLE_ID && admins<=1){
+            sb.append("⚠ No se puede eliminar: es el único administrador.\n");
+            bloqueado = true;
+        }
+        if (ventas>0){
+            sb.append("⚠ No se puede eliminar: el usuario posee ventas registradas. Sugerencia: pasarlo a estado INACTIVO.\n");
+            bloqueado = true;
+        }
+
+        info.setText(sb.toString());
+        gc.gridy=1; gc.weighty=1;
+        card.add(info, gc);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JButton btnVolver   = estilos.botonSm("Volver");
+        JButton btnEliminar = estilos.botonSmDanger("Eliminar");
+        actions.add(btnVolver);
+        if (!bloqueado) actions.add(btnEliminar);
+
+        gc.gridy=2; gc.weighty=0;
+        card.add(actions, gc);
+
+        GridBagConstraints root = new GridBagConstraints();
+        root.insets = new Insets(8,8,8,8);
+        add(card, root);
+
+        btnVolver.addActionListener(e -> dispose());
+        btnEliminar.addActionListener(e -> onEliminar());
+    }
+
+    public boolean fueEliminado(){ return eliminado; }
+
+    private void onEliminar(){
+        int r = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar definitivamente?",
+                "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (r!=JOptionPane.YES_OPTION) return;
+
+        try (Connection cn = DB.get();
+             PreparedStatement ps = cn.prepareStatement("DELETE FROM usuario WHERE id_usuario=?")){
+            ps.setInt(1, idUsuario);
+            int n = ps.executeUpdate();
+            if (n>0){
+                eliminado = true;
+                JOptionPane.showMessageDialog(this, "Usuario eliminado.");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se eliminó (¿ID inexistente?)");
+            }
+        } catch (Exception ex){
+            JOptionPane.showMessageDialog(this, "No se pudo eliminar:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    static class DB {
+        static Connection get() throws Exception {
+            String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
+            String user = "root"; String pass = "";
+            return DriverManager.getConnection(url, user, pass);
+        }
+    }
+}
