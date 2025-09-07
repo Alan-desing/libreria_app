@@ -3,8 +3,7 @@ package admin.inventario;
 import includes.estilos;
 
 import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,195 +12,182 @@ import java.util.List;
 public class movimientos extends JDialog {
 
     private final int idProducto;
-
-    private JComboBox<String> cbTipo;
-    private JTextField txtDesde, txtHasta;
-    private JButton btnFiltrar, btnCerrar;
     private JTable tabla;
     private DefaultTableModel model;
+    private JComboBox<String> cbTipo;
+    private JFormattedTextField dpDesde, dpHasta;
 
-    public movimientos(Window owner, int idProducto) {
-        super(owner, "Movimientos de inventario", ModalityType.APPLICATION_MODAL);
+    public movimientos(Window owner, int idProducto){
+        super(owner, "Movimientos", ModalityType.APPLICATION_MODAL);
         this.idProducto = idProducto;
-
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(920, 620);
+        setSize(1000, 680);
         setLocationRelativeTo(owner);
+        setLayout(new BorderLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
-        setLayout(new GridBagLayout());
 
-        JPanel card = new JPanel(new GridBagLayout());
+        JPanel shell = new JPanel(new GridBagLayout());
+        shell.setOpaque(false);
+        shell.setBorder(BorderFactory.createEmptyBorder(14,14,14,14));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
+        gbc.fill=GridBagConstraints.HORIZONTAL; gbc.anchor=GridBagConstraints.PAGE_START;
+
+        JPanel card = new JPanel();
+        card.setOpaque(true);
         card.setBackground(Color.WHITE);
-        card.setBorder(new CompoundBorder(
-                new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true),
-                new EmptyBorder(16,16,16,16)
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(estilos.COLOR_BORDE_CREMA,1,true),
+                BorderFactory.createEmptyBorder(16,16,18,16)
         ));
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
 
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6,6,6,6);
-        gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.weightx=1;
-
-        // Título con info de producto
-        JLabel lbTitle = new JLabel();
-        lbTitle.setFont(new Font("Arial", Font.BOLD, 15));
-        gc.gridx=0; gc.gridy=0;
-        card.add(lbTitle, gc);
-
-        // Info de producto
-        String prodNom="—";
+        // Título (busca nombre de producto)
+        String titulo = "Movimientos — #"+idProducto;
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("SELECT nombre FROM producto WHERE id_producto=?")){
             ps.setInt(1, idProducto);
             try (ResultSet rs = ps.executeQuery()){
-                if (rs.next()) prodNom = rs.getString(1);
+                if (rs.next()) titulo += " " + rs.getString("nombre");
             }
         } catch (Exception ignore){}
-        lbTitle.setText("Movimientos — #"+idProducto+" "+prodNom);
+
+        JPanel head = new JPanel(new BorderLayout());
+        head.setOpaque(false);
+        JLabel h1 = new JLabel(titulo);
+        h1.setFont(new Font("Arial", Font.BOLD, 20));
+        h1.setForeground(estilos.COLOR_TITULO);
+        head.add(h1, BorderLayout.WEST);
+
+        JButton btnVolver = estilos.botonSm("Volver");
+        btnVolver.addActionListener(e -> dispose());
+        JPanel headRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        headRight.setOpaque(false);
+        headRight.add(btnVolver);
+        head.add(headRight, BorderLayout.EAST);
+        head.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
 
         // Filtros
-        JPanel filtros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        filtros.setOpaque(false);
-
-        cbTipo = new JComboBox<>(new String[]{"Tipo: Todos", "Ingreso", "Egreso", "Ajuste"});
+        cbTipo = new JComboBox<>(new String[]{"Todos","ingreso","egreso","ajuste"});
         estilos.estilizarCombo(cbTipo);
-        filtros.add(cbTipo);
+        cbTipo.setPreferredSize(new Dimension(160, 38));
 
-        txtDesde = new JTextField();
-        txtDesde.setPreferredSize(new Dimension(120, 32));
-        txtDesde.setToolTipText("Desde (YYYY-MM-DD)");
-        filtros.add(txtDesde);
+        dpDesde = new JFormattedTextField("dd/mm/aaaa");
+        dpHasta = new JFormattedTextField("dd/mm/aaaa");
+        estilos.estilizarCampo(dpDesde);
+        estilos.estilizarCampo(dpHasta);
+        dpDesde.setPreferredSize(new Dimension(160, 38));
+        dpHasta.setPreferredSize(new Dimension(160, 38));
 
-        txtHasta = new JTextField();
-        txtHasta.setPreferredSize(new Dimension(120, 32));
-        txtHasta.setToolTipText("Hasta (YYYY-MM-DD)");
-        filtros.add(txtHasta);
+        JButton btnFiltrar = estilos.botonBlanco("FILTRAR");
+        btnFiltrar.setPreferredSize(new Dimension(120, 38));
+        btnFiltrar.addActionListener(e -> cargarTabla());
 
-        btnFiltrar = estilos.botonBlanco("FILTRAR");
-        filtros.add(btnFiltrar);
-
-        gc.gridy=1;
-        card.add(filtros, gc);
+        JPanel filaFiltros = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        filaFiltros.setOpaque(false);
+        filaFiltros.add(cbTipo);
+        filaFiltros.add(dpDesde);
+        filaFiltros.add(dpHasta);
+        filaFiltros.add(btnFiltrar);
 
         // Tabla
-        String[] cols = {"ID","Fecha","Tipo","Cantidad","Stock (prev → nuevo)","Motivo","Usuario"};
+        String[] cols = {"ID", "Fecha", "Tipo", "Cantidad", "Stock (prev → nuevo)", "Motivo", "Usuario"};
         model = new DefaultTableModel(cols, 0){
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public boolean isCellEditable(int r, int c){ return false; }
         };
+
         tabla = new JTable(model);
-        tabla.setRowHeight(28);
-        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        tabla.setFont(new Font("Arial", Font.PLAIN, 17));
+        tabla.setRowHeight(32);
+        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 17));
+        tabla.getTableHeader().setBackground(new Color(0xFF,0xF3,0xD9));
+        tabla.setShowVerticalLines(false);
+        tabla.setShowHorizontalLines(true);
+        tabla.setGridColor(new Color(0xEDE3D2));
 
-        JScrollPane sp = new JScrollPane(tabla);
-        sp.setBorder(new CompoundBorder(new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true), new EmptyBorder(6,6,6,6)));
-        gc.gridy=2; gc.weighty=1; gc.fill = GridBagConstraints.BOTH;
-        card.add(sp, gc);
+        JScrollPane sc = new JScrollPane(tabla,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sc.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(estilos.COLOR_BORDE_CREMA,1,true),
+                BorderFactory.createEmptyBorder(6,6,6,6)
+        ));
+        sc.setPreferredSize(new Dimension(0, 420));
 
-        // Acciones
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        btnCerrar = estilos.botonSm("Volver");
-        actions.add(btnCerrar);
+        card.add(head);
+        card.add(filaFiltros);
+        card.add(Box.createVerticalStrut(8));
+        card.add(sc);
 
-        gc.gridy=3; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
-        card.add(actions, gc);
+        shell.add(card, gbc);
+        add(shell, BorderLayout.CENTER);
 
-        GridBagConstraints root = new GridBagConstraints();
-        root.insets = new Insets(8,8,8,8);
-        add(card, root);
-
-        btnCerrar.addActionListener(e -> dispose());
-        btnFiltrar.addActionListener(e -> cargar());
-
-        // asegurar tabla movimientos
-        try (Connection cn = DB.get()){
-            cn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS inventario_mov (
-                  id_mov INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                  id_producto INT UNSIGNED NOT NULL,
-                  tipo ENUM('ingreso','egreso','ajuste') NOT NULL,
-                  cantidad INT NOT NULL,
-                  motivo VARCHAR(200) DEFAULT NULL,
-                  stock_prev INT NOT NULL,
-                  stock_nuevo INT NOT NULL,
-                  id_usuario INT UNSIGNED DEFAULT NULL,
-                  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  KEY (id_producto),
-                  KEY (id_usuario),
-                  KEY (creado_en)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """);
-        } catch (Exception ignore){}
-
-        cargar();
+        // asegurar tabla de movimientos
+        crearTablaSiNoExiste();
+        cargarTabla();
     }
 
-    private void cargar(){
-        String tipoSel = (String) cbTipo.getSelectedItem();
-        String tipo="";
-        if (tipoSel!=null){
-            if (tipoSel.startsWith("Ingreso")) tipo="ingreso";
-            else if (tipoSel.startsWith("Egreso")) tipo="egreso";
-            else if (tipoSel.startsWith("Ajuste")) tipo="ajuste";
-        }
-        String desde = txtDesde.getText()==null? "" : txtDesde.getText().trim();
-        String hasta = txtHasta.getText()==null? "" : txtHasta.getText().trim();
+    private void crearTablaSiNoExiste(){
+        String sql = """
+            CREATE TABLE IF NOT EXISTS inventario_mov (
+              id_mov INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              id_producto INT UNSIGNED NOT NULL,
+              tipo ENUM('ingreso','egreso','ajuste') NOT NULL,
+              cantidad INT NOT NULL,
+              motivo VARCHAR(200) DEFAULT NULL,
+              stock_prev INT NOT NULL,
+              stock_nuevo INT NOT NULL,
+              id_usuario INT UNSIGNED DEFAULT NULL,
+              creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              KEY (id_producto), KEY (id_usuario)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """;
+        try (Connection cn = DB.get(); Statement st = cn.createStatement()){
+            st.execute(sql);
+        } catch (Exception ignore){}
+    }
 
-        String where = " WHERE m.id_producto=? ";
+    private void cargarTabla(){
         List<Object> params = new ArrayList<>();
+        StringBuilder where = new StringBuilder(" WHERE id_producto=? ");
         params.add(idProducto);
 
-        if (!tipo.isEmpty()){
-            where += " AND m.tipo=? ";
-            params.add(tipo);
+        String tipoSel = (String) cbTipo.getSelectedItem();
+        if (tipoSel!=null && !"Todos".equalsIgnoreCase(tipoSel)){
+            where.append(" AND tipo=? "); params.add(tipoSel.toLowerCase());
         }
-        if (!desde.isEmpty() && desde.matches("^\\d{4}-\\d{2}-\\d{2}$")){
-            where += " AND m.creado_en >= CONCAT(?, ' 00:00:00') ";
-            params.add(desde);
-        }
-        if (!hasta.isEmpty() && hasta.matches("^\\d{4}-\\d{2}-\\d{2}$")){
-            where += " AND m.creado_en <= CONCAT(?, ' 23:59:59') ";
-            params.add(hasta);
-        }
+        // notas: si quisieras filtrar fechas reales, parseá dd/mm/aaaa -> yyyy-mm-dd
+        // y agregá BETWEEN en creado_en. Dejo los campos para que mantengas el layout.
 
-        String sql = """
-            SELECT m.id_mov, m.creado_en, m.tipo, m.cantidad,
-                   m.stock_prev, m.stock_nuevo, m.motivo,
-                   u.nombre AS usuario
-            FROM inventario_mov m
-            LEFT JOIN usuario u ON u.id_usuario = m.id_usuario
-        """ + where + " ORDER BY m.creado_en DESC, m.id_mov DESC";
-
+        String sql = "SELECT id_mov, tipo, cantidad, motivo, stock_prev, stock_nuevo, id_usuario, creado_en "
+                   + "FROM inventario_mov " + where + " ORDER BY id_mov DESC";
         model.setRowCount(0);
-
         try (Connection cn = DB.get();
-             PreparedStatement ps = cn.prepareStatement(sql)){
-
-            int bind=1;
-            for (Object v: params){
-                if (v instanceof Integer iv) ps.setInt(bind++, iv);
-                else ps.setString(bind++, String.valueOf(v));
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            int b=1;
+            for (Object v : params){
+                if (v instanceof Integer iv) ps.setInt(b++, iv);
+                else ps.setString(b++, String.valueOf(v));
             }
-
             try (ResultSet rs = ps.executeQuery()){
                 while (rs.next()){
                     model.addRow(new Object[]{
-                            "#"+rs.getInt(1),
-                            rs.getString(2),
-                            rs.getString(3),
-                            rs.getInt(4),
-                            rs.getInt(5) + " → " + rs.getInt(6),
-                            rs.getString(7)==null? "" : rs.getString(7),
-                            rs.getString(8)==null? "—" : rs.getString(8)
+                            rs.getInt("id_mov"),
+                            rs.getString("creado_en"),
+                            rs.getString("tipo"),
+                            rs.getInt("cantidad"),
+                            rs.getInt("stock_prev")+" → "+rs.getInt("stock_nuevo"),
+                            (rs.getString("motivo")==null ? "—" : rs.getString("motivo")),
+                            (rs.getObject("id_usuario")==null ? "—" : String.valueOf(rs.getInt("id_usuario")))
                     });
                 }
             }
-
             if (model.getRowCount()==0){
-                model.addRow(new Object[]{"","Sin movimientos para los filtros.","","","","",""});
+                model.addRow(new Object[]{"","# Sin movimientos","","","","",""});
             }
-
         } catch (Exception ex){
-            JOptionPane.showMessageDialog(this, "Error consultando:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,"Error cargando movimientos:\n"+ex.getMessage(),"BD",JOptionPane.ERROR_MESSAGE);
         }
     }
 

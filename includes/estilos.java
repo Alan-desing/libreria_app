@@ -7,19 +7,19 @@ import javax.swing.text.JTextComponent;
 
 public class estilos {
 
-    // colores
+    // ===== Colores base
     public static final Color COLOR_FONDO       = Color.decode("#FFF4D8");
     public static final Color COLOR_BARRA       = Color.decode("#ECBA73");
     public static final Color COLOR_TITULO      = Color.decode("#7B6C6C");
     public static final Color COLOR_BOTON       = Color.decode("#798D48");
     public static final Color COLOR_BOTON_HOVER = Color.decode("#7C8A65");
 
-    // Bordes y radios
+    // Bordes / radios
     public static final Color COLOR_BORDE_CREMA = new Color(0xE6,0xD9,0xBF);
-    public static final Color COLOR_BORDE_SUAVE = new Color(0,0,0,35); // borde gris muy suave
+    public static final Color COLOR_BORDE_SUAVE = new Color(0,0,0,35);
     public static final int   RADIO             = 12;
 
-    //stock
+    // ===== Paleta badges (igual que la web)
     public static final Color BADGE_OK_BG     = new Color(0xE6,0xF6,0xEA);
     public static final Color BADGE_OK_BORDER = new Color(0xC6,0xE9,0xD0);
     public static final Color BADGE_OK_FG     = new Color(0x22,0x6B,0x3D);
@@ -32,13 +32,13 @@ public class estilos {
     public static final Color BADGE_WARN_BORDER = new Color(0xF1,0xD5,0xA3);
     public static final Color BADGE_WARN_FG     = new Color(0x9A,0x68,0x1A);
 
-    // Fuentes
+    // ===== Fuentes
     public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 40);
     public static final Font FUENTE_TEXTO  = new Font("SansSerif", Font.PLAIN, 20);
     public static final Font FUENTE_INPUT  = new Font("SansSerif", Font.PLAIN, 16);
     public static final Font FUENTE_BOTON  = new Font("SansSerif", Font.BOLD, 14);
 
-    
+    // ===== Look&Feel
     public static void initLookAndFeel() {
         try {
             Class<?> lafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
@@ -48,7 +48,7 @@ public class estilos {
         UIManager.put("Panel.background", COLOR_FONDO);
     }
 
-    // Botón grande 
+    // ===== Botones
     public static JButton botonRedondeado(String texto) {
         JButton btn = new JButton(texto) {
             @Override protected void paintComponent(Graphics g) {
@@ -72,7 +72,7 @@ public class estilos {
         return btn;
     }
 
-    //  Botón  (FILTRAR)
+    // Botón blanco (p/ FILTRAR)
     public static JButton botonBlanco(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -91,7 +91,7 @@ public class estilos {
         return b;
     }
 
-    // Botón  (Editar)
+    // Botón pequeño “primario”
     public static JButton botonSm(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -111,7 +111,7 @@ public class estilos {
         return b;
     }
 
-    // Botón  (Eliminar)
+    // Botón pequeño “peligro”
     public static JButton botonSmDanger(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -131,7 +131,22 @@ public class estilos {
         return b;
     }
 
-    
+    // Botón pequeño “blanco”
+    public static JButton botonSmBlanco(String txt){
+        JButton b = new JButton(txt);
+        b.setFocusPainted(false);
+        b.setFont(new Font("Arial", Font.PLAIN, 14));
+        b.setBackground(Color.WHITE);
+        b.setForeground(new Color(0x444444));
+        b.setBorder(new CompoundBorder(
+            new LineBorder(COLOR_BORDE_CREMA, 1, true),
+            new EmptyBorder(8, 14, 8, 14)
+        ));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return b;
+    }
+
+    // ===== Combos / Inputs
     public static <T> void estilizarCombo(JComboBox<T> combo){
         combo.setFont(FUENTE_INPUT);
         combo.setBackground(Color.WHITE);
@@ -141,7 +156,6 @@ public class estilos {
         ));
     }
 
-    //  redondeo del texto
     public static void estilizarCampo(JTextComponent c) {
         c.setFont(FUENTE_INPUT);
         Border line   = new LineBorder(new Color(0xD9,0xD9,0xD9), 1, true);
@@ -150,18 +164,57 @@ public class estilos {
         c.setBackground(Color.WHITE);
     }
 
-    public static JButton botonSmBlanco(String txt){
-    JButton b = new JButton(txt);
-    b.setFocusPainted(false);
-    b.setFont(new Font("Arial", Font.PLAIN, 14));
-    b.setBackground(Color.WHITE); // fondo blanco
-    b.setForeground(new Color(0x444444)); // texto gris oscuro
-    b.setBorder(new CompoundBorder(
-        new LineBorder(COLOR_BORDE_CREMA, 1, true), // borde crema
-        new EmptyBorder(8, 14, 8, 14)               // padding interno
-    ));
-    b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    return b;
-}
+    // ===== BADGES (pill)
+    /** Componente interno para dibujar un pill redondeado */
+    public static class Badge extends JComponent {
+        private String text;
+        private Color bg, border, fg;
 
+        public Badge(String text, Color bg, Color border, Color fg){
+            this.text = text; this.bg = bg; this.border = border; this.fg = fg;
+            setOpaque(false);
+        }
+
+        @Override public Dimension getPreferredSize() { return new Dimension(52, 24); }
+
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth(), h = getHeight(), arc = h;
+            int pillH = Math.min(20, h-6);
+            int y = (h - pillH)/2;
+
+            g2.setColor(bg);
+            g2.fillRoundRect(4, y, w-8, pillH, arc, arc);
+            g2.setColor(border);
+            g2.drawRoundRect(4, y, w-8, pillH, arc, arc);
+
+            g2.setColor(fg);
+            g2.setFont(getFont().deriveFont(Font.BOLD, 12f));
+            FontMetrics fm = g2.getFontMetrics();
+            int tw = fm.stringWidth(text==null?"":text);
+            int tx = Math.max(8, (w - tw)/2);
+            int ty = h/2 + fm.getAscent()/2 - 3;
+            g2.drawString(text==null?"":text, tx, ty);
+            g2.dispose();
+        }
+    }
+
+    /** Factory genérica */
+    public static JComponent pill(String txt, Color bg, Color border, Color fg){
+        Badge b = new Badge(String.valueOf(txt), bg, border, fg);
+        b.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        return b;
+    }
+
+    // === Helpers específicos (para usar directo en renderers) ===
+    public static JComponent badgeVerde(String txt){   // stock OK
+        return pill(txt, BADGE_OK_BG,   BADGE_OK_BORDER,   BADGE_OK_FG);
+    }
+    public static JComponent badgeAmarilla(String txt){ // stock <= mínimo
+        return pill(txt, BADGE_WARN_BG, BADGE_WARN_BORDER, BADGE_WARN_FG);
+    }
+    public static JComponent badgeRoja(String txt){     // sin stock / alerta
+        return pill(txt, BADGE_NO_BG,   BADGE_NO_BORDER,   BADGE_NO_FG);
+    }
 }
