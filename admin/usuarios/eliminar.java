@@ -17,7 +17,7 @@ public class eliminar extends JDialog {
         this.idUsuario = idUsuario;
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(560, 360);
+        setSize(560, 400);
         setLocationRelativeTo(owner);
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
@@ -47,13 +47,14 @@ public class eliminar extends JDialog {
         info.setWrapStyleWord(true);
         info.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // Datos y validaciones previas
+        // ===== Datos y validaciones previas =====
         String nombre = "—", email = "—", rolNombre = "—";
         int idRol = 0;
-        int admins = 0, ventas = 0;
+        int admins = 0, ventas = 0, audits = 0;
         final int ADMIN_ROLE_ID = 1;
 
         try (Connection cn = DB.get()){
+            // usuario
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT u.id_usuario, u.nombre, u.email, u.id_rol, r.nombre_rol " +
                     "FROM usuario u LEFT JOIN rol r ON r.id_rol=u.id_rol WHERE u.id_usuario=?")){
@@ -70,17 +71,33 @@ public class eliminar extends JDialog {
                     rolNombre = rs.getString("nombre_rol");
                 }
             }
-            try (PreparedStatement ps = cn.prepareStatement("SELECT COUNT(*) c FROM usuario WHERE id_rol=?")){
+            // cantidad de administradores
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "SELECT COUNT(*) c FROM usuario WHERE id_rol=?")){
                 ps.setInt(1, ADMIN_ROLE_ID);
                 try (ResultSet rs = ps.executeQuery()){
                     if (rs.next()) admins = rs.getInt(1);
                 }
             }
-            try (PreparedStatement ps = cn.prepareStatement("SELECT COUNT(*) c FROM venta WHERE id_usuario=?")){
+            // ventas asociadas
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "SELECT COUNT(*) c FROM venta WHERE id_usuario=?")){
                 ps.setInt(1, idUsuario);
                 try (ResultSet rs = ps.executeQuery()){
                     if (rs.next()) ventas = rs.getInt(1);
                 }
+            }
+            // auditoría asociada (puede no existir la tabla en algunos esquemas)
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "SELECT COUNT(*) c FROM auditoria WHERE id_usuario=?")){
+                ps.setInt(1, idUsuario);
+                try (ResultSet rs = ps.executeQuery()){
+                    if (rs.next()) audits = rs.getInt(1);
+                }
+            } catch (SQLException exAud) {
+                // Si la tabla no existe en esta versión del esquema, no bloqueamos por auditoría.
+                // (Ej.: en el dump de 'librerial' no aparece, pero sí en el de 'libreria') 
+                audits = 0;
             }
         } catch (Exception ex){
             JOptionPane.showMessageDialog(this, "Error verificando datos:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
@@ -92,7 +109,8 @@ public class eliminar extends JDialog {
         sb.append("Vas a eliminar al usuario: ").append(nombre).append(" (").append(email).append(").\n\n")
           .append("Rol: ").append(rolNombre==null?"—":rolNombre).append("\n")
           .append("Administradores activos: ").append(admins).append("\n")
-          .append("Ventas asociadas: ").append(ventas).append("\n\n");
+          .append("Ventas asociadas: ").append(ventas).append("\n")
+          .append("Registros de auditoría: ").append(audits).append("\n\n");
 
         boolean bloqueado = false;
         if (idRol==ADMIN_ROLE_ID && admins<=1){
@@ -101,6 +119,10 @@ public class eliminar extends JDialog {
         }
         if (ventas>0){
             sb.append("⚠ No se puede eliminar: el usuario posee ventas registradas. Sugerencia: pasarlo a estado INACTIVO.\n");
+            bloqueado = true;
+        }
+        if (audits>0){
+            sb.append("⚠ No se puede eliminar: el usuario posee registros de auditoría. Sugerencia: pasarlo a estado INACTIVO.\n");
             bloqueado = true;
         }
 
@@ -149,6 +171,7 @@ public class eliminar extends JDialog {
         }
     }
 
+    // Conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
