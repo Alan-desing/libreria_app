@@ -45,7 +45,7 @@ public class panel_inicio extends JPanel {
         content.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
         content.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Envolvemos en scroll
+        // scroll
         JScrollPane scroll = new JScrollPane(
                 content,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -62,7 +62,7 @@ public class panel_inicio extends JPanel {
         scroll.getViewport().setBackground(crema);
         scroll.setBackground(crema);
 
-        /*  KPIs  */
+        
         content.add(crearFilaKPIs());
 
         /*  Filtro  */
