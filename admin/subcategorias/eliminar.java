@@ -11,9 +11,24 @@ import java.sql.*;
 
 public class eliminar extends JDialog {
 
+    // Lógica: ID de la subcategoría a eliminar
     private final int idSub;
+
+    // Lógica: bandera para informar al panel si se eliminó
     private boolean eliminado = false;
 
+    // Visual: labels con datos de la subcategoría
+    private JLabel lblNombre = new JLabel("-");
+    private JLabel lblProductos = new JLabel("-");
+
+    // Visual: botones inferiores
+    private JButton btnVolver, btnEliminar;
+
+    // Lógica: valores leídos para evaluar si se puede eliminar
+    private int cantProductos = 0;
+    private String nombre = "";
+
+    // Visual + Lógica: constructor (arma UI, centra y evalúa)
     public eliminar(Window owner, int idSubcategoria){
         super(owner, "Eliminar subcategoría", ModalityType.APPLICATION_MODAL);
         this.idSub = idSubcategoria;
@@ -24,11 +39,7 @@ public class eliminar extends JDialog {
         cargarYEvaluar();
     }
 
-    private JLabel lblNombre = new JLabel("-");
-    private JLabel lblProductos = new JLabel("-");
-
-    private JButton btnVolver, btnEliminar;
-
+    // Visual: card (título, info y acciones)
     private void buildUI(){
         getContentPane().setLayout(new GridBagLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
@@ -73,13 +84,12 @@ public class eliminar extends JDialog {
         gbc.fill=GridBagConstraints.HORIZONTAL; gbc.weightx=1;
         getContentPane().add(card, gbc);
 
+        // Lógica: eventos
         btnVolver.addActionListener(e -> dispose());
         btnEliminar.addActionListener(e -> onEliminar());
     }
 
-    private int cantProductos = 0;
-    private String nombre = "";
-
+    // Lógica/BD: consulta nombre y cantidad de productos; deshabilita si no se puede
     private void cargarYEvaluar(){
         try (Connection cn = DB.get()){
             try (PreparedStatement ps = cn.prepareStatement(
@@ -95,9 +105,11 @@ public class eliminar extends JDialog {
                     }
                 }
             }
+            // Visual: pintar datos
             lblNombre.setText("• " + (nombre==null?("-"):nombre));
             lblProductos.setText(String.valueOf(cantProductos));
 
+            // Lógica: si tiene productos asociados, no se puede eliminar
             if (cantProductos > 0){
                 btnEliminar.setEnabled(false);
                 btnEliminar.setToolTipText("No se puede eliminar: la subcategoría tiene productos asociados.");
@@ -108,6 +120,7 @@ public class eliminar extends JDialog {
         }
     }
 
+    // Lógica/BD: confirma y elimina (si no hay productos asociados)
     private void onEliminar(){
         if (cantProductos > 0){
             JOptionPane.showMessageDialog(this, "No se puede eliminar: la subcategoría tiene productos asociados.", "Validación", JOptionPane.WARNING_MESSAGE);
@@ -132,8 +145,10 @@ public class eliminar extends JDialog {
         }
     }
 
+    // Lógica: permite al panel saber si se eliminó
     public boolean fueEliminado(){ return eliminado; }
 
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -141,6 +156,8 @@ public class eliminar extends JDialog {
             return DriverManager.getConnection(url, user, pass);
         }
     }
+
+    // Lógica: item simple para combos (si lo necesitás luego)
     static class Item {
         final int id; final String label;
         Item(int id, String label){ this.id=id; this.label=label; }

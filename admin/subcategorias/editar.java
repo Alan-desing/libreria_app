@@ -11,12 +11,17 @@ import java.sql.*;
 
 public class editar extends JDialog {
 
+    // Lógica: ID de la subcategoría que vamos a editar
     private final int idSub;
+
+    // Visual: campos del formulario (categoría + nombre)
     private JComboBox<Item> cbCategoria;
     private JTextField txtNombre;
 
+    // Lógica: bandera para informar al panel si se guardó
     private boolean guardado = false;
 
+    // Visual + Lógica: constructor (arma UI, centra y carga datos)
     public editar(Window owner, int idSubcategoria){
         super(owner, "Editar subcategoría", ModalityType.APPLICATION_MODAL);
         this.idSub = idSubcategoria;
@@ -27,6 +32,7 @@ public class editar extends JDialog {
         cargarDatos();
     }
 
+    // Visual: card con título, formulario y acciones inferiores
     private void buildUI(){
         getContentPane().setLayout(new GridBagLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
@@ -48,24 +54,25 @@ public class editar extends JDialog {
         GridBagConstraints g = new GridBagConstraints();
         g.insets=new Insets(6,2,6,2); g.fill=GridBagConstraints.HORIZONTAL;
 
+        // Visual: combo de categoría
         g.gridx=0; g.gridy=0; g.weightx=0;
         form.add(new JLabel("Categoría"), g);
-
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(260, 36));
         g.gridx=1; g.weightx=1;
         form.add(cbCategoria, g);
 
+        // Visual: campo nombre
         g.gridx=0; g.gridy=1; g.weightx=0;
         form.add(new JLabel("Nombre"), g);
-
         txtNombre = new JTextField();
         estilos.estilizarCampo(txtNombre);
         txtNombre.setPreferredSize(new Dimension(260, 36));
         g.gridx=1; g.weightx=1;
         form.add(txtNombre, g);
 
+        // Visual: acciones inferiores
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         actions.setOpaque(false);
         JButton btnCancel = estilos.botonSmBlanco("Cancelar");
@@ -84,10 +91,12 @@ public class editar extends JDialog {
         gbc.fill=GridBagConstraints.HORIZONTAL; gbc.weightx=1;
         getContentPane().add(card, gbc);
 
+        // Lógica: eventos
         btnCancel.addActionListener(e -> dispose());
         btnSave.addActionListener(e -> onSave());
     }
 
+    // Lógica/BD: carga combo de categorías y datos actuales de la subcategoría
     private void cargarDatos(){
         cbCategoria.removeAllItems();
         try (Connection cn = DB.get()){
@@ -105,7 +114,7 @@ public class editar extends JDialog {
                         String nombre = rs.getString("nombre");
                         txtNombre.setText(nombre);
 
-                        // seleccionar cat
+                        // Visual: seleccionar en el combo la categoría asociada
                         ComboBoxModel<Item> model = cbCategoria.getModel();
                         for (int i=0;i<model.getSize();i++){
                             if (model.getElementAt(i).id == idCat){
@@ -125,6 +134,7 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica/BD: validación, control de duplicados y actualización
     private void onSave(){
         Item cat = (Item) cbCategoria.getSelectedItem();
         String nombre = txtNombre.getText()==null?"":txtNombre.getText().trim();
@@ -140,7 +150,7 @@ public class editar extends JDialog {
         }
 
         try (Connection cn = DB.get()){
-            // duplicado excluyéndome
+            // Lógica/BD: chequear duplicado (misma categoría y nombre, excluyendo el propio id)
             try (PreparedStatement chk = cn.prepareStatement(
                     "SELECT 1 FROM subcategoria WHERE id_categoria=? AND nombre=? AND id_subcategoria<>? LIMIT 1")){
                 chk.setInt(1, cat.id);
@@ -153,6 +163,7 @@ public class editar extends JDialog {
                     }
                 }
             }
+            // Lógica/BD: update
             try (PreparedStatement up = cn.prepareStatement(
                     "UPDATE subcategoria SET id_categoria=?, nombre=? WHERE id_subcategoria=?")){
                 up.setInt(1, cat.id);
@@ -169,14 +180,17 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica: permite al panel saber si guardó bien
     public boolean fueGuardado(){ return guardado; }
 
-    /* ====== helpers ====== */
+    // Lógica: item simple para el combo (id + etiqueta visible)
     static class Item {
         final int id; final String label;
         Item(int id, String label){ this.id=id; this.label=label; }
         @Override public String toString(){ return label; }
     }
+
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

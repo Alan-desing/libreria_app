@@ -13,10 +13,14 @@ import java.sql.*;
 
 public class crear extends JDialog {
 
+    // Visual: campos del formulario (categoría + nombre)
     private JComboBox<Item> cbCategoria;
     private JTextField txtNombre;
+
+    // Lógica: bandera para informar al panel si se creó
     private boolean guardado = false;
 
+    // Visual + Lógica: constructor que arma la pantalla, centra y enfoca
     public crear(Window owner){
         super(owner, "Nueva subcategoría", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -26,6 +30,7 @@ public class crear extends JDialog {
         addWindowListener(new WindowAdapter() { @Override public void windowOpened(WindowEvent e) { txtNombre.requestFocusInWindow(); } });
     }
 
+    // Visual: arma la card (título, formulario, acciones)
     private void buildUI(){
         getContentPane().setLayout(new GridBagLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
@@ -54,25 +59,26 @@ public class crear extends JDialog {
         g.fill = GridBagConstraints.HORIZONTAL;
         g.gridx=0; g.gridy=0; g.weightx=0;
 
+        // Visual: combo de categoría
         JLabel lc = new JLabel("Categoría");
         form.add(lc, g);
-
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(260, 36));
         g.gridx=1; g.weightx=1;
         form.add(cbCategoria, g);
 
+        // Visual: campo de nombre
         JLabel ln = new JLabel("Nombre");
         g.gridx=0; g.gridy=1; g.weightx=0;
         form.add(ln, g);
-
         txtNombre = new JTextField();
         estilos.estilizarCampo(txtNombre);
         txtNombre.setPreferredSize(new Dimension(260, 36));
         g.gridx=1; g.weightx=1;
         form.add(txtNombre, g);
 
+        // Visual: acciones inferiores
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         actions.setOpaque(false);
         JButton btnCancel = estilos.botonSmBlanco("Cancelar");
@@ -80,6 +86,7 @@ public class crear extends JDialog {
         actions.add(btnCancel);
         actions.add(btnCrear);
 
+        // Visual: ensamblado
         card.add(wrTitle);
         card.add(Box.createVerticalStrut(12));
         card.add(form);
@@ -92,12 +99,15 @@ public class crear extends JDialog {
         gbc.weightx=1;
         getContentPane().add(card, gbc);
 
+        // Lógica: eventos
         btnCancel.addActionListener(e -> dispose());
         btnCrear.addActionListener(e -> onCrear());
 
+        // Lógica/BD: llenar categorías
         cargarCategorias();
     }
 
+    // Lógica/BD: carga el combo de categorías
     private void cargarCategorias(){
         cbCategoria.removeAllItems();
         try (Connection cn = DB.get();
@@ -112,6 +122,7 @@ public class crear extends JDialog {
         }
     }
 
+    // Lógica/BD: valida, evita duplicado (id_categoria,nombre) e inserta
     private void onCrear(){
         Item cat = (Item) cbCategoria.getSelectedItem();
         String nombre = txtNombre.getText()==null?"":txtNombre.getText().trim();
@@ -128,7 +139,7 @@ public class crear extends JDialog {
         }
 
         try (Connection cn = DB.get()){
-            // duplicado por (id_categoria, nombre)
+            // Lógica/BD: check de duplicado por (id_categoria, nombre)
             try (PreparedStatement chk = cn.prepareStatement(
                     "SELECT 1 FROM subcategoria WHERE id_categoria=? AND nombre=? LIMIT 1")){
                 chk.setInt(1, cat.id);
@@ -140,6 +151,7 @@ public class crear extends JDialog {
                     }
                 }
             }
+            // Lógica/BD: insert
             try (PreparedStatement ins = cn.prepareStatement(
                     "INSERT INTO subcategoria(id_categoria, nombre) VALUES(?,?)")){
                 ins.setInt(1, cat.id);
@@ -154,14 +166,17 @@ public class crear extends JDialog {
         }
     }
 
+    // Lógica: permite al panel saber si se creó correctamente
     public boolean fueGuardado(){ return guardado; }
 
-    /* ==== helpers ===== */
+    // Lógica: item simple para el combo (id + etiqueta visible)
     static class Item {
         final int id; final String label;
         Item(int id, String label){ this.id=id; this.label=label; }
         @Override public String toString(){ return label; }
     }
+
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
