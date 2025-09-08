@@ -9,9 +9,13 @@ import java.sql.*;
 
 public class eliminar extends JDialog {
 
+    // Lógica: ID del usuario a eliminar
     private final int idUsuario;
+
+    // Lógica: bandera para informar al panel si se eliminó
     private boolean eliminado = false;
 
+    // Visual + Lógica: constructor (arma UI, trae datos y valida restricciones)
     public eliminar(Window owner, int idUsuario) {
         super(owner, "Eliminar usuario", ModalityType.APPLICATION_MODAL);
         this.idUsuario = idUsuario;
@@ -22,6 +26,7 @@ public class eliminar extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card blanca con borde suave
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -35,11 +40,13 @@ public class eliminar extends JDialog {
         gc.fill   = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
 
+        // Visual: título del cuadro
         JLabel title = new JLabel("Confirmar eliminación");
         title.setFont(new Font("Arial", Font.BOLD, 16));
         gc.gridx=0; gc.gridy=0;
         card.add(title, gc);
 
+        // Visual: área informativa (datos/validaciones)
         JTextArea info = new JTextArea();
         info.setEditable(false);
         info.setOpaque(false);
@@ -47,14 +54,14 @@ public class eliminar extends JDialog {
         info.setWrapStyleWord(true);
         info.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // ===== Datos y validaciones previas =====
+        // Lógica/BD: datos y validaciones previas a la eliminación
         String nombre = "—", email = "—", rolNombre = "—";
         int idRol = 0;
         int admins = 0, ventas = 0, audits = 0;
         final int ADMIN_ROLE_ID = 1;
 
         try (Connection cn = DB.get()){
-            // usuario
+            // Lógica/BD: obtener datos del usuario
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT u.id_usuario, u.nombre, u.email, u.id_rol, r.nombre_rol " +
                     "FROM usuario u LEFT JOIN rol r ON r.id_rol=u.id_rol WHERE u.id_usuario=?")){
@@ -71,7 +78,7 @@ public class eliminar extends JDialog {
                     rolNombre = rs.getString("nombre_rol");
                 }
             }
-            // cantidad de administradores
+            // Lógica/BD: contar administradores actuales
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT COUNT(*) c FROM usuario WHERE id_rol=?")){
                 ps.setInt(1, ADMIN_ROLE_ID);
@@ -79,7 +86,7 @@ public class eliminar extends JDialog {
                     if (rs.next()) admins = rs.getInt(1);
                 }
             }
-            // ventas asociadas
+            // Lógica/BD: contar ventas asociadas
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT COUNT(*) c FROM venta WHERE id_usuario=?")){
                 ps.setInt(1, idUsuario);
@@ -87,7 +94,7 @@ public class eliminar extends JDialog {
                     if (rs.next()) ventas = rs.getInt(1);
                 }
             }
-            // auditoría asociada (puede no existir la tabla en algunos esquemas)
+            // Lógica/BD: contar auditoría asociada (si existe)
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT COUNT(*) c FROM auditoria WHERE id_usuario=?")){
                 ps.setInt(1, idUsuario);
@@ -95,8 +102,7 @@ public class eliminar extends JDialog {
                     if (rs.next()) audits = rs.getInt(1);
                 }
             } catch (SQLException exAud) {
-                // Si la tabla no existe en esta versión del esquema, no bloqueamos por auditoría.
-                // (Ej.: en el dump de 'librerial' no aparece, pero sí en el de 'libreria') 
+                // Lógica: si no existe la tabla de auditoría, no bloqueamos por esto
                 audits = 0;
             }
         } catch (Exception ex){
@@ -105,6 +111,7 @@ public class eliminar extends JDialog {
             return;
         }
 
+        // Visual: composición del mensaje (datos y bloqueos)
         StringBuilder sb = new StringBuilder();
         sb.append("Vas a eliminar al usuario: ").append(nombre).append(" (").append(email).append(").\n\n")
           .append("Rol: ").append(rolNombre==null?"—":rolNombre).append("\n")
@@ -130,6 +137,7 @@ public class eliminar extends JDialog {
         gc.gridy=1; gc.weighty=1;
         card.add(info, gc);
 
+        // Visual: acciones inferiores (volver + eliminar si procede)
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnVolver   = estilos.botonSm("Volver");
         JButton btnEliminar = estilos.botonSmDanger("Eliminar");
@@ -143,12 +151,15 @@ public class eliminar extends JDialog {
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: eventos
         btnVolver.addActionListener(e -> dispose());
         btnEliminar.addActionListener(e -> onEliminar());
     }
 
+    // Lógica: permite al panel saber si se eliminó
     public boolean fueEliminado(){ return eliminado; }
 
+    // Lógica/BD: confirma y elimina el usuario (si no está bloqueado)
     private void onEliminar(){
         int r = JOptionPane.showConfirmDialog(this,
                 "¿Eliminar definitivamente?",
@@ -171,7 +182,7 @@ public class eliminar extends JDialog {
         }
     }
 
-    // Conexión local
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

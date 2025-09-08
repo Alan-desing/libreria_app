@@ -10,12 +10,15 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class crear extends JDialog {
 
+    // Visual: campos del formulario (nombre, email, rol, estado, contraseñas)
     private JTextField txtNombre, txtEmail;
     private JComboBox<Item> cbRol, cbEstado;
     private JPasswordField txtPass, txtPass2;
 
+    // Lógica: bandera para informar al panel si se creó
     private boolean guardado = false;
 
+    // Visual + Lógica: constructor que arma la pantalla y carga combos
     public crear(Window owner) {
         super(owner, "Nuevo usuario", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -24,6 +27,7 @@ public class crear extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card blanca con borde suave
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -37,7 +41,7 @@ public class crear extends JDialog {
         gc.fill   = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
 
-        // Nombre
+        // Visual: campo Nombre
         JLabel lbNom = new JLabel("Nombre");
         lbNom.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridx=0; gc.gridy=0; gc.gridwidth=2;
@@ -52,7 +56,7 @@ public class crear extends JDialog {
         gc.gridy=1;
         card.add(txtNombre, gc);
 
-        // Email
+        // Visual: campo Email
         JLabel lbEmail = new JLabel("Email");
         lbEmail.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=2;
@@ -67,7 +71,7 @@ public class crear extends JDialog {
         gc.gridy=3;
         card.add(txtEmail, gc);
 
-        // Fila Rol/Estado
+        // Visual: fila con Rol y Estado
         JPanel fila = new JPanel(new GridBagLayout());
         fila.setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
@@ -99,7 +103,7 @@ public class crear extends JDialog {
         gc.gridy=4; gc.gridx=0; gc.gridwidth=2;
         card.add(fila, gc);
 
-        // Contraseñas
+        // Visual: contraseñas
         JLabel lbPass = new JLabel("Contraseña");
         lbPass.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=5;
@@ -120,7 +124,7 @@ public class crear extends JDialog {
         card.add(lbPass2, gc);
 
         txtPass2 = new JPasswordField();
-        txtPass2.setFont(new Font("Arial", Font.PLAIN, 14));
+        txtPass2.setFont(new Font( "Arial", Font.PLAIN, 14));
         txtPass2.setBorder(new CompoundBorder(
                 new LineBorder(new Color(0xD9,0xD9,0xD9),1,true),
                 new EmptyBorder(8,12,8,12)
@@ -128,7 +132,7 @@ public class crear extends JDialog {
         gc.gridy=8;
         card.add(txtPass2, gc);
 
-        // Acciones
+        // Visual: acciones inferiores
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnCancel = estilos.botonSm("Cancelar");
         JButton btnCrear  = estilos.botonBlanco("CREAR");
@@ -142,15 +146,18 @@ public class crear extends JDialog {
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: eventos
         btnCancel.addActionListener(e -> dispose());
         btnCrear.addActionListener(e -> onGuardar());
 
-        // Cargar combos
+        // Lógica/BD: cargar combos (rol y estado)
         cargarCombos();
     }
 
+    // Lógica: informa al panel si guardó correctamente
     public boolean fueGuardado(){ return guardado; }
 
+    // Lógica/BD: carga combos de Rol y Estado desde BD
     private void cargarCombos(){
         cbRol.removeAllItems();
         cbEstado.removeAllItems();
@@ -172,6 +179,7 @@ public class crear extends JDialog {
         }
     }
 
+    // Lógica/BD: validación, unicidad de email, hashing y alta del usuario
     private void onGuardar(){
         String nombre = (txtNombre.getText()==null?"":txtNombre.getText().trim());
         String email  = (txtEmail.getText()==null?"":txtEmail.getText().trim());
@@ -181,7 +189,7 @@ public class crear extends JDialog {
         Item rol = (Item) cbRol.getSelectedItem();
         Item est = (Item) cbEstado.getSelectedItem();
 
-        // Validaciones (idénticas a la web)
+        // Lógica: validaciones (alineadas con la web)
         if (nombre.isEmpty()){
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.");
             return;
@@ -208,7 +216,7 @@ public class crear extends JDialog {
         }
 
         try (Connection cn = DB.get()){
-            // unicidad email
+            // Lógica/BD: unicidad de email
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT 1 FROM usuario WHERE email=? LIMIT 1")){
                 ps.setString(1, email);
@@ -220,12 +228,13 @@ public class crear extends JDialog {
                 }
             }
 
-            // Hash BCrypt (compat. PHP $2y$) sin regex -> evita "Illegal group reference"
+            // Lógica: hash BCrypt (compatibilizar prefijo $2y$)
             String hash = BCrypt.hashpw(pass, BCrypt.gensalt(10));
             if (hash.startsWith("$2a$") || hash.startsWith("$2b$")) {
                 hash = "$2y$" + hash.substring(4);
             }
 
+            // Lógica/BD: alta del usuario
             try (PreparedStatement ps = cn.prepareStatement(
                     "INSERT INTO usuario(nombre,email,contrasena,id_rol,id_estado_usuario,creado_en,actualizado_en) " +
                     "VALUES (?,?,?,?,?,NOW(),NOW())")){
@@ -246,18 +255,20 @@ public class crear extends JDialog {
         }
     }
 
+    // Lógica: validador básico de email
     private static boolean isEmail(String s){
         if (s==null) return false;
         return Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$").matcher(s).find();
     }
 
+    // Lógica: item simple para combos (id + etiqueta)
     static class Item{
         final int id; final String label;
         Item(int id, String label){ this.id=id; this.label=label; }
         @Override public String toString(){ return label; }
     }
 
-    // Conexión local (sin conexion_bd)
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

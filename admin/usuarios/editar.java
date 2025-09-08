@@ -10,14 +10,18 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class editar extends JDialog {
 
+    // Lógica: ID del usuario a editar
     private final int idUsuario;
 
+    // Visual: campos del formulario (nombre, email, rol, estado, contraseñas opcionales)
     private JTextField txtNombre, txtEmail;
     private JComboBox<Item> cbRol, cbEstado;
     private JPasswordField txtPass, txtPass2;
 
+    // Lógica: bandera para informar al panel si se actualizó
     private boolean actualizado = false;
 
+    // Visual + Lógica: constructor (arma UI, carga combos y datos)
     public editar(Window owner, int idUsuario) {
         super(owner, "Editar usuario", ModalityType.APPLICATION_MODAL);
         this.idUsuario = idUsuario;
@@ -28,6 +32,7 @@ public class editar extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card blanca con borde suave
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -41,6 +46,7 @@ public class editar extends JDialog {
         gc.fill   = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
 
+        // Visual: campo Nombre
         JLabel lbNom = new JLabel("Nombre");
         lbNom.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridx=0; gc.gridy=0; gc.gridwidth=2;
@@ -55,6 +61,7 @@ public class editar extends JDialog {
         gc.gridy=1;
         card.add(txtNombre, gc);
 
+        // Visual: campo Email
         JLabel lbEmail = new JLabel("Email");
         lbEmail.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=2;
@@ -69,6 +76,7 @@ public class editar extends JDialog {
         gc.gridy=3;
         card.add(txtEmail, gc);
 
+        // Visual: fila Rol/Estado
         JPanel fila = new JPanel(new GridBagLayout());
         fila.setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
@@ -100,7 +108,7 @@ public class editar extends JDialog {
         gc.gridy=4; gc.gridx=0; gc.gridwidth=2;
         card.add(fila, gc);
 
-        // Cambio de contraseña (opcional)
+        // Visual: sección de cambio de contraseña (opcional)
         JLabel sec = new JLabel("Cambiar contraseña (opcional)");
         sec.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=5;
@@ -134,6 +142,7 @@ public class editar extends JDialog {
         gc.gridy=9;
         card.add(txtPass2, gc);
 
+        // Visual: acciones inferiores
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnCancel = estilos.botonSm("Cancelar");
         JButton btnGuardar = estilos.botonBlanco("GUARDAR");
@@ -147,15 +156,19 @@ public class editar extends JDialog {
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: eventos
         btnCancel.addActionListener(e -> dispose());
         btnGuardar.addActionListener(e -> onGuardar());
 
+        // Lógica/BD: combos + datos actuales del usuario
         cargarCombos();
         cargarUsuario();
     }
 
+    // Lógica: informa al panel si actualizó correctamente
     public boolean fueActualizado(){ return actualizado; }
 
+    // Lógica/BD: carga combos de rol y estado
     private void cargarCombos(){
         cbRol.removeAllItems();
         cbEstado.removeAllItems();
@@ -173,6 +186,7 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica/BD: trae datos del usuario a editar y selecciona sus combos
     private void cargarUsuario(){
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(
@@ -198,6 +212,7 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica: helper para seleccionar un ítem de combo por ID
     private static void selectById(JComboBox<Item> combo, int id){
         for (int i=0;i<combo.getItemCount();i++){
             Item it = combo.getItemAt(i);
@@ -205,6 +220,7 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica/BD: valida, evita duplicados de email, actualiza datos y contraseña opcional
     private void onGuardar(){
         String nombre = (txtNombre.getText()==null?"":txtNombre.getText().trim());
         String email  = (txtEmail.getText()==null?"":txtEmail.getText().trim());
@@ -214,6 +230,7 @@ public class editar extends JDialog {
         Item rol = (Item) cbRol.getSelectedItem();
         Item est = (Item) cbEstado.getSelectedItem();
 
+        // Lógica: validaciones
         if (nombre.isEmpty()){
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.");
             return;
@@ -242,7 +259,7 @@ public class editar extends JDialog {
         }
 
         try (Connection cn = DB.get()){
-            // email duplicado en otro usuario
+            // Lógica/BD: validar email duplicado en otro usuario
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT 1 FROM usuario WHERE email=? AND id_usuario<>? LIMIT 1")){
                 ps.setString(1, email);
@@ -255,6 +272,7 @@ public class editar extends JDialog {
                 }
             }
 
+            // Lógica/BD: transacción para actualizar datos y (opcional) contraseña
             cn.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = cn.prepareStatement(
@@ -296,17 +314,20 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica: validador básico de email
     private static boolean isEmail(String s){
         if (s==null) return false;
         return Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$").matcher(s).find();
     }
 
+    // Lógica: item simple para combos (id + etiqueta)
     static class Item{
         final int id; final String label;
         Item(int id, String label){ this.id=id; this.label=label; }
         @Override public String toString(){ return label; }
     }
 
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
