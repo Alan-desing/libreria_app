@@ -7,19 +7,27 @@ import javax.swing.text.JTextComponent;
 
 public class estilos {
 
-    // ===== Colores base
+    // Colores base de la interfaz
+    // Cambia COLOR_FONDO para el color de fondo general de la app
+    // Cambia COLOR_BARRA para la franja del encabezado del panel
+    // Cambia COLOR_TITULO para el texto de títulos principales
+    // Cambia COLOR_BOTON y COLOR_BOTON_HOVER para botones primarios
     public static final Color COLOR_FONDO       = Color.decode("#FFF4D8");
     public static final Color COLOR_BARRA       = Color.decode("#ECBA73");
     public static final Color COLOR_TITULO      = Color.decode("#7B6C6C");
     public static final Color COLOR_BOTON       = Color.decode("#798D48");
     public static final Color COLOR_BOTON_HOVER = Color.decode("#7C8A65");
 
-    // Bordes / radios
+    // Bordes / radios de redondeo
+    // Cambia RADIO para ajustar curvatura de botones y tarjetas
     public static final Color COLOR_BORDE_CREMA = new Color(0xE6,0xD9,0xBF);
     public static final Color COLOR_BORDE_SUAVE = new Color(0,0,0,35);
     public static final int   RADIO             = 12;
 
-    // ===== Paleta badges (igual que la web)
+    // Paleta para badges tipo “pill”
+    // BADGE_OK_*    se usa cuando el stock está por encima del mínimo
+    // BADGE_NO_*    se usa para sin stock / alerta
+    // BADGE_WARN_*  se usa cuando stock <= mínimo
     public static final Color BADGE_OK_BG     = new Color(0xE6,0xF6,0xEA);
     public static final Color BADGE_OK_BORDER = new Color(0xC6,0xE9,0xD0);
     public static final Color BADGE_OK_FG     = new Color(0x22,0x6B,0x3D);
@@ -32,13 +40,15 @@ public class estilos {
     public static final Color BADGE_WARN_BORDER = new Color(0xF1,0xD5,0xA3);
     public static final Color BADGE_WARN_FG     = new Color(0x9A,0x68,0x1A);
 
-    // ===== Fuentes
+    // Fuentes principales
+    // Cambia tamaños desde las deriveFont() en cada pantalla si necesitás ajustar puntualmente
     public static final Font FUENTE_TITULO = new Font("SansSerif", Font.BOLD, 40);
     public static final Font FUENTE_TEXTO  = new Font("SansSerif", Font.PLAIN, 20);
     public static final Font FUENTE_INPUT  = new Font("SansSerif", Font.PLAIN, 16);
     public static final Font FUENTE_BOTON  = new Font("SansSerif", Font.BOLD, 14);
 
-    // ===== Look&Feel
+    // Look&Feel
+    // Si no tenés FlatLaf en el classpath, el try/catch evita romper la app
     public static void initLookAndFeel() {
         try {
             Class<?> lafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
@@ -48,7 +58,7 @@ public class estilos {
         UIManager.put("Panel.background", COLOR_FONDO);
     }
 
-    // ===== Botones
+    // Visual: botón grande, redondeado (se usa en login)
     public static JButton botonRedondeado(String texto) {
         JButton btn = new JButton(texto) {
             @Override protected void paintComponent(Graphics g) {
@@ -72,7 +82,7 @@ public class estilos {
         return btn;
     }
 
-    // Botón blanco (p/ FILTRAR)
+    // Visual: botón blanco (para acciones secundarias como FILTRAR)
     public static JButton botonBlanco(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -91,7 +101,7 @@ public class estilos {
         return b;
     }
 
-    // Botón pequeño “primario”
+    // Visual: botón pequeño primario (verde)
     public static JButton botonSm(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -111,7 +121,7 @@ public class estilos {
         return b;
     }
 
-    // Botón pequeño “peligro”
+    // Visual: botón pequeño rojo
     public static JButton botonSmDanger(String texto){
         JButton b = new JButton(texto);
         b.setFocusPainted(false);
@@ -131,7 +141,7 @@ public class estilos {
         return b;
     }
 
-    // Botón pequeño “blanco”
+    // Visual: botón pequeño blanco (variante neutra)
     public static JButton botonSmBlanco(String txt){
         JButton b = new JButton(txt);
         b.setFocusPainted(false);
@@ -146,7 +156,7 @@ public class estilos {
         return b;
     }
 
-    // ===== Combos / Inputs
+    // Visual: estilos de combos
     public static <T> void estilizarCombo(JComboBox<T> combo){
         combo.setFont(FUENTE_INPUT);
         combo.setBackground(Color.WHITE);
@@ -156,6 +166,7 @@ public class estilos {
         ));
     }
 
+    // Visual: estilos de inputs
     public static void estilizarCampo(JTextComponent c) {
         c.setFont(FUENTE_INPUT);
         Border line   = new LineBorder(new Color(0xD9,0xD9,0xD9), 1, true);
@@ -164,8 +175,7 @@ public class estilos {
         c.setBackground(Color.WHITE);
     }
 
-    // ===== BADGES (pill)
-    /** Componente interno para dibujar un pill redondeado */
+    // Visual: componente para dibujar badges tipo “pill”
     public static class Badge extends JComponent {
         private String text;
         private Color bg, border, fg;
@@ -200,21 +210,21 @@ public class estilos {
         }
     }
 
-    /** Factory genérica */
+    // Visual: factory para crear badges
     public static JComponent pill(String txt, Color bg, Color border, Color fg){
         Badge b = new Badge(String.valueOf(txt), bg, border, fg);
         b.setFont(new Font("SansSerif", Font.PLAIN, 12));
         return b;
     }
 
-    // === Helpers específicos (para usar directo en renderers) ===
-    public static JComponent badgeVerde(String txt){   // stock OK
+    // Visual: helpers listos para usar en celdas de tablas
+    public static JComponent badgeVerde(String txt){
         return pill(txt, BADGE_OK_BG,   BADGE_OK_BORDER,   BADGE_OK_FG);
     }
-    public static JComponent badgeAmarilla(String txt){ // stock <= mínimo
+    public static JComponent badgeAmarilla(String txt){
         return pill(txt, BADGE_WARN_BG, BADGE_WARN_BORDER, BADGE_WARN_FG);
     }
-    public static JComponent badgeRoja(String txt){     // sin stock / alerta
+    public static JComponent badgeRoja(String txt){
         return pill(txt, BADGE_NO_BG,   BADGE_NO_BORDER,   BADGE_NO_FG);
     }
 }
