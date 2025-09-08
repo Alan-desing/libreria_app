@@ -13,23 +13,29 @@ import java.util.function.Consumer;
 
 public class panel_productos extends JPanel {
 
+    // Visual: tabla visible y su modelo de datos
     private JTable tabla;
     private DefaultTableModel model;
 
+    // Visual: filtros superiores (buscador, categoría, estado de stock y botón)
     private PlaceholderTextField txtBuscar;
     private JComboBox<Item> cbCategoria;
     private JComboBox<String> cbStock;
     private JButton btnFiltrarFila;
+
+    // Visual: acción para crear (falta implementar diálogo crear)
     private JButton btnAgregar;
 
-    // mínimos por fila 
+    // Lógica: guarda el "mínimo" por cada fila para pintar el badge de stock
     private final List<Integer> minsFila = new ArrayList<>();
 
+    // Visual + Lógica: constructor de toda la pantalla 
     public panel_productos() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-            JPanel shell = new JPanel(new GridBagLayout());
+        // Visual: contenedor externo (márgenes y centrado de la card)
+        JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14)); // alineación con el sidebar
         GridBagConstraints gbc = new GridBagConstraints();
@@ -38,7 +44,7 @@ public class panel_productos extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        //tarjeta
+        // Visual: card blanca con borde crema 
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -50,7 +56,7 @@ public class panel_productos extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        //  Head de tarjeta productos
+        // Visual: header con título a la izquierda y “Añadir Producto” a la derecha
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Productos");
@@ -65,7 +71,7 @@ public class panel_productos extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // Filtros
+        // Visual: fila de filtros (buscador + categoría + stock + botón FILTRAR)
         txtBuscar = new PlaceholderTextField("Buscar…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -78,11 +84,11 @@ public class panel_productos extends JPanel {
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
 
-        // busqueda
+        // Visual: buscador (por nombre)
         g.gridx = 0; g.weightx = 1.0;
         filaFiltros.add(txtBuscar, g);
 
-        // categoría
+        // Visual: combo de categorías (se carga al final del constructor)
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(220, 38));
@@ -90,7 +96,7 @@ public class panel_productos extends JPanel {
         g.gridx = 1; g.weightx = 0;
         filaFiltros.add(cbCategoria, g);
 
-        // stock
+        // Visual: combo de estado de stock (todos / bajo / sin)
         String[] stocks = {"Stock: Todos", "Bajo (≤ mínimo)", "Sin stock"};
         cbStock = new JComboBox<>(stocks);
         estilos.estilizarCombo(cbStock);
@@ -99,21 +105,22 @@ public class panel_productos extends JPanel {
         g.gridx = 2;
         filaFiltros.add(cbStock, g);
 
-        // botón Filtrar
+        // Visual: botón FILTRAR
         btnFiltrarFila = estilos.botonBlanco("FILTRAR");
         btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        //  Tabla 
+        // Visual: definición de columnas de la tabla
         String[] cols = {"ID", "Nombre", "Categoría", "Stock", "Precio", "editar", "eliminar"};
         model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
+            @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; } // Lógica: solo acciones
             @Override public Class<?> getColumnClass(int columnIndex) {
                 return (columnIndex == 5 || columnIndex == 6) ? JButton.class : Object.class;
             }
         };
 
+        // Visual: estilos de la tabla (fuentes, colores, selección)
         tabla = new JTable(model);
         tabla.setFont(new Font("Arial", Font.PLAIN, 17));
         tabla.setRowHeight(32);
@@ -130,6 +137,7 @@ public class panel_productos extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
+        // Visual: anchos 
         tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
         tabla.getColumnModel().getColumn(1).setPreferredWidth(260);
         tabla.getColumnModel().getColumn(2).setPreferredWidth(200);
@@ -138,12 +146,12 @@ public class panel_productos extends JPanel {
         tabla.getColumnModel().getColumn(5).setPreferredWidth(90);
         tabla.getColumnModel().getColumn(6).setPreferredWidth(90);
 
-        // alineación izq
+        // Visual: alineación por defecto a la izquierda
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        
+        // Visual: renderer del ID para mostrarlo con “#”
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -154,16 +162,16 @@ public class panel_productos extends JPanel {
             }
         });
 
-        // Stock 
+        // Visual: badge de stock (verde/amarillo/rojo) según comparación con el mínimo
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
 
-        // Botones 
+        // Visual + Lógica: botones por fila (Editar / Eliminar)
         tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // editar
         tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(true));  // eliminar
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onEditar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onEliminar(id), true));
 
-        // Scroll 
+        // Visual: scroll 
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -174,24 +182,26 @@ public class panel_productos extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420)); // scroll
 
-    
+        // Visual: ensamblado final
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
         card.add(sc);
 
+        // Visual: agregamos la card al shell y el shell al panel
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        //  Eventos 
+        // Lógica: eventos de filtros
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla()); // Enter
 
+        // Lógica/BD: carga inicial de combos y datos
         cargarCategorias();
         cargarTabla();
     }
 
-
+    // Lógica/BD: carga el combo de categorías desde la tabla categoria
     private void cargarCategorias() {
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -209,18 +219,19 @@ public class panel_productos extends JPanel {
         }
     }
 
-    
+    // Lógica/BD: arma la consulta con filtros aplicados y llena la tabla
     private void cargarTabla() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
         Item cat = (Item) cbCategoria.getSelectedItem();
         int idCat = (cat == null) ? 0 : cat.id();
         String stockSel = (String) cbStock.getSelectedItem();
-        String stockFlag = "";
+        String stockFlag = ""; // "", "bajo", "sin"
         if (stockSel != null) {
             if (stockSel.startsWith("Bajo")) stockFlag = "bajo";
             else if (stockSel.startsWith("Sin"))  stockFlag = "sin";
         }
 
+        // BD: FROM + JOINs para traer subcategoría/categoría e inventario
         String baseFrom = """
                 FROM producto p
                 LEFT JOIN subcategoria sc ON sc.id_subcategoria = p.id_subcategoria
@@ -228,6 +239,7 @@ public class panel_productos extends JPanel {
                 LEFT JOIN inventario i    ON i.id_producto      = p.id_producto
                 """;
 
+        // Lógica: WHERE dinámico (texto + categoría)
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder();
         if (!q.isEmpty()) {
@@ -241,6 +253,7 @@ public class panel_productos extends JPanel {
             params.add(idCat);
         }
 
+        // Lógica: usamos HAVING para filtrar por stock total en el SELECT agregado
         String having = "";
         if ("bajo".equals(stockFlag)) {
             having = " HAVING COALESCE(SUM(i.stock_actual),0) <= COALESCE(MIN(i.stock_minimo),0)";
@@ -248,6 +261,7 @@ public class panel_productos extends JPanel {
             having = " HAVING COALESCE(SUM(i.stock_actual),0) = 0";
         }
 
+        // BD: SELECT final (agrupamos por producto + precio)
         String sql = """
                 SELECT
                     p.id_producto,
@@ -262,18 +276,21 @@ public class panel_productos extends JPanel {
                  ORDER BY p.nombre ASC
                 """;
 
+        // Visual: vaciamos la tabla y limpiamos el cache de mínimos antes de cargar
         model.setRowCount(0);
         minsFila.clear();
 
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
+            // Lógica/BD: bind de parámetros seguro
             for (int i = 0; i < params.size(); i++) {
                 Object v = params.get(i);
                 if (v instanceof Integer iv) ps.setInt(i+1, iv);
                 else ps.setString(i+1, v.toString());
             }
 
+            // Lógica + Visual: recorremos el ResultSet y volcamos al modelo
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int id    = rs.getInt("id_producto");
@@ -283,8 +300,10 @@ public class panel_productos extends JPanel {
                     int min   = rs.getInt("stock_min");
                     double precio = rs.getDouble("precio_venta");
 
+                    // Lógica: guardamos el mínimo para que el renderer pinte bien el badge
                     minsFila.add(min);
 
+                    // Visual: precio formateado con separador local
                     String precioTxt = "$ " + String.format("%,.2f", precio)
                             .replace(',', 'X').replace('.', ',').replace('X','.');
 
@@ -307,12 +326,14 @@ public class panel_productos extends JPanel {
         }
     }
 
+    // Lógica: acción de “Editar” por fila (provisorio)
     private void onEditar(int idProducto){
         JOptionPane.showMessageDialog(this,
                 "Abrir pantalla de edición para ID: " + idProducto,
                 "Editar", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    // Lógica/BD: acción de “Eliminar” por fila (provisorio, inline)
     private void onEliminar(int idProducto){
         int r = JOptionPane.showConfirmDialog(this,
                 "¿Eliminar el producto #" + idProducto + "?\nEsta acción no se puede deshacer.",
@@ -337,7 +358,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    
+    // Lógica/BD: helper de conexión local
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -347,7 +368,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    
+    // Visual: campo de texto con placeholder (texto guía al estar vacío)
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -372,6 +393,7 @@ public class panel_productos extends JPanel {
         }
     }
 
+    // Lógica: item simple para combo de categorías (id + nombre)
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
@@ -379,7 +401,7 @@ public class panel_productos extends JPanel {
         public String toString(){ return nombre; }
     }
 
-    
+    // Visual: renderer de la columna "Stock" (pinta pill verde/amarillo/rojo)
     class StockBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -402,7 +424,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-
+    // Visual: componente pill redondeado usado por el renderer de stock
     static class PillLabel extends JComponent {
         private String text = "";
         private Color bg = Color.LIGHT_GRAY, border = Color.GRAY, fg = Color.BLACK;
@@ -436,7 +458,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-
+    // Visual: renderer de botón por celda 
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -453,7 +475,7 @@ public class panel_productos extends JPanel {
         }
     }
 
-    //  Botón editor
+    // Lógica: editor del botón por celda → llama al callback con el id del producto
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
         private final JButton button;
