@@ -360,7 +360,7 @@ public class panel_usuarios extends JPanel {
         }
     }
 
-    // Visual: campo de texto con placeholder (texto guía al estar vacío)
+    // Visual: campo de texto con placeholder 
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
