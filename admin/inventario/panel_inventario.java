@@ -13,26 +13,29 @@ import java.util.function.Consumer;
 
 public class panel_inventario extends JPanel {
 
+    // Visual: tabla visible y su modelo de datos
     private JTable tabla;
     private DefaultTableModel model;
 
+    // Visual: filtros superiores (buscador, categoría, estado de stock y botón)
     private PlaceholderTextField txtBuscar;
-    private JComboBox<Item> cbCategoria;  // id_categoria, nombre
+    private JComboBox<Item> cbCategoria;  // guarda id_categoria + nombre
     private JComboBox<String> cbStock;
     private JButton btnFiltrarFila;
 
-    // botones superiores (como la web: Bajo / Mínimos)
+    // Visual: botones rápidos (como en la web) → Bajo stock / Mínimos
     private JButton btnBajo;
     private JButton btnMinimos;
 
-    // guardo los mínimos por fila para pintar el badge de stock
+    // Lógica: guardamos el "mínimo" por cada fila para pintar el badge de stock
     private final List<Integer> minsFila = new ArrayList<>();
 
+    // Visual + Lógica: constructor que arma toda la pantalla y engancha eventos
     public panel_inventario() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // ======== Shell ========
+        // Visual: contenedor externo (márgenes y centrado de la card)
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
@@ -42,7 +45,7 @@ public class panel_inventario extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // ======== Card ========
+        // Visual: card blanca con borde crema (toda la vista vive adentro)
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -54,7 +57,7 @@ public class panel_inventario extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ======== Header ========
+        // Visual: header con título a la izquierda y acciones a la derecha
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
 
@@ -66,8 +69,8 @@ public class panel_inventario extends JPanel {
         JPanel headRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         headRight.setOpaque(false);
 
-        btnBajo    = estilos.botonSm("Bajo stock");
-        btnMinimos = estilos.botonSm("Mínimos (lote)");
+        btnBajo    = estilos.botonSm("Bajo stock");     // Visual: botón (abre listado de stock bajo)
+        btnMinimos = estilos.botonSm("Mínimos (lote)"); // Visual: botón (abre edición masiva de mínimos)
 
         headRight.add(btnBajo);
         headRight.add(btnMinimos);
@@ -76,7 +79,7 @@ public class panel_inventario extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // ======== Filtros ========
+        // Visual: fila de filtros (buscador + combos + botón FILTRAR)
         txtBuscar = new PlaceholderTextField("Buscar por nombre o ID…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -89,11 +92,11 @@ public class panel_inventario extends JPanel {
         GridBagConstraints g = new GridBagConstraints();
         g.gridy = 0; g.insets = new Insets(6, 0, 6, 8); g.fill = GridBagConstraints.HORIZONTAL;
 
-        // buscador
+        // Visual: buscador (texto o ID exacto)
         g.gridx = 0; g.weightx = 1.0;
         filaFiltros.add(txtBuscar, g);
 
-        // categorías
+        // Visual: combo de categorías (se carga desde BD al final del constructor)
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(220, 38));
@@ -101,35 +104,36 @@ public class panel_inventario extends JPanel {
         g.gridx = 1; g.weightx = 0;
         filaFiltros.add(cbCategoria, g);
 
-        // stock
+        // Visual: combo de estado de stock (todos / bajo / sin stock)
         cbStock = new JComboBox<>(new String[]{"Stock: Todos", "Bajo (≤ mínimo)", "Sin stock"});
         estilos.estilizarCombo(cbStock);
         cbStock.setPreferredSize(new Dimension(200, 38));
         g.gridx = 2;
         filaFiltros.add(cbStock, g);
 
-        // botón Filtrar
+        // Visual: botón FILTRAR (aplica lo seleccionado)
         btnFiltrarFila = estilos.botonBlanco("FILTRAR");
         btnFiltrarFila.setPreferredSize(new Dimension(120, 38));
         g.gridx = 3;
         filaFiltros.add(btnFiltrarFila, g);
 
-        // ======== Tabla ========
+        // Visual: definición de columnas de la tabla
         String[] cols = {"ID", "Producto", "Categoría", "Stock", "Mínimo", "Ajustar", "Movimientos"};
         model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; }
-            @Override public Class<?> getColumnClass(int columnIndex) {
-                return (columnIndex == 5 || columnIndex == 6) ? JButton.class : Object.class;
+            @Override public boolean isCellEditable(int r, int c) { return c == 5 || c == 6; } // Lógica: solo botones editables
+            @Override public Class<?> getColumnClass(int ci) {
+                return (ci == 5 || ci == 6) ? JButton.class : Object.class;
             }
         };
 
+        // Visual: estilos de la tabla (fuentes, colores, selección)
         tabla = new JTable(model);
         tabla.setFont(new Font("Arial", Font.PLAIN, 17));
         tabla.setRowHeight(32);
         tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 17));
         tabla.getTableHeader().setReorderingAllowed(false);
         JTableHeader th = tabla.getTableHeader();
-        th.setBackground(new Color(0xFF,0xF3,0xD9)); // header crema
+        th.setBackground(new Color(0xFF,0xF3,0xD9)); // crema
 
         tabla.setShowVerticalLines(false);
         tabla.setShowHorizontalLines(true);
@@ -139,6 +143,7 @@ public class panel_inventario extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
+        // Visual: anchos sugeridos (mejor legibilidad)
         tabla.getColumnModel().getColumn(0).setPreferredWidth(80);   // ID
         tabla.getColumnModel().getColumn(1).setPreferredWidth(260);  // Producto
         tabla.getColumnModel().getColumn(2).setPreferredWidth(200);  // Categoría
@@ -147,12 +152,12 @@ public class panel_inventario extends JPanel {
         tabla.getColumnModel().getColumn(5).setPreferredWidth(90);   // Ajustar
         tabla.getColumnModel().getColumn(6).setPreferredWidth(110);  // Movimientos
 
-        // alineación izq por defecto
+        // Visual: alineación por defecto a la izquierda
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // ID con "#"
+        // Visual: renderer del ID para mostrarlo con “#”
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -163,16 +168,16 @@ public class panel_inventario extends JPanel {
             }
         });
 
-        // badge para "Stock"
+        // Visual: badge de stock (verde/amarillo/rojo) según comparación con el mínimo
         tabla.getColumnModel().getColumn(3).setCellRenderer(new StockBadgeRenderer());
 
-        // botones por fila
+        // Visual + Lógica: botones por fila (renderers + editores)
         tabla.getColumnModel().getColumn(5).setCellRenderer(new ButtonCellRenderer(false)); // Ajustar
         tabla.getColumnModel().getColumn(6).setCellRenderer(new ButtonCellRenderer(false)); // Movimientos
         tabla.getColumnModel().getColumn(5).setCellEditor(new ButtonCellEditor(tabla, id -> onAjustar(id), false));
         tabla.getColumnModel().getColumn(6).setCellEditor(new ButtonCellEditor(tabla, id -> onVerMovimientos(id), false));
 
-        // ======== Scroll ========
+        // Visual: scroll con borde crema
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -183,47 +188,50 @@ public class panel_inventario extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
-        // armar card
+        // Visual: ensamblado final de la card
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
         card.add(sc);
 
+        // Visual: agregamos la card al shell y el shell al panel
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // ======== Acciones ========
+        // Lógica: eventos de filtros
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
 
+        // Lógica: botón que abre la pantalla de “Bajo stock”
         btnBajo.addActionListener(e -> {
             Window owner = SwingUtilities.getWindowAncestor(this);
             try {
-                bajo dlg = new bajo(owner);        // listado de stock bajo
+                bajo dlg = new bajo(owner);
                 dlg.setVisible(true);
-                if (dlg.huboCambios()) cargarTabla();
+                if (dlg.huboCambios()) cargarTabla(); // si hubo cambios, refrescamos
             } catch (Throwable ex) {
                 JOptionPane.showMessageDialog(this, "Pantalla 'Bajo stock' no disponible:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
             }
         });
 
+        // Lógica: botón que abre la pantalla de “Mínimos (lote)”
         btnMinimos.addActionListener(e -> {
             Window owner = SwingUtilities.getWindowAncestor(this);
             try {
-                minimos dlg = new minimos(owner);  // mínimos en lote
+                minimos dlg = new minimos(owner);
                 dlg.setVisible(true);
-                if (dlg.huboCambios()) cargarTabla();
+                if (dlg.huboCambios()) cargarTabla(); // si hubo cambios, refrescamos
             } catch (Throwable ex) {
                 JOptionPane.showMessageDialog(this, "Pantalla 'Mínimos (lote)' no disponible:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // cargar combos y tabla
+        // Lógica: carga inicial de combos y datos
         cargarCategorias();
         cargarTabla();
     }
 
-    // ===================== Datos =====================
+    // Lógica/BD: carga el combo de categorías desde la tabla categoria
     private void cargarCategorias() {
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -241,6 +249,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // Lógica/BD: arma la consulta con filtros aplicados y llena la tabla
     private void cargarTabla() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
         Item cat = (Item) cbCategoria.getSelectedItem();
@@ -252,6 +261,7 @@ public class panel_inventario extends JPanel {
             else if (stockSel.startsWith("Sin"))  stockFlag = "sin";
         }
 
+        // BD: FROM + JOINs para traer subcategoría/categoría e inventario
         String baseFrom = """
                 FROM producto p
                 LEFT JOIN subcategoria sc ON sc.id_subcategoria = p.id_subcategoria
@@ -259,6 +269,7 @@ public class panel_inventario extends JPanel {
                 LEFT JOIN inventario i    ON i.id_producto      = p.id_producto
                 """;
 
+        // Lógica: WHERE dinámico (texto/ID y categoría)
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder();
         if (!q.isEmpty()) {
@@ -266,7 +277,7 @@ public class panel_inventario extends JPanel {
             where.append("(p.nombre LIKE ? OR p.id_producto = ?)");
             params.add("%"+q+"%");
             try { params.add(Integer.parseInt(q)); }
-            catch (Exception e) { params.add(0); }
+            catch (Exception e) { params.add(0); } // ojo: si q no es número, forzamos 0 para no romper
         }
         if (idCat > 0) {
             where.append(where.length()==0 ? " WHERE " : " AND ");
@@ -274,13 +285,17 @@ public class panel_inventario extends JPanel {
             params.add(idCat);
         }
 
+        // Lógica: usamos HAVING para filtrar por stock calculado del SELECT
         String having = "";
         if ("bajo".equals(stockFlag)) {
             having = " HAVING COALESCE(i.stock_actual,0) <= COALESCE(i.stock_minimo,0)";
         } else if ("sin".equals(stockFlag)) {
             having = " HAVING COALESCE(i.stock_actual,0) = 0";
         }
+        // Nota: si en algún server MySQL el HAVING no filtra como esperamos,
+        // se puede pasar esa condición a un WHERE con subconsulta (pendiente si aparece ese caso).
 
+        // BD: SELECT final (agrupamos para permitir el HAVING)
         String sql = """
                 SELECT
                     p.id_producto,
@@ -294,18 +309,21 @@ public class panel_inventario extends JPanel {
                  ORDER BY p.nombre ASC
                 """;
 
+        // Visual: vaciamos la tabla y limpiamos el cache de mínimos antes de cargar
         model.setRowCount(0);
         minsFila.clear();
 
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
+            // Lógica/BD: bind de parámetros seguro (evita SQL injection y errores de tipo)
             int bind = 1;
             for (Object v : params) {
                 if (v instanceof Integer iv) ps.setInt(bind++, iv);
                 else ps.setString(bind++, String.valueOf(v));
             }
 
+            // Lógica + Visual: recorremos el ResultSet y volcamos al modelo
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int id       = rs.getInt("id_producto");
@@ -314,6 +332,7 @@ public class panel_inventario extends JPanel {
                     int stock    = rs.getInt("stock_actual");
                     int minimo   = rs.getInt("stock_minimo");
 
+                    // Lógica: guardamos el mínimo para que el renderer pinte bien el badge
                     minsFila.add(minimo);
 
                     model.addRow(new Object[]{
@@ -328,6 +347,7 @@ public class panel_inventario extends JPanel {
                 }
             }
 
+            // Visual: si no hay resultados mostramos una fila informativa
             if (model.getRowCount()==0){
                 model.addRow(new Object[]{"","Sin resultados.","","","","",""});
             }
@@ -339,17 +359,19 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===================== Acciones por fila =====================
+    // Lógica: abre el diálogo de ajuste para el producto seleccionado
     private void onAjustar(int idProd){
         Window owner = SwingUtilities.getWindowAncestor(this);
         try {
             ajustar dlg = new ajustar(owner, idProd);
             dlg.setVisible(true);
-            if (dlg.fueGuardado()) cargarTabla();
+            if (dlg.fueGuardado()) cargarTabla(); // si guardó, refrescamos
         } catch (Throwable ex) {
             JOptionPane.showMessageDialog(this, "No se pudo abrir Ajustar:\n"+ex.getMessage(), "Inventario", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    // Lógica: abre el listado de movimientos del producto
     private void onVerMovimientos(int idProd){
         Window owner = SwingUtilities.getWindowAncestor(this);
         try {
@@ -360,7 +382,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===================== Conexión =====================
+    // Lógica/BD: helper de conexión local (misma config que los otros diálogos)
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
@@ -370,7 +392,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
-    // ===================== UI Helpers =====================
+    // Visual: campo de texto con placeholder (el texto guía cuando está vacío)
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder) {
@@ -395,6 +417,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // Lógica: item simple para el combo de categorías (id + nombre)
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
@@ -402,6 +425,7 @@ public class panel_inventario extends JPanel {
         public String toString(){ return nombre; }
     }
 
+    // Visual: renderer de la columna "Stock" (pinta pill verde/amarillo/rojo)
     class StockBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -428,6 +452,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // Visual: componente pill redondeado usado por el renderer de stock
     static class PillLabel extends JComponent {
         private String text = "";
         private Color bg = Color.LIGHT_GRAY, border = Color.GRAY, fg = Color.BLACK;
@@ -461,6 +486,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // Visual: renderer de botón por celda (usa helpers de estilos)
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -477,6 +503,7 @@ public class panel_inventario extends JPanel {
         }
     }
 
+    // Lógica: editor del botón por celda → llama al callback con el id del producto
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table;
         private final JButton button;
@@ -506,7 +533,7 @@ public class panel_inventario extends JPanel {
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
                                                      int row, int column) {
-            button.setText(String.valueOf(value)); // "Ajustar" / "Ver"
+            button.setText(String.valueOf(value)); // Visual: texto del botón en la celda
             return button;
         }
     }

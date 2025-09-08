@@ -12,12 +12,18 @@ import java.util.List;
 
 public class bajo extends JDialog {
 
+    // Visual: tabla y modelo para listar productos en “bajo stock”
     private JTable tabla;
     private DefaultTableModel model;
+
+    // Visual: filtros (por categoría) + botón aplicar
     private JComboBox<Item> cbCategoria;   // id_categoria, nombre
     private JButton btnFiltrar;
-    private boolean huboCambios = false;   // para refrescar al volver
 
+    // Lógica: flag para avisar al panel padre si hubo cambios (para refrescar al volver)
+    private boolean huboCambios = false;
+
+    // Visual + lógica: constructor. Arma la UI y conecta eventos
     public bajo(Window owner) {
         super(owner, "Productos con stock bajo", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -27,7 +33,7 @@ public class bajo extends JDialog {
         setLayout(new BorderLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
 
-        // ===== Shell =====
+        // Visual: shell con márgenes para centrar la card
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14,14,14,14));
@@ -37,7 +43,7 @@ public class bajo extends JDialog {
         gbc.fill=GridBagConstraints.HORIZONTAL;
         gbc.anchor=GridBagConstraints.PAGE_START;
 
-        // ===== Card =====
+        // Visual: card blanca con borde crema (contenedor principal)
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -49,7 +55,7 @@ public class bajo extends JDialog {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ===== Header =====
+        // Visual: header con título y botón Volver
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Productos con stock bajo");
@@ -66,33 +72,35 @@ public class bajo extends JDialog {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
 
-        // ===== Filtros =====
+        // Visual: filtros (categoría + botón “FILTRAR”)
         cbCategoria = new JComboBox<>();
         estilos.estilizarCombo(cbCategoria);
         cbCategoria.setPreferredSize(new Dimension(240, 38));
-        cargarCategorias();
+        cargarCategorias(); // BD: llena el combo al abrir
 
         btnFiltrar = estilos.botonBlanco("FILTRAR");
         btnFiltrar.setPreferredSize(new Dimension(120, 38));
-        btnFiltrar.addActionListener(e -> cargarTabla());
+        btnFiltrar.addActionListener(e -> cargarTabla()); // Lógica: aplica filtro
 
         JPanel filaFiltros = new JPanel(new GridBagLayout());
         filaFiltros.setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
         g.gridy=0; g.insets=new Insets(6,0,6,8); g.fill=GridBagConstraints.HORIZONTAL;
 
+        // Visual: orden de filtros (categoría → botón)
         g.gridx=0; g.weightx=0; filaFiltros.add(cbCategoria, g);
         g.gridx=1; filaFiltros.add(btnFiltrar, g);
 
-        // ===== Tabla =====
+        // Visual: definición de columnas (tiene botones “Ajustar” y “Pedido”)
         String[] cols = {"ID", "Producto", "Categoría", "Stock", "Mínimo", "Ajustar", "Pedido"};
         model = new DefaultTableModel(cols, 0){
-            @Override public boolean isCellEditable(int r, int c){ return c==5 || c==6; }
+            @Override public boolean isCellEditable(int r, int c){ return c==5 || c==6; } // solo botones
             @Override public Class<?> getColumnClass(int ci){
                 return (ci==5 || ci==6) ? JButton.class : Object.class;
             }
         };
 
+        // Visual: configuración de la tabla (fuentes, header, grilla, selección)
         tabla = new JTable(model);
         tabla.setFont(new Font("Arial", Font.PLAIN, 17));
         tabla.setRowHeight(32);
@@ -105,11 +113,12 @@ public class bajo extends JDialog {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
+        // Visual: alineación por defecto a la izquierda
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // ID con "#"
+        // Visual: renderer del ID con “#”
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override public Component getTableCellRendererComponent(JTable t,Object v,boolean s,boolean f,int r,int c){
                 Component comp = super.getTableCellRendererComponent(t,v,s,f,r,c);
@@ -118,19 +127,19 @@ public class bajo extends JDialog {
             }
         });
 
-        // badge de stock (rojo siempre en bajo)
+        // Visual: badge rojo para “Stock” (en esta vista todo es bajo, lo marcamos en rojo directo)
         tabla.getColumnModel().getColumn(3).setCellRenderer((t, val, sel, foc, row, col) -> {
             String txt = String.valueOf(val);
-            return estilos.badgeRoja(txt); // usa tu helper de estilos
+            return estilos.badgeRoja(txt); // usa el helper de estilos (pill rojo)
         });
 
-        // botones
+        // Visual + lógica: botones por fila (Ajustar y Pedido)
         tabla.getColumnModel().getColumn(5).setCellRenderer(new BtnRenderer("Ajustar"));
         tabla.getColumnModel().getColumn(6).setCellRenderer(new BtnRenderer("Borrador"));
         tabla.getColumnModel().getColumn(5).setCellEditor(new BtnEditor(tabla, id -> abrirAjustar(id)));
         tabla.getColumnModel().getColumn(6).setCellEditor(new BtnEditor(tabla, id -> abrirPedido(id)));
 
-        // Scroll
+        // Visual: scroll para la tabla con borde crema
         JScrollPane sc = new JScrollPane(tabla, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         sc.setBorder(BorderFactory.createCompoundBorder(
@@ -139,20 +148,24 @@ public class bajo extends JDialog {
         ));
         sc.setPreferredSize(new Dimension(0, 420));
 
+        // Visual: ensamblado de card (header → filtros → tabla)
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
         card.add(sc);
 
+        // Visual: agregamos la card al shell y mostramos
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Carga inicial
+        // Lógica: carga inicial de datos (ya viene filtrado por “bajo stock”)
         cargarTabla();
     }
 
+    // Lógica: usado por el panel padre para saber si hay que refrescar al volver
     public boolean huboCambios(){ return huboCambios; }
 
+    // BD: carga el combo de categorías desde la tabla categoria
     private void cargarCategorias(){
         cbCategoria.removeAllItems();
         cbCategoria.addItem(new Item(0, "Todas las categorías"));
@@ -168,6 +181,7 @@ public class bajo extends JDialog {
         }
     }
 
+    // BD + lógica: carga la tabla solo con productos cuyo stock_actual <= stock_minimo
     private void cargarTabla(){
         Item cat = (Item) cbCategoria.getSelectedItem();
         int idCat = (cat==null) ? 0 : cat.id();
@@ -189,9 +203,11 @@ public class bajo extends JDialog {
         model.setRowCount(0);
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
+            // Lógica: bind de parámetros si se filtró por categoría
             for (int i=0;i<params.size();i++){
                 ps.setInt(i+1, (int)params.get(i));
             }
+            // Visual: volcamos resultados a la tabla
             try (ResultSet rs = ps.executeQuery()){
                 while (rs.next()){
                     model.addRow(new Object[]{
@@ -205,6 +221,7 @@ public class bajo extends JDialog {
                     });
                 }
             }
+            // Visual: si no hay filas, mostramos un mensaje informativo
             if (model.getRowCount()==0){
                 model.addRow(new Object[]{"","# No hay productos en bajo stock.","","","","",""});
             }
@@ -213,12 +230,13 @@ public class bajo extends JDialog {
         }
     }
 
+    // Lógica: abre el diálogo de “ajustar” para el id de producto seleccionado
     private void abrirAjustar(int idProd){
         try {
             ajustar dlg = new ajustar(SwingUtilities.getWindowAncestor(this), idProd);
             dlg.setVisible(true);
             if (dlg.fueGuardado()){
-                huboCambios = true;
+                huboCambios = true; // avisamos que hay cambios para refrescar
                 cargarTabla();
             }
         } catch (Throwable ex){
@@ -226,14 +244,15 @@ public class bajo extends JDialog {
         }
     }
 
+    // Lógica: hook para crear un borrador de pedido (por ahora informativo)
     private void abrirPedido(int idProd){
-        // Hook simple: podés reemplazar por tu panel de Pedidos
+        // Nota: reemplazar por la navegación real a tu módulo de Pedidos cuando esté listo
         JOptionPane.showMessageDialog(this,
                 "Crear borrador de pedido para producto #"+idProd+" (implementá aquí el redireccionamiento).",
                 "Pedidos", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // ===== Helpers =====
+    // Lógica: clase simple para combos (id + nombre)
     static class Item {
         private final int id; private final String n;
         Item(int id, String n){ this.id=id; this.n=n; }
@@ -241,12 +260,15 @@ public class bajo extends JDialog {
         public String toString(){ return n; }
     }
 
+    // Visual: renderer de botón por celda (usa tu estilo para mantener consistencia)
     static class BtnRenderer extends JButton implements TableCellRenderer {
         BtnRenderer(String txt){ super(txt); setOpaque(true); setBorderPainted(false); setFocusPainted(false); }
         @Override public Component getTableCellRendererComponent(JTable t,Object v,boolean s,boolean f,int r,int c){
             return estilos.botonSm(String.valueOf(v));
         }
     }
+
+    // Lógica: editor del botón por celda, llama al callback con el id de la fila
     static class BtnEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table; private final JButton btn = estilos.botonSm("Acción");
         private final java.util.function.IntConsumer onClick;
@@ -270,6 +292,7 @@ public class bajo extends JDialog {
         }
     }
 
+    // BD: helper local de conexión (mismo que en otros módulos de inventario)
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

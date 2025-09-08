@@ -9,18 +9,22 @@ import java.sql.*;
 
 public class ajustar extends JDialog {
 
+    // Lógica: ID del producto al que se le ajusta el inventario
     private final int idProducto;
 
+    // Visual: controles principales del formulario (tipo, cantidad, motivo)
     private JComboBox<String> cbTipo;
     private JSpinner spCantidad;
     private JTextField txtMotivo;
 
-    // para que el "mínimo (opcional)" sea realmente opcional
+    // Visual: controles para mínimo opcional (spinner + check para aplicar o no)
     private JSpinner spNuevoMin;
     private JCheckBox chkAplicarMin;
 
+    // Lógica: bandera para avisar al panel padre si se guardó correctamente
     private boolean guardado = false;
 
+    // Visual + lógica: constructor que arma la UI y engancha los eventos
     public ajustar(Window owner, int idProducto) {
         super(owner, "Ajustar inventario", ModalityType.APPLICATION_MODAL);
         this.idProducto = idProducto;
@@ -31,6 +35,7 @@ public class ajustar extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card contenedora del formulario (fondo blanco + borde suave)
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -38,42 +43,47 @@ public class ajustar extends JDialog {
                 new EmptyBorder(18,18,18,18)
         ));
 
+        // Visual: layout base del formulario (márgenes, alineación y fill)
         GridBagConstraints gc = new GridBagConstraints();
         gc.insets = new Insets(6,6,6,6);
         gc.anchor = GridBagConstraints.WEST;
         gc.fill   = GridBagConstraints.HORIZONTAL;
         gc.weightx=1;
 
+        // Visual: título auxiliar con el ID del producto
         JLabel t1 = new JLabel("ID de producto: #"+idProducto);
         t1.setFont(new Font("Arial", Font.BOLD, 15));
         gc.gridx=0; gc.gridy=0;
         card.add(t1, gc);
 
-        // Tipo
+        // Visual: etiqueta “Tipo de operación”
         JLabel lb1 = new JLabel("Tipo de operación");
         lb1.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=1; card.add(lb1, gc);
 
+        // Visual: combo con los tipos (Ingreso/Egreso/Ajuste)
         cbTipo = new JComboBox<>(new String[]{
                 "Seleccionar…","Ingreso (+)","Egreso (−)","Ajuste (fijar exacto)"
         });
         estilos.estilizarCombo(cbTipo);
         gc.gridy=2; card.add(cbTipo, gc);
 
-        // Cantidad
+        // Visual: etiqueta “Cantidad”
         JLabel lb2 = new JLabel("Cantidad");
         lb2.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=3; card.add(lb2, gc);
 
+        // Visual: spinner de cantidad (mínimo 1)
         spCantidad = new JSpinner(new SpinnerNumberModel(1, 1, 999999, 1));
         ((JSpinner.DefaultEditor)spCantidad.getEditor()).getTextField().setColumns(8);
         gc.gridy=4; card.add(spCantidad, gc);
 
-        // Motivo
+        // Visual: etiqueta “Motivo” (opcional)
         JLabel lb3 = new JLabel("Motivo (opcional, máx 200)");
         lb3.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=5; card.add(lb3, gc);
 
+        // Visual: campo de texto para motivo
         txtMotivo = new JTextField();
         txtMotivo.setBorder(new CompoundBorder(
                 new LineBorder(new Color(0xD9,0xD9,0xD9),1,true),
@@ -81,20 +91,22 @@ public class ajustar extends JDialog {
         ));
         gc.gridy=6; card.add(txtMotivo, gc);
 
-        // Nuevo mínimo (opcional)
+        // Visual: etiqueta “Nuevo mínimo” (opcional)
         JLabel lb4 = new JLabel("Nuevo mínimo (opcional)");
         lb4.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridy=7; card.add(lb4, gc);
 
+        // Visual: spinner para ingresar un nuevo stock mínimo
         spNuevoMin = new JSpinner(new SpinnerNumberModel(0, 0, 999999, 1));
         ((JSpinner.DefaultEditor)spNuevoMin.getEditor()).getTextField().setColumns(8);
         gc.gridy=8; card.add(spNuevoMin, gc);
 
+        // Visual: check para decidir si se aplica el nuevo mínimo o no
         chkAplicarMin = new JCheckBox("Aplicar nuevo mínimo");
         chkAplicarMin.setOpaque(false);
         gc.gridy=9; card.add(chkAplicarMin, gc);
 
-        // Acciones
+        // Visual: fila de acciones (Cancelar / Guardar)
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnCancel = estilos.botonSm("Cancelar");
         JButton btnGuardar = estilos.botonBlanco("GUARDAR");
@@ -103,16 +115,20 @@ public class ajustar extends JDialog {
 
         gc.gridy=10; card.add(actions, gc);
 
+        // Visual: agregamos la card al root del diálogo
         GridBagConstraints root = new GridBagConstraints();
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: eventos de botones
         btnCancel.addActionListener(e -> dispose());
         btnGuardar.addActionListener(e -> onGuardar());
     }
 
+    // Lógica: permite al panel padre saber si se guardó para refrescar datos
     public boolean fueGuardado(){ return guardado; }
 
+    // Lógica + BD: valida el formulario, calcula el nuevo stock, persiste cambios y registra el movimiento
     private void onGuardar(){
         String tipoSel = (String) cbTipo.getSelectedItem();
         int cant  = (int) spCantidad.getValue();
@@ -121,10 +137,12 @@ public class ajustar extends JDialog {
         boolean aplicarMin = chkAplicarMin.isSelected();
         String tipo="";
 
+        // Lógica: traducimos la opción visible a un valor interno consistente
         if ("Ingreso (+)".equals(tipoSel)) tipo="ingreso";
         else if ("Egreso (−)".equals(tipoSel)) tipo="egreso";
         else if ("Ajuste (fijar exacto)".equals(tipoSel)) tipo="ajuste";
 
+        // Lógica: validaciones simples de formulario
         if (tipo.isEmpty()){
             JOptionPane.showMessageDialog(this, "Seleccioná el tipo de operación.");
             return;
@@ -138,9 +156,10 @@ public class ajustar extends JDialog {
             return;
         }
 
+        // Lógica + BD: ejecutamos el ajuste
         try (Connection cn = DB.get()){
 
-            // Asegurar fila en inventario
+            // BD: asegura que el producto tenga fila en inventario
             try (Statement s = cn.createStatement()){
                 s.executeUpdate(
                         "INSERT IGNORE INTO inventario(id_producto, stock_actual, stock_minimo) " +
@@ -148,7 +167,8 @@ public class ajustar extends JDialog {
                 );
             }
 
-            // Bloquear/leer actual
+            // BD: lee y bloquea la fila actual para evitar pisadas (FOR UPDATE)
+            // Nota: idealmente manejaríamos transacción completa si sumamos más operaciones encadenadas.
             int prev=0;
             try (PreparedStatement ps = cn.prepareStatement("""
                 SELECT stock_actual, stock_minimo
@@ -159,18 +179,18 @@ public class ajustar extends JDialog {
                 try (ResultSet rs = ps.executeQuery()){
                     if (rs.next()){
                         prev = rs.getInt(1);
-                        // int minActual = rs.getInt(2); // si lo necesitás, lo dejás
+                        // int minActual = rs.getInt(2); // si necesitamos conocer el mínimo actual, está acá
                     }
                 }
             }
 
-            // Calcular nuevo stock
+            // Lógica: calculamos el nuevo stock según el tipo
             int nuevo = prev;
             if ("ingreso".equals(tipo)) nuevo = prev + cant;
             else if ("egreso".equals(tipo)) nuevo = Math.max(0, prev - cant);
             else if ("ajuste".equals(tipo)) nuevo = cant;
 
-            // Actualizar stock
+            // BD: actualiza el stock_actual
             try (PreparedStatement ps = cn.prepareStatement(
                     "UPDATE inventario SET stock_actual=? WHERE id_producto=?")){
                 ps.setInt(1, nuevo);
@@ -178,7 +198,7 @@ public class ajustar extends JDialog {
                 ps.executeUpdate();
             }
 
-            // Actualizar mínimo (opcional)
+            // BD: si corresponde, actualiza el stock_minimo
             if (aplicarMin){
                 try (PreparedStatement ps = cn.prepareStatement(
                         "UPDATE inventario SET stock_minimo=? WHERE id_producto=?")){
@@ -188,7 +208,7 @@ public class ajustar extends JDialog {
                 }
             }
 
-            // Registrar movimiento
+            // BD: garantiza que exista la tabla de movimientos (por si la BD está limpia)
             try (Statement s = cn.createStatement()){
                 s.execute("""
                     CREATE TABLE IF NOT EXISTS inventario_mov (
@@ -206,7 +226,11 @@ public class ajustar extends JDialog {
                 """);
             }
 
-            int uid = 0; // si luego tenés sesión en la app, poné el id real
+            // Lógica: por ahora usamos 0 como id de usuario.
+            // hay que revisar esto cuando tengamos sesión/usuario logueado en la app
+            int uid = 0;
+
+            // BD: registra el movimiento con los datos de la operación
             try (PreparedStatement ps = cn.prepareStatement("""
                 INSERT INTO inventario_mov(id_producto,tipo,cantidad,motivo,stock_prev,stock_nuevo,id_usuario)
                 VALUES(?,?,?,?,?,?,?)
@@ -221,15 +245,18 @@ public class ajustar extends JDialog {
                 ps.executeUpdate();
             }
 
+            // Lógica: marcamos éxito y cerramos
             guardado = true;
             JOptionPane.showMessageDialog(this, "Inventario actualizado.");
             dispose();
 
         } catch (Exception ex){
+            // Lógica: informamos error si algo falla en BD
             JOptionPane.showMessageDialog(this, "No se pudo guardar:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // BD: helper local de conexión (mismo estilo que el resto del módulo Inventario)
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

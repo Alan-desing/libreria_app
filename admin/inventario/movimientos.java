@@ -11,12 +11,18 @@ import java.util.List;
 
 public class movimientos extends JDialog {
 
+    // Lógica: producto para el que se muestran los movimientos
     private final int idProducto;
+
+    // Visual: tabla y modelo de datos
     private JTable tabla;
     private DefaultTableModel model;
+
+    // Visual: filtros (tipo y fechas — por ahora las fechas son decorativas)
     private JComboBox<String> cbTipo;
     private JFormattedTextField dpDesde, dpHasta;
 
+    // Visual + lógica: constructor. Arma la pantalla y deja listo el flujo
     public movimientos(Window owner, int idProducto){
         super(owner, "Movimientos", ModalityType.APPLICATION_MODAL);
         this.idProducto = idProducto;
@@ -26,6 +32,7 @@ public class movimientos extends JDialog {
         setLayout(new BorderLayout());
         getContentPane().setBackground(estilos.COLOR_FONDO);
 
+        // Visual: shell con márgenes para centrar la “card” blanca
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14,14,14,14));
@@ -33,6 +40,7 @@ public class movimientos extends JDialog {
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
         gbc.fill=GridBagConstraints.HORIZONTAL; gbc.anchor=GridBagConstraints.PAGE_START;
 
+        // Visual: card principal (blanca, borde crema, layout en columna)
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -43,7 +51,7 @@ public class movimientos extends JDialog {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
 
-        // Título (busca nombre de producto)
+        // Lógica: título dinámico (busca el nombre del producto)
         String titulo = "Movimientos — #"+idProducto;
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("SELECT nombre FROM producto WHERE id_producto=?")){
@@ -53,6 +61,7 @@ public class movimientos extends JDialog {
             }
         } catch (Exception ignore){}
 
+        // Visual: header con título y botón Volver
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel(titulo);
@@ -68,11 +77,12 @@ public class movimientos extends JDialog {
         head.add(headRight, BorderLayout.EAST);
         head.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
 
-        // Filtros
+        // Visual: fila de filtros (tipo + fechas + botón FILTRAR)
         cbTipo = new JComboBox<>(new String[]{"Todos","ingreso","egreso","ajuste"});
         estilos.estilizarCombo(cbTipo);
         cbTipo.setPreferredSize(new Dimension(160, 38));
 
+        // Visual: por ahora las fechas son placeholder (si se quiere, se integra un datepicker real)
         dpDesde = new JFormattedTextField("dd/mm/aaaa");
         dpHasta = new JFormattedTextField("dd/mm/aaaa");
         estilos.estilizarCampo(dpDesde);
@@ -91,12 +101,13 @@ public class movimientos extends JDialog {
         filaFiltros.add(dpHasta);
         filaFiltros.add(btnFiltrar);
 
-        // Tabla
+        // Visual: definición de columnas y modelo (todo solo lectura)
         String[] cols = {"ID", "Fecha", "Tipo", "Cantidad", "Stock (prev → nuevo)", "Motivo", "Usuario"};
         model = new DefaultTableModel(cols, 0){
             @Override public boolean isCellEditable(int r, int c){ return false; }
         };
 
+        // Visual: configuración de la tabla (fuente, colores de header, grid, etc.)
         tabla = new JTable(model);
         tabla.setFont(new Font("Arial", Font.PLAIN, 17));
         tabla.setRowHeight(32);
@@ -106,6 +117,7 @@ public class movimientos extends JDialog {
         tabla.setShowHorizontalLines(true);
         tabla.setGridColor(new Color(0xEDE3D2));
 
+        // Visual: scroll con borde crema
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -115,19 +127,22 @@ public class movimientos extends JDialog {
         ));
         sc.setPreferredSize(new Dimension(0, 420));
 
+        // Visual: ensamblado de la card
         card.add(head);
         card.add(filaFiltros);
         card.add(Box.createVerticalStrut(8));
         card.add(sc);
 
+        // Visual: la card va al shell y el shell al diálogo
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // asegurar tabla de movimientos
+        // Lógica + BD: asegurar que la tabla de movimientos exista y cargar datos
         crearTablaSiNoExiste();
         cargarTabla();
     }
 
+    // Lógica + BD: crea la tabla de movimientos si no existe (por si la BD está vacía)
     private void crearTablaSiNoExiste(){
         String sql = """
             CREATE TABLE IF NOT EXISTS inventario_mov (
@@ -148,7 +163,9 @@ public class movimientos extends JDialog {
         } catch (Exception ignore){}
     }
 
+    // Lógica + BD: arma la consulta según filtros y llena la tabla
     private void cargarTabla(){
+        // Lógica: armamos el WHERE dinámico según filtros
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder(" WHERE id_producto=? ");
         params.add(idProducto);
@@ -157,19 +174,28 @@ public class movimientos extends JDialog {
         if (tipoSel!=null && !"Todos".equalsIgnoreCase(tipoSel)){
             where.append(" AND tipo=? "); params.add(tipoSel.toLowerCase());
         }
-        // notas: si quisieras filtrar fechas reales, parseá dd/mm/aaaa -> yyyy-mm-dd
-        // y agregá BETWEEN en creado_en. Dejo los campos para que mantengas el layout.
 
+        // Lógica: las fechas todavía no filtran. Si se quiere, parsear dd/mm/aaaa -> yyyy-mm-dd
+        // y agregar BETWEEN creado_en entre ambas fechas. Dejamos los campos para mantener el layout.
+
+        // BD: consulta final ordenada del más nuevo al más viejo
         String sql = "SELECT id_mov, tipo, cantidad, motivo, stock_prev, stock_nuevo, id_usuario, creado_en "
                    + "FROM inventario_mov " + where + " ORDER BY id_mov DESC";
+
+        // Visual: limpiar la tabla
         model.setRowCount(0);
+
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            // Lógica: bind de parámetros seguro acorde al tipo
             int b=1;
             for (Object v : params){
                 if (v instanceof Integer iv) ps.setInt(b++, iv);
                 else ps.setString(b++, String.valueOf(v));
             }
+
+            // Visual: volcamos cada fila al modelo, formateando dos columnas
             try (ResultSet rs = ps.executeQuery()){
                 while (rs.next()){
                     model.addRow(new Object[]{
@@ -183,14 +209,19 @@ public class movimientos extends JDialog {
                     });
                 }
             }
+
+            // Visual: si no hay resultados, dejamos una fila “informativa”
             if (model.getRowCount()==0){
                 model.addRow(new Object[]{"","# Sin movimientos","","","","",""});
             }
+
         } catch (Exception ex){
+            // Lógica: avisamos el error de BD al usuario
             JOptionPane.showMessageDialog(this,"Error cargando movimientos:\n"+ex.getMessage(),"BD",JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // BD: helper local de conexión (igual que en los otros módulos del inventario)
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
