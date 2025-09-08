@@ -9,10 +9,16 @@ import java.sql.*;
 
 public class editar extends JDialog {
 
+    // Lógica: id de la categoría a editar
     private final int id;
+
+    // Visual: campo del nombre
     private JTextField txtNombre;
+
+    // Lógica: flag para avisar si se guardó
     private boolean guardado = false;
 
+    // Visual + Lógica: constructor. Carga datos y arma la UI
     public editar(Window owner, int id) {
         super(owner, "Editar categoría", ModalityType.APPLICATION_MODAL);
         this.id = id;
@@ -22,6 +28,7 @@ public class editar extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card contenedora
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -35,6 +42,7 @@ public class editar extends JDialog {
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
 
+        // Visual: label + input
         JLabel lb = new JLabel("Nombre");
         lb.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridx=0; gc.gridy=0; gc.gridwidth=2;
@@ -49,6 +57,7 @@ public class editar extends JDialog {
         gc.gridy=1;
         card.add(txtNombre, gc);
 
+        // Visual: acciones
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnCancel = estilos.botonSm("Cancelar");
         JButton btnGuardar  = estilos.botonBlanco("GUARDAR CAMBIOS");
@@ -58,18 +67,23 @@ public class editar extends JDialog {
         gc.gridy=2; gc.gridwidth=2;
         card.add(actions, gc);
 
+        // Visual: agrego card
         GridBagConstraints root = new GridBagConstraints();
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: listeners
         btnCancel.addActionListener(e -> dispose());
         btnGuardar.addActionListener(e -> onGuardar());
 
+        // Lógica: carga datos de la categoría
         cargar();
     }
 
+    // Lógica: consulta si guardó para refrescar el panel
     public boolean fueGuardado(){ return guardado; }
 
+    // Lógica + BD: trae el nombre actual y lo muestra
     private void cargar(){
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("SELECT id_categoria, nombre FROM categoria WHERE id_categoria=?")) {
@@ -89,9 +103,11 @@ public class editar extends JDialog {
         }
     }
 
+    // Lógica + BD: valida y actualiza el nombre
     private void onGuardar(){
         String nombre = (txtNombre.getText()==null?"":txtNombre.getText().trim());
 
+        // Lógica: validaciones básicas
         if (nombre.isEmpty()){
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.");
             return;
@@ -106,7 +122,7 @@ public class editar extends JDialog {
         }
 
         try (Connection cn = DB.get()) {
-            // unicidad excluyendo el ID actual
+            // Lógica + BD: unicidad del nombre (excluyendo el mismo ID)
             try (PreparedStatement ps = cn.prepareStatement(
                     "SELECT 1 FROM categoria WHERE nombre=? AND id_categoria<>? LIMIT 1")){
                 ps.setString(1, nombre);
@@ -118,13 +134,14 @@ public class editar extends JDialog {
                     }
                 }
             }
-            // update
+            // BD: update
             try (PreparedStatement ps = cn.prepareStatement("UPDATE categoria SET nombre=? WHERE id_categoria=?")){
                 ps.setString(1, nombre);
                 ps.setInt(2, id);
                 ps.executeUpdate();
             }
 
+            // Lógica: éxito → avisamos y cerramos
             guardado = true;
             JOptionPane.showMessageDialog(this, "Categoría actualizada.");
             dispose();
@@ -134,7 +151,7 @@ public class editar extends JDialog {
         }
     }
 
-    // Conexión local
+    // BD: helper local de conexión
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";

@@ -9,9 +9,13 @@ import java.sql.*;
 
 public class crear extends JDialog {
 
+    // Visual: campo para el nombre de la categoría
     private JTextField txtNombre;
+
+    // Lógica: indica al panel si se guardó correctamente
     private boolean guardado = false;
 
+    // Visual + Lógica: constructor. Arma el form y conecta eventos
     public crear(Window owner) {
         super(owner, "Nueva categoría", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -20,6 +24,7 @@ public class crear extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new GridBagLayout());
 
+        // Visual: card contenedora
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(new CompoundBorder(
@@ -33,6 +38,7 @@ public class crear extends JDialog {
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
 
+        // Visual: label y campo de nombre
         JLabel lb = new JLabel("Nombre");
         lb.setFont(new Font("Arial", Font.BOLD, 14));
         gc.gridx=0; gc.gridy=0; gc.gridwidth=2;
@@ -47,6 +53,7 @@ public class crear extends JDialog {
         gc.gridy=1;
         card.add(txtNombre, gc);
 
+        // Visual: acciones (Cancelar / CREAR)
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton btnCancel = estilos.botonSm("Cancelar");
         JButton btnCrear  = estilos.botonBlanco("CREAR");
@@ -56,20 +63,24 @@ public class crear extends JDialog {
         gc.gridy=2; gc.gridwidth=2;
         card.add(actions, gc);
 
+        // Visual: agregamos card a la ventana
         GridBagConstraints root = new GridBagConstraints();
         root.insets = new Insets(8,8,8,8);
         add(card, root);
 
+        // Lógica: listeners
         btnCancel.addActionListener(e -> dispose());
         btnCrear.addActionListener(e -> onGuardar());
     }
 
+    // Lógica: avisa al panel padre si se creó con éxito
     public boolean fueGuardado(){ return guardado; }
 
+    // Lógica + BD: validaciones y alta de categoría
     private void onGuardar(){
         String nombre = (txtNombre.getText()==null?"":txtNombre.getText().trim());
 
-        // Validaciones (como en la web)
+        // Lógica: validaciones básicas (igual que en la web)
         if (nombre.isEmpty()){
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.");
             return;
@@ -84,7 +95,7 @@ public class crear extends JDialog {
         }
 
         try (Connection cn = DB.get()) {
-            // unicidad
+            // Lógica + BD: validar unicidad del nombre
             try (PreparedStatement ps = cn.prepareStatement("SELECT 1 FROM categoria WHERE nombre=? LIMIT 1")){
                 ps.setString(1, nombre);
                 try (ResultSet rs = ps.executeQuery()){
@@ -94,12 +105,13 @@ public class crear extends JDialog {
                     }
                 }
             }
-            // insert
+            // BD: insertar categoría
             try (PreparedStatement ps = cn.prepareStatement("INSERT INTO categoria(nombre) VALUES (?)")){
                 ps.setString(1, nombre);
                 ps.executeUpdate();
             }
 
+            // Lógica: éxito → avisamos y cerramos
             guardado = true;
             JOptionPane.showMessageDialog(this, "Categoría creada correctamente.");
             dispose();
@@ -109,7 +121,7 @@ public class crear extends JDialog {
         }
     }
 
-    // Conexión local
+    // BD: helper local de conexión
     static class DB {
         static Connection get() throws Exception {
             String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
