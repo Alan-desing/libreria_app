@@ -15,8 +15,13 @@ import admin.categorias.panel_categorias;
 import admin.subcategorias.panel_subcategorias;
 import admin.pedidos.panel_pedidos;
 import admin.inventario.panel_inventario;
-import admin.reportes.panel_reportes;
+// import admin.reportes.panel_reportes; // postergado
 import admin.usuarios.panel_usuarios;
+
+// Nuevos paneles reales
+import admin.proveedores.panel_proveedores;
+import admin.sucursales.panel_sucursales;
+import admin.ajustes.panel_ajustes;
 
 public class escritorio_admin extends JFrame {
 
@@ -31,11 +36,9 @@ public class escritorio_admin extends JFrame {
     private static final String V_SUBCATS      = "subcategorias";
     private static final String V_INVENTARIO   = "inventario";
     private static final String V_PEDIDOS      = "pedidos";
-    private static final String V_ALERTAS      = "alertas";
-    private static final String V_REPORTES     = "reportes";
-    private static final String V_VENTAS       = "ventas";
+    private static final String V_PROVEEDORES  = "proveedores";
+    private static final String V_SUCURSALES   = "sucursales";
     private static final String V_USUARIOS     = "usuarios";
-    private static final String V_ROLES        = "roles";
     private static final String V_AJUSTES      = "ajustes";
     private static final String V_SALIR        = "salir";
 
@@ -59,20 +62,18 @@ public class escritorio_admin extends JFrame {
         panelCentral.setBackground(estilos.COLOR_FONDO);
 
         // Lógica: registrar cada vista en el CardLayout
-        panelCentral.add(new panel_inicio(),         V_INICIO);
-        panelCentral.add(new panel_productos(),      V_PRODUCTOS);
-        panelCentral.add(new panel_categorias(),     V_CATEGORIAS);
-        panelCentral.add(new panel_subcategorias(),  V_SUBCATS);
-        panelCentral.add(new panel_inventario(),     V_INVENTARIO);
-        panelCentral.add(new panel_pedidos(),        V_PEDIDOS);
-        panelCentral.add(new panel_reportes(),       V_REPORTES);
-        panelCentral.add(new panel_usuarios(),       V_USUARIOS);
+        panelCentral.add(new panel_inicio(),          V_INICIO);
+        panelCentral.add(new panel_productos(),       V_PRODUCTOS);
+        panelCentral.add(new panel_categorias(),      V_CATEGORIAS);
+        panelCentral.add(new panel_subcategorias(),   V_SUBCATS);
+        panelCentral.add(new panel_inventario(),      V_INVENTARIO);
+        panelCentral.add(new panel_pedidos(),         V_PEDIDOS);
+        panelCentral.add(new panel_usuarios(),        V_USUARIOS);
 
-        // Visual: placeholders para secciones aún no desarrolladas
-        panelCentral.add(new Placeholder("Alertas"),            V_ALERTAS);
-        panelCentral.add(new Placeholder("Ventas"),             V_VENTAS);
-        panelCentral.add(new Placeholder("Roles y permisos"),   V_ROLES);
-        panelCentral.add(new Placeholder("Ajustes"),            V_AJUSTES);
+        // Nuevos (reales, sin placeholders)
+        panelCentral.add(new panel_proveedores(),     V_PROVEEDORES);
+        panelCentral.add(new panel_sucursales(),      V_SUCURSALES);
+        panelCentral.add(new panel_ajustes(),         V_AJUSTES);
 
         add(panelCentral, BorderLayout.CENTER);
 
@@ -126,7 +127,7 @@ public class escritorio_admin extends JFrame {
         ));
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
-        // Lógica: definición de items del menú en orden
+        // Lógica: definición de items del menú en orden (ajustada)
         String[][] items = {
                 {"inicio",             V_INICIO},
                 {"Productos",          V_PRODUCTOS},
@@ -134,11 +135,9 @@ public class escritorio_admin extends JFrame {
                 {"subcategorias",      V_SUBCATS},
                 {"Inventario",         V_INVENTARIO},
                 {"Pedidos",            V_PEDIDOS},
-                {"Alertas",            V_ALERTAS},
-                {"Reportes",           V_REPORTES},
-                {"Ventas",             V_VENTAS},
+                {"Proveedores",        V_PROVEEDORES},
+                {"Sucursales",         V_SUCURSALES},
                 {"Usuarios",           V_USUARIOS},
-                {"Roles y permisos",   V_ROLES},
                 {"Ajustes",            V_AJUSTES},
                 {"Salir",              V_SALIR}
         };
@@ -195,19 +194,17 @@ public class escritorio_admin extends JFrame {
 
                 // Lógica: actualización del título según la clave
                 String nombre = switch (clave) {
-                    case V_INICIO      -> "Inicio";
-                    case V_PRODUCTOS   -> "Productos";
-                    case V_CATEGORIAS  -> "Categorías";
-                    case V_SUBCATS     -> "Subcategorías";
-                    case V_INVENTARIO  -> "Inventario";
-                    case V_PEDIDOS     -> "Pedidos";
-                    case V_ALERTAS     -> "Alertas";
-                    case V_REPORTES    -> "Reportes";
-                    case V_VENTAS      -> "Ventas";
-                    case V_USUARIOS    -> "Usuarios";
-                    case V_ROLES       -> "Roles y permisos";
-                    case V_AJUSTES     -> "Ajustes";
-                    default            -> "Admin";
+                    case V_INICIO       -> "Inicio";
+                    case V_PRODUCTOS    -> "Productos";
+                    case V_CATEGORIAS   -> "Categorías";
+                    case V_SUBCATS      -> "Subcategorías";
+                    case V_INVENTARIO   -> "Inventario";
+                    case V_PEDIDOS      -> "Pedidos";
+                    case V_PROVEEDORES  -> "Proveedores";
+                    case V_SUCURSALES   -> "Sucursales";
+                    case V_USUARIOS     -> "Usuarios";
+                    case V_AJUSTES      -> "Ajustes";
+                    default             -> "Admin";
                 };
                 setTituloVista(nombre);
 
@@ -233,21 +230,5 @@ public class escritorio_admin extends JFrame {
         side.add(box, gbc);
 
         return side;
-    }
-
-    // Visual: tarjeta placeholder para secciones no implementadas aún
-    static class Placeholder extends JPanel {
-        Placeholder(String nombre){
-            setLayout(new GridBagLayout());
-            setBackground(estilos.COLOR_FONDO);
-            JPanel card = new JPanel();
-            card.setBackground(Color.WHITE);
-            card.setBorder(new CompoundBorder(
-                    new LineBorder(estilos.COLOR_BORDE_SUAVE,1,true),
-                    new EmptyBorder(24,24,24,24)
-            ));
-            card.add(new JLabel(nombre + " — En construcción"));
-            add(card, new GridBagConstraints());
-        }
     }
 }
