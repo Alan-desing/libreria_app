@@ -38,7 +38,7 @@ public class panel_ajustes extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // Shell con márgenes (como en otros paneles)
+        // Shell con márgenes
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14, 14, 14, 14));
@@ -48,7 +48,7 @@ public class panel_ajustes extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // Card principal (contenedor visual)
+        // Card principal
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -83,9 +83,9 @@ public class panel_ajustes extends JPanel {
         card.add(sectionCard("Estados de pedidos", null, buildEstadosPanel()));
         card.add(Box.createVerticalStrut(10));
         card.add(sectionCard("Tipos de movimiento de inventario", null, buildTiposPanel()));
-        card.add(Box.createVerticalStrut(6)); // respiro inferior
+        card.add(Box.createVerticalStrut(6));
 
-        // Scroll para toda la Card (soluciona el “no se ve abajo”)
+        // Scroll de toda la card
         JPanel scrollContent = new JPanel();
         scrollContent.setOpaque(false);
         scrollContent.setLayout(new BoxLayout(scrollContent, BoxLayout.Y_AXIS));
@@ -372,7 +372,7 @@ public class panel_ajustes extends JPanel {
         JTableHeader th = t.getTableHeader();
         th.setFont(new Font("Arial", Font.BOLD, 17));
         th.setReorderingAllowed(false);
-        th.setBackground(new Color(0xFF, 0xF3, 0xD9)); // crema
+        th.setBackground(new Color(0xFF, 0xF3, 0xD9));
 
         t.setShowVerticalLines(false);
         t.setShowHorizontalLines(true);
@@ -626,9 +626,12 @@ public class panel_ajustes extends JPanel {
             this.onClick = onClick;
             this.btn = danger ? estilos.botonSmDanger("ELIMINAR") : estilos.botonSm("GUARDAR");
             this.btn.addActionListener(e -> {
-                int vr = this.table.getEditingRow(); // usar el campo → evita warning
-                if (vr >= 0) this.onClick.accept(vr);
+                // 1) guardo la fila vista
+                final int vr = this.table.getEditingRow();
+                // 2) cierro edición primero (evita AIOOBE en JTable.editingStopped)
                 fireEditingStopped();
+                // 3) corro el callback luego de cerrar el editor
+                if (vr >= 0) SwingUtilities.invokeLater(() -> this.onClick.accept(vr));
             });
         }
 
