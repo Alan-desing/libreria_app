@@ -1,7 +1,7 @@
 package admin.subcategorias;
 
 import includes.estilos;
-
+import includes.conexion_bd;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -148,12 +148,10 @@ public class eliminar extends JDialog {
     // Lógica: permite al panel saber si se eliminó
     public boolean fueEliminado(){ return eliminado; }
 
-    // Lógica/BD: helper de conexión local
+        // BD: helper local unificado
     static class DB {
-        static Connection get() throws Exception {
-            String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
-            String user = "root"; String pass = "";
-            return DriverManager.getConnection(url, user, pass);
+        static java.sql.Connection get() throws Exception {
+            return conexion_bd.getConnection();
         }
     }
 

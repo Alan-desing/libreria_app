@@ -1,5 +1,6 @@
 import admin.escritorio_admin;
 import includes.estilos;
+import includes.conexion_bd;   // <-- NUEVO IMPORT
 
 import javax.swing.*;
 import java.awt.*;

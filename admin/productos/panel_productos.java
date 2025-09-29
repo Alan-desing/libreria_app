@@ -1,7 +1,7 @@
 package admin.productos;
 
 import includes.estilos;
-
+import includes.conexion_bd;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -358,13 +358,10 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // Lógica/BD: helper de conexión local
+        // BD: helper local unificado
     static class DB {
-        static Connection get() throws Exception {
-            String url  = "jdbc:mysql://127.0.0.1:3306/libreria?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Argentina/Buenos_Aires";
-            String user = "root";
-            String pass = "";
-            return DriverManager.getConnection(url, user, pass);
+        static java.sql.Connection get() throws Exception {
+            return conexion_bd.getConnection();
         }
     }
 
