@@ -10,11 +10,20 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class conexion_bd {
 
-    // === Configuración local ===
-    private static final String URL =
-        "jdbc:mysql://localhost:3306/libreria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8";
-    private static final String USER = "root";      // usuario por defecto en XAMPP
-    private static final String PASS = "";          // contraseña vacía por defecto en XAMPP
+    // ====== CONFIG REMOTA (Hostinger) ======
+    private static final String HOST = "srv804.hstgr.io";
+    private static final String PORT = "3306";
+    private static final String DB   = "u156482620_libreria";
+    private static final String USER = "u156482620_Zava";
+    private static final String PASS = "Zava4567"; // tu pass
+
+    // Si tu servidor exige SSL estricto, poné requireSSL=true.
+    // allowPublicKeyRetrieval=true ayuda si el server está con caching de keys.
+    private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB
+            + "?useUnicode=true&characterEncoding=UTF-8"
+            + "&serverTimezone=America/Argentina/Buenos_Aires"
+            + "&useSSL=true&requireSSL=false&autoReconnect=true"
+            + "&allowPublicKeyRetrieval=true";
 
     private static final boolean DEBUG = true;
 
@@ -28,7 +37,7 @@ public class conexion_bd {
         }
     }
 
-    /** Verificar credenciales de usuario (bcrypt o texto plano). */
+    /** Verificar credenciales de usuario (bcrypt o texto plano de fallback). */
     public static boolean verificarLogin(String email, String passwordPlano) {
         final String sql =
             "SELECT contrasena, id_estado_usuario " +
@@ -80,6 +89,28 @@ public class conexion_bd {
         } catch (SQLException e) {
             System.err.println("❌ SQL Error: " + e.getMessage());
             return false;
+        }
+    }
+
+    // === Test rápido: ejecutalo para verificar conexión y contar productos ===
+    public static void main(String[] args) {
+        try (Connection cn = getConnection()) {
+            if (cn == null) throw new SQLException("Conexión nula");
+
+            try (var st = cn.createStatement();
+                 var rsNow = st.executeQuery("SELECT NOW()")) {
+                rsNow.next();
+                System.out.println("✅ Conexión OK. Hora servidor: " + rsNow.getString(1));
+            }
+
+            try (var st2 = cn.createStatement();
+                 var rsCnt = st2.executeQuery("SELECT COUNT(*) FROM producto")) {
+                rsCnt.next();
+                System.out.println("📦 Productos en DB: " + rsCnt.getInt(1));
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error de conexión/test: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
