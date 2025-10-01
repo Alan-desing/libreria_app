@@ -192,7 +192,7 @@ public class panel_alertas extends JPanel {
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         );
         sc.setBorder(new CompoundBorder(new LineBorder(estilos.COLOR_BORDE_CREMA,1,true), new EmptyBorder(6,6,6,6)));
-        // No ponemos preferredSize fija: el BorderLayout.CENTER hará que use TODO el espacio disponible
+        // No ponemos preferredSize fija: el BorderLayout.CENTER hará que use todo el espacio disponible
         card.add(sc, BorderLayout.CENTER);
 
         shell.add(card, gbc);
