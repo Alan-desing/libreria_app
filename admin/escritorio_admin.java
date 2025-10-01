@@ -24,7 +24,6 @@ import admin.ajustes.panel_ajustes;
 
 // === NUEVOS: agregar 4 secciones ===
 import admin.alertas.panel_alertas;
-import admin.ventas.panel_ventas;
 import admin.auditorias.panel_auditorias;
 import admin.reportes.panel_reportes;
 
@@ -45,7 +44,6 @@ public class escritorio_admin extends JFrame {
     private static final String V_SUCURSALES   = "sucursales";
     private static final String V_ALERTAS      = "alertas";          // nuevo
     private static final String V_REPORTES     = "reportes";         // nuevo
-    private static final String V_VENTAS       = "ventas";           // nuevo
     private static final String V_USUARIOS     = "usuarios";
     private static final String V_AJUSTES      = "ajustes";
     private static final String V_AUDITORIAS   = "auditorias";       // nuevo
@@ -83,7 +81,6 @@ public class escritorio_admin extends JFrame {
         // === NUEVOS: registro de vistas reales (sin placeholders) ===
         panelCentral.add(new panel_alertas(),         V_ALERTAS);
         panelCentral.add(new panel_reportes(),        V_REPORTES);
-        panelCentral.add(new panel_ventas(),          V_VENTAS);
         panelCentral.add(new panel_usuarios(),        V_USUARIOS);
         panelCentral.add(new panel_ajustes(),         V_AJUSTES);
         panelCentral.add(new panel_auditorias(),      V_AUDITORIAS);
@@ -149,7 +146,6 @@ public class escritorio_admin extends JFrame {
                 {"Sucursales",              V_SUCURSALES},
                 {"Alertas",                 V_ALERTAS},            // nuevo
                 {"Reportes y estadísticas", V_REPORTES},           // nuevo
-                {"Ventas",                  V_VENTAS},             // nuevo
                 {"Usuarios",                V_USUARIOS},
                 {"Ajustes",                 V_AJUSTES},
                 {"Auditorías",              V_AUDITORIAS},         // nuevo
@@ -212,7 +208,6 @@ public class escritorio_admin extends JFrame {
                     case V_SUCURSALES   -> "Sucursales";
                     case V_ALERTAS      -> "Alertas";
                     case V_REPORTES     -> "Reportes y estadísticas";
-                    case V_VENTAS       -> "Ventas";
                     case V_USUARIOS     -> "Usuarios";
                     case V_AJUSTES      -> "Ajustes";
                     case V_AUDITORIAS   -> "Auditorías";

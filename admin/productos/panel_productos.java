@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;   // <-- agregado (doble clic ver)
+import java.awt.event.MouseEvent;    // <-- agregado (doble clic ver)
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,6 +198,28 @@ public class panel_productos extends JPanel {
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla()); // Enter
 
+        // >>>>>>>>>>>>>> CAMBIO MÍNIMO: botón "Añadir Producto" abre crear.java
+        btnAgregar.addActionListener(e -> {
+            crear.abrir(panel_productos.this);
+            cargarTabla();
+        });
+        // <<<<<<<<<<<<<<
+
+        // (Opcional, pero no invasivo) doble clic para ver.java
+        tabla.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount()==2) {
+                    int viewRow = tabla.getSelectedRow();
+                    if (viewRow>=0){
+                        int modelRow = tabla.convertRowIndexToModel(viewRow);
+                        Object idObj = model.getValueAt(modelRow, 0);
+                        int id = 0; try { id = Integer.parseInt(String.valueOf(idObj)); } catch(Exception ignore){}
+                        if (id>0) ver.abrir(panel_productos.this, id);
+                    }
+                }
+            }
+        });
+
         // Lógica/BD: carga inicial de combos y datos
         cargarCategorias();
         cargarTabla();
@@ -326,39 +350,20 @@ public class panel_productos extends JPanel {
         }
     }
 
-    // Lógica: acción de “Editar” por fila (provisorio)
+    // >>>>>>>>>>>>>> CAMBIO MÍNIMO: usar editar.java
     private void onEditar(int idProducto){
-        JOptionPane.showMessageDialog(this,
-                "Abrir pantalla de edición para ID: " + idProducto,
-                "Editar", JOptionPane.INFORMATION_MESSAGE);
+        editar.abrir(this, idProducto);
+        cargarTabla();
     }
+    // <<<<<<<<<<<<<<
 
-    // Lógica/BD: acción de “Eliminar” por fila (provisorio, inline)
+    // >>>>>>>>>>>>>> CAMBIO MÍNIMO: usar eliminar.java
     private void onEliminar(int idProducto){
-        int r = JOptionPane.showConfirmDialog(this,
-                "¿Eliminar el producto #" + idProducto + "?\nEsta acción no se puede deshacer.",
-                "Eliminar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (r!=JOptionPane.YES_OPTION) return;
-
-        String sql = "DELETE FROM producto WHERE id_producto = ?";
-        try (Connection cn = DB.get();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            ps.setInt(1, idProducto);
-            int n = ps.executeUpdate();
-            if (n>0){
-                JOptionPane.showMessageDialog(this, "Producto eliminado.");
-                cargarTabla();
-            }else{
-                JOptionPane.showMessageDialog(this, "No se eliminó (¿ID inexistente?)");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo eliminar:\n" + ex.getMessage(),
-                    "BD", JOptionPane.ERROR_MESSAGE);
-        }
+        eliminar.ejecutar(this, idProducto, this::cargarTabla);
     }
+    // <<<<<<<<<<<<<<
 
-        // BD: helper local unificado
+    // BD: helper local unificado
     static class DB {
         static java.sql.Connection get() throws Exception {
             return conexion_bd.getConnection();
