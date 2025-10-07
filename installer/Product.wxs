@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="LosLapicitos" Language="1033" Version="1.0.0.0" Manufacturer="TuEmpresa" UpgradeCode="5a6bdff7-d0cb-43c2-aad0-37ea84fd58f5">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="Ya existe una version mas reciente instalada." />
+    <MediaTemplate />
+
+    <Feature Id="ProductFeature" Title="LosLapicitos" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <!-- Propiedad para el icono que aparece en "Programas y características" -->
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico"/>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="LosLapicitos" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="LosLapicitos"/>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Copiamos el JAR -->
+      <Component Id="AppJarComponent" Guid="*">
+        <File Id="AppJar" Source="..\app-fat.jar" KeyPath="yes"/>
+      </Component>
+
+      <!-- Copiamos el BAT y creamos accesos directos -->
+      <Component Id="RunBatComponent" Guid="*">
+        <File Id="RunBat" Source="..\run.bat"/>
+        <!-- Clave de registro dummy para evitar errores ICE -->
+        <RegistryValue Root="HKCU" Key="Software\LosLapicitos" Name="installed" Type="string" Value="1" KeyPath="yes"/>
+
+        <!-- Acceso directo en el escritorio -->
+        <Shortcut Id="DesktopShortcut"
+                  Directory="DesktopFolder"
+                  Name="LosLapicitos"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Target="[INSTALLFOLDER]run.bat"
+                  Icon="AppIcon.ico"
+                  Advertise="no"/>
+
+        <!-- Acceso directo en el menú inicio -->
+        <Shortcut Id="StartMenuShortcut"
+                  Directory="ApplicationProgramsFolder"
+                  Name="LosLapicitos"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Target="[INSTALLFOLDER]run.bat"
+                  Icon="AppIcon.ico"
+                  Advertise="no"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- Icono -->
+  <Fragment>
+    <Icon Id="AppIcon.ico" SourceFile="..\app.ico"/>
+  </Fragment>
+</Wix>
