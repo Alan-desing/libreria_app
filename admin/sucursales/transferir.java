@@ -11,19 +11,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class transferir extends JDialog {
+
+    // lógica: Estado de la transferencia
     private boolean ok=false;
 
+    // visual: Campos y botones
     private JComboBox<Item> cbOrigen, cbDestino;
     private JTextField tfObs;
     private JPanel rowsWrap;
     private JButton btnAgregar, btnConfirmar, btnCancelar;
 
+    // lógica: Representa un elemento de combo
     static class Item {
         int id; String nombre;
         Item(int i, String n){ id=i; nombre=n; }
         @Override public String toString(){ return nombre; }
     }
 
+    // visual y lógica: Representa una fila de producto a transferir
     static class Row {
         JComboBox<Item> cbProd;
         JSpinner spCant;
@@ -35,25 +40,27 @@ public class transferir extends JDialog {
         super(owner, "Transferir productos entre sucursales", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        // visual: Panel raíz
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(new EmptyBorder(14,14,14,14));
         root.setBackground(estilos.COLOR_FONDO);
 
+        // visual: Card principal
         JPanel card = new JPanel();
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220,220,220),1,true),
-                new EmptyBorder(16,16,16,16) // <-- FIX: 4 parámetros
+                new EmptyBorder(16,16,16,16)
         ));
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
-        // Encabezado
+        // visual: Encabezado de sección
         JLabel h = new JLabel("Datos de la transferencia");
         h.setFont(new Font("Arial", Font.BOLD, 16));
         h.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(h); card.add(Box.createVerticalStrut(6));
 
-        // Combos
+        // visual y lógica: Combos y campo de observación
         JPanel grid = new JPanel(new GridBagLayout());
         grid.setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
@@ -72,11 +79,13 @@ public class transferir extends JDialog {
         card.add(grid);
         card.add(Box.createVerticalStrut(10));
 
+        // visual: Subtítulo de productos
         JLabel h2 = new JLabel("Productos");
         h2.setFont(new Font("Arial", Font.BOLD, 16));
         h2.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(h2); card.add(Box.createVerticalStrut(6));
 
+        // visual: Contenedor de filas de productos
         rowsWrap = new JPanel();
         rowsWrap.setOpaque(false);
         rowsWrap.setLayout(new BoxLayout(rowsWrap, BoxLayout.Y_AXIS));
@@ -87,11 +96,13 @@ public class transferir extends JDialog {
         scRows.setPreferredSize(new Dimension(0, 260));
         card.add(scRows);
 
+        // visual: Botón agregar fila
         btnAgregar = estilos.botonBlanco("+ Agregar producto");
         btnAgregar.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(Box.createVerticalStrut(6));
         card.add(btnAgregar);
 
+        // visual: Botones confirmar y cancelar
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));
         btnConfirmar = estilos.botonRedondeado("Confirmar transferencia");
         btnCancelar  = estilos.botonBlanco("Cancelar");
@@ -107,21 +118,23 @@ public class transferir extends JDialog {
         pack();
         setLocationRelativeTo(owner);
 
-        // Data
+        // lógica: Carga inicial de datos
         cargarSucursales();
         if (idOrigenSel>0) selectById(cbOrigen, idOrigenSel);
-        cargarProductos(); // para prototipos de filas
+        cargarProductos();
         addRow(); // primera fila
 
-        // Events
+        // lógica y visual: Eventos botones
         btnAgregar.addActionListener(e -> addRow());
         btnCancelar.addActionListener(e -> dispose());
         btnConfirmar.addActionListener(e -> onConfirm());
         getRootPane().setDefaultButton(btnConfirmar);
     }
 
+    // visual: Estiliza combos
     private void estilizarCombo(JComboBox<?> cb){ estilos.estilizarCombo(cb); cb.setPreferredSize(new Dimension(320,38)); }
 
+    // visual: Añade etiqueta a campo
     private void addLabeled(JPanel grid, GridBagConstraints g, String label, JComponent comp){
         JPanel row = new JPanel(new BorderLayout()); row.setOpaque(false);
         JLabel lb = new JLabel(label);
@@ -131,6 +144,7 @@ public class transferir extends JDialog {
         grid.add(row, g);
     }
 
+    // visual y lógica: Agrega fila de producto
     private void addRow(){
         Row r = new Row();
         r.cbProd = new JComboBox<>();
@@ -148,6 +162,7 @@ public class transferir extends JDialog {
         g.gridx=0; g.weightx=1; line.add(r.cbProd, g);
         g.gridx=1; g.weightx=0; line.add(r.spCant, g);
 
+        // visual y lógica: Botón quitar fila
         JButton btnX = estilos.botonSmDanger("Quitar");
         btnX.addActionListener(e -> { rowsWrap.remove(line); filas.remove(r); rowsWrap.revalidate(); rowsWrap.repaint(); });
         g.gridx=2; line.add(btnX, g);
@@ -159,9 +174,11 @@ public class transferir extends JDialog {
     }
 
     /* ===== Data load ===== */
+    // lógica: Listas de sucursales y productos
     private final List<Item> sucursales = new ArrayList<>();
     private final List<Item> productos  = new ArrayList<>();
 
+    // lógica: Carga de sucursales
     private void cargarSucursales(){
         sucursales.clear();
         try (Connection cn = conexion_bd.getConnection();
@@ -172,6 +189,8 @@ public class transferir extends JDialog {
         cbOrigen.removeAllItems(); cbDestino.removeAllItems();
         for (Item it: sucursales){ cbOrigen.addItem(it); cbDestino.addItem(new Item(it.id, it.nombre)); }
     }
+
+    // lógica: Carga de productos
     private void cargarProductos(){
         productos.clear();
         try (Connection cn = conexion_bd.getConnection();
@@ -180,15 +199,20 @@ public class transferir extends JDialog {
             while (rs.next()) productos.add(new Item(rs.getInt(1), rs.getString(2)));
         } catch (Exception ex){ JOptionPane.showMessageDialog(this,"Error cargando productos:\n"+ex.getMessage(),"BD",JOptionPane.ERROR_MESSAGE); }
     }
+
+    // lógica: Llena combo de productos
     private void fillProductos(JComboBox<Item> cb){
         cb.removeAllItems();
         for (Item it: productos) cb.addItem(new Item(it.id, it.nombre));
     }
+
+    // lógica: Selecciona item por id en combo
     private void selectById(JComboBox<Item> cb, int id){
         for (int i=0;i<cb.getItemCount();i++){ if (cb.getItemAt(i).id==id){ cb.setSelectedIndex(i); return; } }
     }
 
     /* ===== Confirmar ===== */
+    // lógica y visual: Confirma transferencia
     private void onConfirm(){
         Item origen = (Item) cbOrigen.getSelectedItem();
         Item destino= (Item) cbDestino.getSelectedItem();
@@ -201,7 +225,7 @@ public class transferir extends JDialog {
             return;
         }
 
-        // Recolectar items
+        // lógica: Recolectar items
         class P { int id; int cant; }
         List<P> items = new ArrayList<>();
         for (Row r: filas){
@@ -216,12 +240,12 @@ public class transferir extends JDialog {
 
         String obs = tfObs.getText().trim();
 
-        // Transacción
+        // lógica: Transacción de transferencia
         try (Connection cn = conexion_bd.getConnection()){
             cn.setAutoCommit(false);
 
-            int idTipoMov = getIdTipoMov(cn, "Transferencia"); // fallback si no existe
-            int idUsuario = 0; // si manejás usuario en escritorio, podés setearlo
+            int idTipoMov = getIdTipoMov(cn, "Transferencia");
+            int idUsuario = 0; // ajustar si se maneja usuario
 
             int idMov;
             try (PreparedStatement ps = cn.prepareStatement(
@@ -245,7 +269,7 @@ public class transferir extends JDialog {
             PreparedStatement insDet = cn.prepareStatement("INSERT INTO movimiento_detalle (id_movimiento,id_producto,cantidad,precio_unitario) VALUES (?,?,?,0)");
 
             for (P it: items){
-                // Debitar ORIGEN
+                // lógica: Debitar ORIGEN
                 selInv.setInt(1, origen.id); selInv.setInt(2, it.id);
                 ResultSet r = selInv.executeQuery();
                 if (!r.next() || r.getInt("stock_actual") < it.cant){
@@ -256,7 +280,7 @@ public class transferir extends JDialog {
                 updInv.setInt(1, nuevoOrigen); updInv.setInt(2, idInvOrigen);
                 updInv.executeUpdate();
 
-                // Acreditar DESTINO
+                // lógica: Acreditar DESTINO
                 selInv.setInt(1, destino.id); selInv.setInt(2, it.id);
                 ResultSet r2 = selInv.executeQuery();
                 if (!r2.next()){
@@ -273,7 +297,7 @@ public class transferir extends JDialog {
                     updInv.executeUpdate();
                 }
 
-                // Detalle
+                // lógica: Insertar detalle
                 insDet.setInt(1, idMov);
                 insDet.setInt(2, it.id);
                 insDet.setInt(3, it.cant);
@@ -291,6 +315,7 @@ public class transferir extends JDialog {
         }
     }
 
+    // lógica: Obtener ID del tipo de movimiento
     private int getIdTipoMov(Connection cn, String nombre) throws Exception {
         try (PreparedStatement ps = cn.prepareStatement(
                 "SELECT id_tipo_movimiento FROM tipo_movimiento WHERE LOWER(nombre_tipo)=LOWER(?) LIMIT 1")){
@@ -299,7 +324,7 @@ public class transferir extends JDialog {
                 if (rs.next()) return rs.getInt(1);
             }
         }
-        // fallback: 2 suele ser Transferencia en varios esquemas; si no existe, creamos uno básico
+        // fallback: insertar si no existe
         try (PreparedStatement ins = cn.prepareStatement(
                 "INSERT INTO tipo_movimiento (nombre_tipo) VALUES (?)", Statement.RETURN_GENERATED_KEYS)){
             ins.setString(1, nombre);
@@ -309,5 +334,6 @@ public class transferir extends JDialog {
         return 2;
     }
 
+    // lógica: Retorna si la transferencia fue exitosa
     public boolean fueOk(){ return ok; }
 }

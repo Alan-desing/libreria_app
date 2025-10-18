@@ -17,11 +17,11 @@ import java.util.function.Consumer;
 
 public class panel_sucursales extends JPanel {
 
-    // Filtros
+    // lógica: Filtros de búsqueda
     private PlaceholderTextField txtBuscar;
     private JButton btnFiltrarFila, btnNueva, btnTransferir;
 
-    // Tabla
+    // lógica: Tabla y modelo de datos
     private JTable tabla;
     private DefaultTableModel model;
 
@@ -29,7 +29,7 @@ public class panel_sucursales extends JPanel {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // Shell con márgenes (igual que categorías / proveedores)
+        // visual: Panel shell con márgenes
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14,14,14,14));
@@ -37,7 +37,7 @@ public class panel_sucursales extends JPanel {
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
         gbc.fill=GridBagConstraints.HORIZONTAL; gbc.anchor=GridBagConstraints.PAGE_START;
 
-        // Card blanca principal
+        // visual: Card blanca principal
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -49,7 +49,7 @@ public class panel_sucursales extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* ===== Encabezado (título + acciones) ===== */
+        // visual: Encabezado con título y botones
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Sucursales");
@@ -57,6 +57,7 @@ public class panel_sucursales extends JPanel {
         h1.setForeground(estilos.COLOR_TITULO);
         head.add(h1, BorderLayout.WEST);
 
+        // visual: Botones Nuevo y Transferir
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actions.setOpaque(false);
         btnNueva = estilos.botonRedondeado("+ Nueva Sucursal");
@@ -70,7 +71,7 @@ public class panel_sucursales extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(new EmptyBorder(0,0,8,0));
 
-        /* ===== Fila de filtros (igual a proveedores) ===== */
+        // visual: Fila de filtros
         txtBuscar = new PlaceholderTextField("Buscar por nombre, dirección, email o teléfono…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -99,7 +100,7 @@ public class panel_sucursales extends JPanel {
         filtrosBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         filtrosBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
-        /* ===== Tabla (misma estética) ===== */
+        // visual: Configuración de la tabla
         String colVentasMes = "Ventas ("+mesY()+")";
         String[] cols = {"ID","Nombre","Dirección","Contacto","Stock","Bajo stock", colVentasMes,"Ver","Editar","Transferir"};
         model = new DefaultTableModel(cols, 0){
@@ -116,7 +117,7 @@ public class panel_sucursales extends JPanel {
         JTableHeader th = tabla.getTableHeader();
         th.setFont(new Font("Arial", Font.BOLD, 17));
         th.setReorderingAllowed(false);
-        th.setBackground(new Color(0xFF,0xF3,0xD9)); // crema
+        th.setBackground(new Color(0xFF,0xF3,0xD9));
 
         tabla.setShowVerticalLines(false);
         tabla.setShowHorizontalLines(true);
@@ -126,17 +127,17 @@ public class panel_sucursales extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        // Alineación por defecto izquierda
+        // visual: Alineación por defecto
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // Ventas alineada a derecha
+        // visual: Columna de ventas alineada a la derecha
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
         tabla.getColumnModel().getColumn(6).setCellRenderer(right);
 
-        // Render para ID con '#'
+        // visual: Columna de ID con #
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c){
                 Component comp = super.getTableCellRendererComponent(t, v, s, f, r, c);
@@ -146,7 +147,7 @@ public class panel_sucursales extends JPanel {
             }
         });
 
-        // Botones
+        // visual y lógica: Botones en la tabla (Ver, Editar, Transferir)
         tabla.getColumnModel().getColumn(7).setCellRenderer(new BtnCellRenderer(false));
         tabla.getColumnModel().getColumn(8).setCellRenderer(new BtnCellRenderer(false));
         tabla.getColumnModel().getColumn(9).setCellRenderer(new BtnCellRenderer(false));
@@ -154,7 +155,7 @@ public class panel_sucursales extends JPanel {
         tabla.getColumnModel().getColumn(8).setCellEditor(new BtnCellEditor(tabla, id -> onEditar(id), false));
         tabla.getColumnModel().getColumn(9).setCellEditor(new BtnCellEditor(tabla, id -> onTransferir(id), false));
 
-        // Anchos orientativos (como en proveedores)
+        // visual: Anchos de columna
         int[] widths = {80,220,260,220,90,110,140,80,80,110};
         for (int i=0;i<widths.length;i++) tabla.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
@@ -168,7 +169,7 @@ public class panel_sucursales extends JPanel {
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
         sc.setPreferredSize(new Dimension(0, 420));
 
-        // Ensamble
+        // visual: Ensamble del panel
         card.add(head);
         card.add(filtrosBox);
         card.add(Box.createVerticalStrut(8));
@@ -177,7 +178,7 @@ public class panel_sucursales extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        /* ===== Eventos ===== */
+        // lógica: Eventos
         btnFiltrarFila.addActionListener(e -> cargar());
         txtBuscar.addActionListener(e -> cargar());
 
@@ -194,11 +195,11 @@ public class panel_sucursales extends JPanel {
             if (dlg.fueOk()) cargar();
         });
 
-        /* ===== Carga inicial ===== */
+        // lógica: Carga inicial de datos
         cargar();
     }
 
-    /* ================== Datos ================== */
+    // lógica: Carga los datos desde la base de datos
     private void cargar(){
         model.setRowCount(0);
         String q = txtBuscar.getText()==null? "" : txtBuscar.getText().trim();
@@ -262,7 +263,7 @@ public class panel_sucursales extends JPanel {
         }
     }
 
-    /* ================== Acciones ================== */
+    // lógica: Acciones para botones de la tabla
     private int idAt(int viewRow){
         if (viewRow<0) return -1;
         int mr = tabla.convertRowIndexToModel(viewRow);
@@ -292,7 +293,7 @@ public class panel_sucursales extends JPanel {
         if (dlg.fueOk()) cargar();
     }
 
-    /* ================== Renderers / Editors ================== */
+    // lógica y visual: Renderers y editores para botones en la tabla
     static class BtnCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         BtnCellRenderer(boolean danger){
@@ -328,7 +329,7 @@ public class panel_sucursales extends JPanel {
         }
     }
 
-    /* ================== Utils ================== */
+    // lógica: Utilidades
     private static String nn(String s){ return (s==null||s.isBlank())?"—":s; }
     private static String nf2(double n){
         String s = String.format("%,.2f", n);
@@ -342,7 +343,7 @@ public class panel_sucursales extends JPanel {
                 + " " + c.get(java.util.Calendar.YEAR);
     }
 
-    /* ===== Placeholder igual al de categorías/proveedores ===== */
+    // visual: Campo de texto con placeholder
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder){
