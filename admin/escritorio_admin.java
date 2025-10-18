@@ -8,7 +8,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// Paneles ya implementadas
+// Paneles de administrador
 import admin.inicio.panel_inicio;
 import admin.productos.panel_productos;
 import admin.categorias.panel_categorias;
@@ -16,13 +16,9 @@ import admin.subcategorias.panel_subcategorias;
 import admin.pedidos.panel_pedidos;
 import admin.inventario.panel_inventario;
 import admin.usuarios.panel_usuarios;
-
-// Nuevos paneles reales existentes
 import admin.proveedores.panel_proveedores;
 import admin.sucursales.panel_sucursales;
 import admin.ajustes.panel_ajustes;
-
-// === NUEVOS: agregar 4 secciones ===
 import admin.alertas.panel_alertas;
 import admin.auditorias.panel_auditorias;
 import admin.reportes.panel_reportes;
@@ -42,11 +38,11 @@ public class escritorio_admin extends JFrame {
     private static final String V_PEDIDOS      = "pedidos";
     private static final String V_PROVEEDORES  = "proveedores";
     private static final String V_SUCURSALES   = "sucursales";
-    private static final String V_ALERTAS      = "alertas";          // nuevo
-    private static final String V_REPORTES     = "reportes";         // nuevo
+    private static final String V_ALERTAS      = "alertas";          
+    private static final String V_REPORTES     = "reportes";         
     private static final String V_USUARIOS     = "usuarios";
     private static final String V_AJUSTES      = "ajustes";
-    private static final String V_AUDITORIAS   = "auditorias";       // nuevo
+    private static final String V_AUDITORIAS   = "auditorias";       
     private static final String V_SALIR        = "salir";
 
     // Visual: título de la sección activa
