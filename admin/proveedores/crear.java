@@ -10,19 +10,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class crear extends JDialog {
+    // visual: campos del formulario
     private JTextField tfNombre, tfContacto, tfEmail, tfTel, tfDir;
+    // lógica: marca si se guardó correctamente
     private boolean guardado=false;
 
     public crear(Window owner){
         super(owner, "Nuevo Proveedor", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // ==== ROOT ====
+        // visual: panel raíz
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(new EmptyBorder(14,14,14,14));
         root.setBackground(estilos.COLOR_FONDO);
 
-        // ==== CARD ====
+        // visual: formulario principal en card blanca
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         JPanel card = new JPanel(new GridBagLayout());
@@ -36,48 +38,53 @@ public class crear extends JDialog {
         g.fill=GridBagConstraints.HORIZONTAL;
         g.gridx=0; g.gridy=0; g.weightx=1;
 
+        // visual: creación de campos
         tfNombre   = field();
         tfContacto = field();
         tfEmail    = field();
         tfTel      = field();
         tfDir      = field();
 
+        // visual: agregar filas al formulario
         addRow(card, g, "Nombre *", tfNombre);
         addRow(card, g, "Contacto / Referente", tfContacto);
         addRow(card, g, "Email", tfEmail);
         addRow(card, g, "Teléfono", tfTel);
         addRow(card, g, "Dirección", tfDir);
 
-        // meto la card en un scroll por si la ventana queda chica
+        // visual: scroll para evitar cortes en pantallas pequeñas
         JScrollPane sc = new JScrollPane(card,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         sc.setBorder(null);
 
-        // ==== ACTIONS ====
+        // visual: botones inferiores
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));
         JButton btnOk = estilos.botonRedondeado("Guardar");
         JButton btnCancel = estilos.botonBlanco("Cancelar");
         btnOk.setPreferredSize(new Dimension(160,38));
         btnCancel.setPreferredSize(new Dimension(140,38));
-        actions.add(btnOk); actions.add(btnCancel);
+        actions.add(btnOk);
+        actions.add(btnCancel);
 
         root.add(sc, BorderLayout.CENTER);
         root.add(actions, BorderLayout.SOUTH);
         setContentPane(root);
 
-        // tamaño y “pack” para respetar preferred sizes
+        // visual: configuración inicial de tamaño y posición
         setMinimumSize(new Dimension(780, 520));
         pack();
         setLocationRelativeTo(owner);
 
-        // UX
+        // visual: enter para guardar
         getRootPane().setDefaultButton(btnOk);
 
+        // lógica: acciones de botones
         btnOk.addActionListener(e -> onSave());
         btnCancel.addActionListener(e -> dispose());
     }
 
+    // visual: crea y estiliza un campo de texto
     private JTextField field(){
         JTextField t=new JTextField();
         estilos.estilizarCampo(t);
@@ -85,6 +92,8 @@ public class crear extends JDialog {
         t.setPreferredSize(new Dimension(520, 38));
         return t;
     }
+
+    // visual: agrega una fila con etiqueta y campo
     private void addRow(JPanel p, GridBagConstraints g, String label, JComponent comp){
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
@@ -97,6 +106,7 @@ public class crear extends JDialog {
         g.gridy++;
     }
 
+    // lógica + BD: guarda el proveedor
     private void onSave(){
         String nombre=tfNombre.getText().trim();
         if (nombre.isEmpty()){
@@ -119,5 +129,6 @@ public class crear extends JDialog {
         }
     }
 
+    // lógica: devuelve si se guardó correctamente
     public boolean fueGuardado(){ return guardado; }
 }

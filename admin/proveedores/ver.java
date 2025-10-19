@@ -10,8 +10,11 @@ import java.awt.*;
 import java.sql.*;
 
 public class ver extends JDialog {
+    // lógica: id del proveedor actual
     private final int id;
+    // visual: etiquetas informativas y resumen
     private JLabel lbNombre, lbContacto, lbEmail, lbTel, lbDir, lbPedidos, lbTotal;
+    // visual: tabla de últimos pedidos
     private JTable tabla;
     private DefaultTableModel model;
 
@@ -20,19 +23,21 @@ public class ver extends JDialog {
         this.id=idProveedor;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        // visual: contenedor raíz
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(estilos.COLOR_FONDO);
         root.setBorder(new EmptyBorder(12,12,12,12));
 
-        // Contenido en columna (para que nada quede “aplastado”)
+        // visual: layout vertical principal
         JPanel content = new JPanel();
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        // tarjetas superiores
+        // visual: tarjetas superiores (datos + resumen)
         JPanel top = new JPanel(new GridLayout(1,2,12,12));
         top.setOpaque(false);
 
+        // visual: card de datos del proveedor
         JPanel c1 = card();
         c1.setLayout(new BoxLayout(c1, BoxLayout.Y_AXIS));
         c1.add(title("Datos de contacto"));
@@ -41,6 +46,8 @@ public class ver extends JDialog {
         lbEmail    = info(c1,"Email:");
         lbTel      = info(c1,"Teléfono:");
         lbDir      = info(c1,"Dirección:");
+
+        // lógica: botón para abrir ventana de edición
         JButton btnEditar = estilos.botonBlanco("Editar");
         btnEditar.addActionListener(e -> {
             editar dlg = new editar(owner, id);
@@ -51,15 +58,17 @@ public class ver extends JDialog {
         c1.add(Box.createVerticalStrut(6));
         c1.add(btnEditar);
 
+        // visual: card con resumen de compras
         JPanel c2 = card();
         c2.setLayout(new BoxLayout(c2, BoxLayout.Y_AXIS));
         c2.add(title("Resumen de compras"));
         lbPedidos = info(c2,"Pedidos:");
         lbTotal   = info(c2,"Total comprado:");
 
-        top.add(c1); top.add(c2);
+        top.add(c1);
+        top.add(c2);
 
-        // tabla últimos pedidos
+        // visual: card con tabla de últimos pedidos
         JPanel tableCard = card();
         tableCard.setLayout(new BorderLayout());
         JLabel th = new JLabel("Últimos pedidos");
@@ -67,6 +76,7 @@ public class ver extends JDialog {
         th.setBorder(new EmptyBorder(6,6,6,6));
         tableCard.add(th, BorderLayout.NORTH);
 
+        // visual: tabla de pedidos recientes
         model = new DefaultTableModel(new String[]{"ID","Fecha","Monto"}, 0){
             @Override public boolean isCellEditable(int r, int c){ return false; }
         };
@@ -79,7 +89,7 @@ public class ver extends JDialog {
         scTable.setPreferredSize(new Dimension(0, 260));
         tableCard.add(scTable, BorderLayout.CENTER);
 
-        // ensamblado
+        // visual: ensamblado general
         content.add(top);
         content.add(Box.createVerticalStrut(12));
         content.add(tableCard);
@@ -87,14 +97,17 @@ public class ver extends JDialog {
         root.add(content, BorderLayout.CENTER);
         setContentPane(root);
 
+        // visual: propiedades generales de la ventana
         setMinimumSize(new Dimension(920, 620));
         pack();
         setLocationRelativeTo(owner);
 
+        // BD: carga inicial de datos
         cargar();
         cargarUltimos();
     }
 
+    // visual: estilo base para tarjetas
     private JPanel card(){
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
@@ -104,19 +117,25 @@ public class ver extends JDialog {
         ));
         return p;
     }
+
+    // visual: estilo para títulos dentro de cards
     private JLabel title(String t){
         JLabel l=new JLabel(t);
         l.setFont(new Font("Arial", Font.BOLD, 16));
         l.setBorder(new EmptyBorder(0,0,8,0));
         return l;
     }
+
+    // visual: agrega una etiqueta con texto informativo
     private JLabel info(JPanel parent, String label){
         JLabel l = new JLabel(label+" —");
         l.setFont(new Font("Arial", Font.PLAIN, 15));
         l.setBorder(new EmptyBorder(2,0,2,0));
-        parent.add(l); return l;
+        parent.add(l);
+        return l;
     }
 
+    // BD: carga los datos del proveedor y su resumen general
     private void cargar(){
         try (Connection cn = conexion_bd.getConnection();
              PreparedStatement ps = cn.prepareStatement("SELECT * FROM proveedor WHERE id_proveedor=?")){
@@ -134,6 +153,7 @@ public class ver extends JDialog {
             JOptionPane.showMessageDialog(this, "Error cargando proveedor:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
         }
 
+        // BD: consulta de totales y cantidad de pedidos
         try (Connection cn = conexion_bd.getConnection();
              PreparedStatement ps = cn.prepareStatement("""
                      SELECT COALESCE(SUM(pd.cantidad_solicitada*pd.precio_unitario),0) total,
@@ -154,6 +174,7 @@ public class ver extends JDialog {
         }
     }
 
+    // BD: carga los últimos pedidos del proveedor
     private void cargarUltimos(){
         model.setRowCount(0);
         try (Connection cn = conexion_bd.getConnection();
@@ -181,6 +202,12 @@ public class ver extends JDialog {
         }
     }
 
+    // helpers: texto vacío o nulo → guion
     private String nn(String s){ return (s==null||s.isBlank())?"—":s; }
-    private String nf2(double n){ String s=String.format("%,.2f", n); return s.replace(',', 'X').replace('.', ',').replace('X','.'); }
+
+    // helpers: formato de número con coma decimal
+    private String nf2(double n){
+        String s=String.format("%,.2f", n);
+        return s.replace(',', 'X').replace('.', ',').replace('X','.');
+    }
 }

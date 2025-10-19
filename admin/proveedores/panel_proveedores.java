@@ -17,19 +17,20 @@ import java.util.function.Consumer;
 
 public class panel_proveedores extends JPanel {
 
-    // Filtros
+    // visual: campos y botones de filtro
     private PlaceholderTextField txtBuscar;
     private JButton btnFiltrarFila, btnNuevo, btnReporte;
 
-    // Tabla
+    // visual: tabla de datos y su modelo
     private JTable tabla;
     private DefaultTableModel model;
 
+    // visual: constructor del panel principal de proveedores
     public panel_proveedores() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // Shell con márgenes (igual a categorías)
+        // visual: panel contenedor principal con márgenes
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14, 14, 14, 14));
@@ -39,7 +40,7 @@ public class panel_proveedores extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // Card blanca (igual)
+        // visual: tarjeta blanca que contiene todos los elementos
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -51,7 +52,7 @@ public class panel_proveedores extends JPanel {
         card.setMaximumSize(new Dimension(1000, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* ====== Encabezado (título + acciones) ====== */
+        // visual: encabezado con título y botones de acción
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Proveedores");
@@ -72,7 +73,7 @@ public class panel_proveedores extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         head.setBorder(new EmptyBorder(0,0,8,0));
 
-        /* ====== Fila de filtros (como Categorías) ====== */
+        // visual: fila de filtros (campo de búsqueda y botón)
         txtBuscar = new PlaceholderTextField("Buscar por nombre, email, teléfono o contacto…");
         estilos.estilizarCampo(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(520, 40));
@@ -91,6 +92,7 @@ public class panel_proveedores extends JPanel {
         g.gridx = 0; g.weightx = 1.0; filaFiltros.add(txtBuscar, g);
         g.gridx = 1; g.weightx = 0;   filaFiltros.add(btnFiltrarFila, g);
 
+        // visual: caja de fondo para los filtros
         JPanel filtrosBox = new JPanel(new BorderLayout());
         filtrosBox.setOpaque(true);
         filtrosBox.setBackground(new Color(0xF7,0xE9,0xD0));
@@ -102,7 +104,7 @@ public class panel_proveedores extends JPanel {
         filtrosBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         filtrosBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
-        /* ====== Tabla (estética idéntica) ====== */
+        // visual: configuración de la tabla de proveedores
         String[] cols = {"Nombre","Contacto","Email","Teléfono","Dirección","Pedidos","Total comprado","Ver","Editar","Eliminar"};
         model = new DefaultTableModel(cols, 0){
             @Override public boolean isCellEditable(int r, int c){ return c>=7; }
@@ -118,7 +120,7 @@ public class panel_proveedores extends JPanel {
         JTableHeader th = tabla.getTableHeader();
         th.setFont(new Font("Arial", Font.BOLD, 17));
         th.setReorderingAllowed(false);
-        th.setBackground(new Color(0xFF,0xF3,0xD9)); // crema igual
+        th.setBackground(new Color(0xFF,0xF3,0xD9));
 
         tabla.setShowVerticalLines(false);
         tabla.setShowHorizontalLines(true);
@@ -128,17 +130,16 @@ public class panel_proveedores extends JPanel {
         tabla.setSelectionBackground(new Color(0xF2,0xE7,0xD6));
         tabla.setSelectionForeground(new Color(0x33,0x33,0x33));
 
-        // Alineación por defecto a la izquierda
+        // visual: alineación de celdas
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         tabla.setDefaultRenderer(Object.class, left);
 
-        // Total comprado alineado a derecha
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
         tabla.getColumnModel().getColumn(6).setCellRenderer(right);
 
-        // Botones
+        // visual: configuración de botones de acción en la tabla
         tabla.getColumnModel().getColumn(7).setCellRenderer(new BtnCellRenderer(false));
         tabla.getColumnModel().getColumn(8).setCellRenderer(new BtnCellRenderer(false));
         tabla.getColumnModel().getColumn(9).setCellRenderer(new BtnCellRenderer(true));
@@ -146,10 +147,11 @@ public class panel_proveedores extends JPanel {
         tabla.getColumnModel().getColumn(8).setCellEditor(new BtnCellEditor(tabla, id -> onEditar(id), false, 0));
         tabla.getColumnModel().getColumn(9).setCellEditor(new BtnCellEditor(tabla, id -> onEliminar(id), true, 0));
 
-        // Anchos orientativos (como en categorías)
+        // visual: definición de anchos de columnas
         int[] widths = {220,160,220,120,220,90,140,70,70,90};
         for (int i=0;i<widths.length;i++) tabla.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
+        // visual: panel con scroll para la tabla
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -158,9 +160,9 @@ public class panel_proveedores extends JPanel {
                 new EmptyBorder(6,6,6,6)
         ));
         sc.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sc.setPreferredSize(new Dimension(0, 420)); // alto como categorías
+        sc.setPreferredSize(new Dimension(0, 420));
 
-        // Ensamble
+        // visual: ensamblado de los componentes principales
         card.add(head);
         card.add(filtrosBox);
         card.add(Box.createVerticalStrut(8));
@@ -169,7 +171,7 @@ public class panel_proveedores extends JPanel {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        /* ====== Eventos ====== */
+        // lógica: eventos de botones y campo de búsqueda
         btnFiltrarFila.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
 
@@ -180,11 +182,10 @@ public class panel_proveedores extends JPanel {
         });
         btnReporte.addActionListener(e -> new reportes(SwingUtilities.getWindowAncestor(this)).setVisible(true));
 
-        /* ====== Carga inicial ====== */
+        // lógica: carga inicial de datos en la tabla
         cargarTabla();
     }
-
-    /* ================== Datos ================== */
+    // lógica: obtiene y muestra la lista de proveedores aplicando filtros de búsqueda
     private void cargarTabla(){
         model.setRowCount(0);
         String q = txtBuscar.getText()==null ? "" : txtBuscar.getText().trim();
@@ -194,6 +195,7 @@ public class panel_proveedores extends JPanel {
             where = " WHERE (p.nombre LIKE ? OR p.email LIKE ? OR p.telefono LIKE ? OR p.contacto_referencia LIKE ?)";
             for(int i=0;i<4;i++) params.add("%"+q+"%");
         }
+
         String sql = """
             SELECT p.id_proveedor, p.nombre, p.email, p.telefono, p.direccion, p.contacto_referencia,
                    COALESCE(SUM(pd.cantidad_solicitada*pd.precio_unitario),0) AS total_compras,
@@ -233,13 +235,16 @@ public class panel_proveedores extends JPanel {
         }
     }
 
-    /* ================== Utils ================== */
+    // lógica: reemplaza valores nulos o vacíos por un guion
     private String nullToDash(String s){ return (s==null || s.isBlank()) ? "—" : s; }
+
+    // lógica: formatea números con dos decimales y separadores de miles
     private String nf2(double n){
         String s = String.format("%,.2f", n);
         return s.replace(',', 'X').replace('.', ',').replace('X','.');
     }
 
+    // lógica: obtiene el ID del proveedor asociado a la fila seleccionada
     private int getIdAtRow(int viewRow){
         int r = tabla.convertRowIndexToModel(viewRow);
         String nombre = String.valueOf(model.getValueAt(r,0));
@@ -257,11 +262,14 @@ public class panel_proveedores extends JPanel {
         return -1;
     }
 
+    // lógica: abre la ventana de visualización del proveedor
     private void onVer(int id){
         if (id<=0) id = getIdAtRow(tabla.getEditingRow());
         if (id<=0) return;
         new ver(SwingUtilities.getWindowAncestor(this), id).setVisible(true);
     }
+
+    // lógica: abre la ventana de edición del proveedor y actualiza si hubo cambios
     private void onEditar(int id){
         if (id<=0) id = getIdAtRow(tabla.getEditingRow());
         if (id<=0) return;
@@ -269,6 +277,8 @@ public class panel_proveedores extends JPanel {
         dlg.setVisible(true);
         if (dlg.huboCambios()) cargarTabla();
     }
+
+    // lógica: elimina un proveedor validando que no tenga registros asociados
     private void onEliminar(int id){
         if (id<=0) id = getIdAtRow(tabla.getEditingRow());
         if (id<=0) return;
@@ -300,12 +310,13 @@ public class panel_proveedores extends JPanel {
         }
     }
 
+    // lógica: ejecuta una consulta que devuelve un valor entero
     private int getInt(Connection cn, String sql) throws Exception {
         try (PreparedStatement ps = cn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()){ return rs.next()? rs.getInt(1):0; }
     }
 
-    /* ====== Renderers / Editors ====== */
+    // visual: renderizado de los botones dentro de la tabla
     static class BtnCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         BtnCellRenderer(boolean danger){
@@ -317,6 +328,8 @@ public class panel_proveedores extends JPanel {
                           : estilos.botonSm(String.valueOf(v));
         }
     }
+
+    // visual/lógica: editor de celda que ejecuta acciones al presionar los botones de la tabla
     static class BtnCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table; private final JButton btn; private final Consumer<Integer> onClick;
         BtnCellEditor(JTable table, Consumer<Integer> onClick, boolean danger, int idCol){
@@ -335,7 +348,7 @@ public class panel_proveedores extends JPanel {
         }
     }
 
-    /* ====== Placeholder igual al de categorías ====== */
+    // visual: campo de texto con texto guía (placeholder) para la búsqueda
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder){
