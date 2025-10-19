@@ -20,14 +20,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-/**
- * Panel de Reportes y Estadísticas — Los Lapicitos
- * Ajustado para que todo el contenido quede dentro de la pantalla
- * sin scroll horizontal y con alturas/anchos controlados.
- */
+// visual: panel principal de reportes y estadísticas
 public class panel_reportes extends JPanel {
 
-    /* ====== Constantes de layout (reducidas) ====== */
+    // visual: constantes de espaciado y fuentes
     private static final int PAD_OUTER_LEFT  = 12;
     private static final int PAD_OUTER_OTHER = 10;
     private static final int PAD_CARD = 10;
@@ -36,33 +32,34 @@ public class panel_reportes extends JPanel {
     private static final int ROW_H = 24;
     private static final int ROW_H_HDR = 26;
 
-    /* ====== Filtros ====== */
+    // visual: componentes de filtros
     private JTextField tfDesde, tfHasta;
     private JComboBox<Item> cbSucursal, cbCategoria, cbProveedor;
     private JComboBox<String> cbGran;
     private JButton btnFiltrar;
     private JLabel tagRango;
 
-    /* ====== KPIs ====== */
+    // visual: indicadores KPI
     private JLabel kpiVentas, kpiTickets, kpiUnidades, kpiMargen;
 
-    /* ====== Serie + Chart ====== */
+    // visual: modelo de serie y gráfico
     private DefaultTableModel modelSerie;
     private LineChartPanel chart;
 
-    /* ====== Modelos de tablas ====== */
+    // visual: modelos de tablas secundarias
     private DefaultTableModel mCat, mProv, mSuc, mTop, mNoSale, mRot;
 
-    /* ====== Catálogos ====== */
+    // lógica: catálogos cargados desde BD
     private final List<Item> sucursales = new ArrayList<>();
     private final List<Item> categorias = new ArrayList<>();
     private final List<Item> proveedores = new ArrayList<>();
 
+    // visual + lógica: constructor principal
     public panel_reportes(){
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        /* ====== Contenedor principal (solo scroll vertical) ====== */
+        // visual: contenedor principal con scroll vertical
         JPanel content = new JPanel(new GridBagLayout());
         content.setOpaque(false);
         content.setBorder(BorderFactory.createEmptyBorder(
@@ -78,18 +75,18 @@ public class panel_reportes extends JPanel {
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        /* ====== Stack superior ====== */
+        // visual: bloque superior (título, filtros, KPIs y gráfico)
         JPanel stack = new JPanel();
         stack.setOpaque(false);
         stack.setLayout(new BoxLayout(stack, BoxLayout.Y_AXIS));
         stack.setAlignmentX(Component.LEFT_ALIGNMENT);
         stack.add(header());
-        stack.add(filtrosFila());       // ← ahora en 2 filas
-        stack.add(kpisGridCompact());   // ← 2x2 compacto
+        stack.add(filtrosFila());
+        stack.add(kpisGridCompact());
         stack.add(boxChart());
         card.add(stack, BorderLayout.NORTH);
 
-        /* ====== Centro: serie + tablas ====== */
+        // visual: bloque central con tablas
         JPanel center = new JPanel();
         center.setOpaque(false);
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
@@ -142,10 +139,11 @@ public class panel_reportes extends JPanel {
 
         content.add(card, gbc);
 
+        // visual: scroll vertical sin horizontal
         JScrollPane scroller = new JScrollPane(
                 content,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER  // ← SIN scroll horizontal del panel
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
         scroller.setBorder(null);
         scroller.setViewportBorder(null);
@@ -154,10 +152,10 @@ public class panel_reportes extends JPanel {
 
         add(scroller, BorderLayout.CENTER);
 
-        /* ====== Eventos ====== */
+        // lógica: evento de filtrado
         btnFiltrar.addActionListener(e -> recargarTodo());
 
-        /* ====== Inicial ====== */
+        // lógica: valores iniciales
         tfHasta.setText(LocalDate.now().toString());
         tfDesde.setText(LocalDate.now().minusDays(14).toString());
         cbGran.setSelectedItem("Día");
@@ -165,8 +163,7 @@ public class panel_reportes extends JPanel {
         recargarTodo();
     }
 
-    /* ======================= Secciones UI ======================= */
-
+    // visual: encabezado del panel
     private JPanel header(){
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -179,11 +176,12 @@ public class panel_reportes extends JPanel {
         return header;
     }
 
+    // visual: contenedor del gráfico principal
     private JPanel boxChart(){
         JPanel wrap = cardInner();
         wrap.setLayout(new BorderLayout());
         wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
-        wrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200)); // más compacto
+        wrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
 
         JLabel h = new JLabel("Evolución (diaria/semanal)");
         h.setFont(new Font("Arial", Font.BOLD, 15));
@@ -201,7 +199,7 @@ public class panel_reportes extends JPanel {
         return wrap;
     }
 
-    /** Filtros en DOS filas para que no desborden */
+    // visual: sección de filtros en dos filas
     private JPanel filtrosFila(){
         JPanel wrap = cardInner();
         wrap.setLayout(new BorderLayout());
@@ -234,7 +232,7 @@ public class panel_reportes extends JPanel {
         btnFiltrar.setPreferredSize(new Dimension(90,28));
         btnFiltrar.setFont(new Font("Arial", Font.BOLD, FONT_BASE-1));
 
-        // ---- fila 1
+        // visual: primera fila de filtros
         int y=0, x=0;
         g.gridy=y; g.gridx=x++; g.weightx=0;    box.add(lbl("Desde"), g);
         g.gridy=y; g.gridx=x++; g.weightx=0.15; box.add(tfDesde, g);
@@ -243,7 +241,7 @@ public class panel_reportes extends JPanel {
         g.gridy=y; g.gridx=x++; g.weightx=0;    box.add(lbl("Sucursal"), g);
         g.gridy=y; g.gridx=x++; g.weightx=0.25; box.add(cbSucursal, g);
 
-        // ---- fila 2
+        // visual: segunda fila de filtros
         y++; x=0;
         g.gridy=y; g.gridx=x++; g.weightx=0;    box.add(lbl("Categoría"), g);
         g.gridy=y; g.gridx=x++; g.weightx=0.25; box.add(cbCategoria, g);
@@ -255,6 +253,7 @@ public class panel_reportes extends JPanel {
 
         wrap.add(box, BorderLayout.CENTER);
 
+        // visual: etiqueta inferior con rango seleccionado
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT,6,0));
         south.setOpaque(false);
         tagRango = new JLabel("");
@@ -269,13 +268,14 @@ public class panel_reportes extends JPanel {
         return wrap;
     }
 
+    // visual: etiqueta simple con estilo base
     private JLabel lbl(String s){
         JLabel l = new JLabel(s);
         l.setFont(new Font("Arial", Font.PLAIN, FONT_BASE));
         return l;
     }
 
-    /** KPIs compactos en 2x2 */
+    // visual: cuadrícula de KPIs compacta (2x2)
     private JPanel kpisGridCompact(){
         JPanel row = new JPanel(new GridLayout(2,2,8,8));
         row.setOpaque(false);
@@ -293,6 +293,7 @@ public class panel_reportes extends JPanel {
         return row;
     }
 
+    // visual: envoltorio para secciones con título y contenido
     private JPanel boxSection(String titulo, JComponent content){
         JPanel wrap = cardInner();
         wrap.setLayout(new BorderLayout());
@@ -306,10 +307,12 @@ public class panel_reportes extends JPanel {
         return wrap;
     }
 
+    // visual: contenedor de tabla dentro de sección
     private JPanel boxTabla(String titulo, JTable table){
         return boxSection(titulo, scrollForTable(table));
     }
 
+    // visual: creación y formato de tablas
     private JTable makeTable(DefaultTableModel model){
         JTable t = new JTable(model);
         t.setFont(new Font("Arial", Font.PLAIN, FONT_BASE));
@@ -325,7 +328,7 @@ public class panel_reportes extends JPanel {
         t.setIntercellSpacing(new Dimension(0,1));
         t.setRowMargin(0);
 
-        // Mantener visible y ajustado al ancho
+        // visual: ajuste de ancho de columnas
         t.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
@@ -338,7 +341,7 @@ public class panel_reportes extends JPanel {
             }
         }
 
-        // Anchos preferidos suaves
+        // visual: ancho preferido por tipo de columna
         for (int c = 0; c < model.getColumnCount(); c++) {
             String name = model.getColumnName(c).toLowerCase(Locale.ROOT);
             int w = switch (name) {
@@ -354,6 +357,7 @@ public class panel_reportes extends JPanel {
         return t;
     }
 
+    // visual: scroll para tablas sin scroll horizontal
     private JScrollPane scrollForTable(JTable t){
         JScrollPane sc = new JScrollPane(
                 t,
@@ -371,6 +375,7 @@ public class panel_reportes extends JPanel {
         return sc;
     }
 
+    // visual: contenedor base con borde crema
     private JPanel cardShell(){
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -383,6 +388,8 @@ public class panel_reportes extends JPanel {
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
         return p;
     }
+
+    // visual: contenedor interno blanco con borde crema
     private JPanel cardInner(){
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -396,12 +403,15 @@ public class panel_reportes extends JPanel {
         return p;
     }
 
+    // visual: estilo de etiqueta KPI principal
     private JLabel kpiBig(){
         JLabel l = new JLabel("—");
         l.setFont(new Font("Arial", Font.BOLD, 20));
         l.setForeground(new Color(50,50,50));
         return l;
     }
+
+    // visual: tarjeta contenedora para KPI individual
     private JPanel kpiCard(String titulo, JLabel big, String sub){
         JPanel p = cardInner();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -416,6 +426,7 @@ public class panel_reportes extends JPanel {
         return p;
     }
 
+    // visual: estilo para campo de fecha
     private void estilizarFecha(JTextField f){
         f.setFont(new Font("Arial", Font.PLAIN, FONT_BASE));
         f.setBorder(new CompoundBorder(
@@ -426,6 +437,8 @@ public class panel_reportes extends JPanel {
         f.setToolTipText("AAAA-MM-DD");
         f.setPreferredSize(new Dimension(110, 28));
     }
+
+    // visual: estilo para combo genérico
     private void estilizarCombo(JComboBox<?> cb){
         cb.setFont(new Font("Arial", Font.PLAIN, FONT_BASE));
         cb.setBorder(new LineBorder(new Color(0xD9,0xD9,0xD9), 1, true));
@@ -434,8 +447,8 @@ public class panel_reportes extends JPanel {
         cb.setMaximumRowCount(15);
     }
 
-    /* ======================= Carga de datos ======================= */
 
+        // lógica: carga completa de datos según los filtros seleccionados
     private void recargarTodo(){
         String desde = tfDesde.getText().trim();
         String hasta = tfHasta.getText().trim();
@@ -447,8 +460,10 @@ public class panel_reportes extends JPanel {
         int idProv = itProv == null ? 0 : itProv.id();
         String gran = "Semana".equals(cbGran.getSelectedItem()) ? "semana" : "dia";
 
+        // visual: muestra rango de fechas seleccionado
         tagRango.setText(desde + " → " + hasta);
 
+        // lógica: ejecuta carga de todas las secciones de datos
         cargarKPIs(desde, hasta, idSuc);
         cargarSerie(desde, hasta, idSuc, gran);
         cargarCat(desde, hasta, idSuc, idCat, idProv);
@@ -459,33 +474,41 @@ public class panel_reportes extends JPanel {
         cargarRot(desde, hasta, idSuc, idCat, idProv);
     }
 
+    // lógica: carga los valores de los combos (sucursal, categoría y proveedor)
     private void cargarCombos(){
         sucursales.clear(); categorias.clear(); proveedores.clear();
         sucursales.add(new Item(0,"Todas las sucursales"));
         categorias.add(new Item(0,"Todas las categorías"));
         proveedores.add(new Item(0,"Todos los proveedores"));
         try (Connection cn = DB.get()){
+            // lógica: obtiene listado de sucursales
             try (PreparedStatement ps = cn.prepareStatement("SELECT id_sucursal, nombre FROM sucursal ORDER BY nombre");
                  ResultSet rs = ps.executeQuery()){
                 while (rs.next()) sucursales.add(new Item(rs.getInt(1), rs.getString(2)));
             }
+            // lógica: obtiene listado de categorías
             try (PreparedStatement ps = cn.prepareStatement("SELECT id_categoria, nombre FROM categoria ORDER BY nombre");
                  ResultSet rs = ps.executeQuery()){
                 while (rs.next()) categorias.add(new Item(rs.getInt(1), rs.getString(2)));
             }
+            // lógica: obtiene listado de proveedores
             try (PreparedStatement ps = cn.prepareStatement("SELECT id_proveedor, nombre FROM proveedor ORDER BY nombre");
                  ResultSet rs = ps.executeQuery()){
                 while (rs.next()) proveedores.add(new Item(rs.getInt(1), rs.getString(2)));
             }
         } catch (Exception ex){
+            // visual: muestra error de base de datos
             JOptionPane.showMessageDialog(this, "Error cargando catálogos:\n"+ex.getMessage(),
                     "BD", JOptionPane.ERROR_MESSAGE);
         }
+
+        // visual: asigna los modelos a los combos
         cbSucursal.setModel(new DefaultComboBoxModel<>(sucursales.toArray(new Item[0])));
         cbCategoria.setModel(new DefaultComboBoxModel<>(categorias.toArray(new Item[0])));
         cbProveedor.setModel(new DefaultComboBoxModel<>(proveedores.toArray(new Item[0])));
     }
 
+    // lógica: consulta y muestra los indicadores KPI (ventas, tickets, unidades, margen)
     private void cargarKPIs(String desde, String hasta, int idSuc){
         String where = " WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')";
         if (idSuc > 0) where += " AND v.id_sucursal=?";
@@ -507,6 +530,7 @@ public class panel_reportes extends JPanel {
             if (idSuc>0) ps.setInt(3, idSuc);
             try (ResultSet rs = ps.executeQuery()){
                 if (rs.next()){
+                    // visual: muestra los valores obtenidos en los indicadores
                     kpiVentas.setText("$ " + nf2(rs.getDouble("ventas")));
                     kpiTickets.setText(nf0(rs.getInt("tickets")));
                     kpiUnidades.setText(nf0(rs.getInt("unidades")));
@@ -514,10 +538,12 @@ public class panel_reportes extends JPanel {
                 }
             }
         } catch (Exception ex){
+            // visual: mensaje de error en caso de fallo de consulta
             JOptionPane.showMessageDialog(this,"Error KPIs:\n"+ex.getMessage(),"BD",JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // lógica: genera y carga la serie temporal de ventas, tickets y unidades
     private void cargarSerie(String desde, String hasta, int idSuc, String gran){
         modelSerie.setRowCount(0);
 
@@ -555,16 +581,22 @@ public class panel_reportes extends JPanel {
                     double ventas = rs.getDouble("ventas");
                     int tickets = rs.getInt("tickets");
                     int unidades = rs.getInt("unidades");
+                    // visual: agrega fila a la tabla de serie
                     modelSerie.addRow(new Object[]{ etiqueta, "$ "+nf2(ventas), nf0(tickets), nf0(unidades) });
+                    // lógica: guarda los puntos para graficar
                     puntos.add(new PuntoSerie(etiqueta, ventas, tickets, unidades));
                 }
             }
         } catch (Exception ex){
+            // visual: mensaje de error si falla la consulta
             JOptionPane.showMessageDialog(this,"Error serie:\n"+ex.getMessage(),"BD",JOptionPane.ERROR_MESSAGE);
         }
+
+        // visual: actualiza el gráfico con los nuevos datos
         chart.setData(puntos);
     }
 
+    // lógica: carga ventas agrupadas por categoría
     private void cargarCat(String desde, String hasta, int idSuc, int idCat, int idProv){
         mCat.setRowCount(0);
         StringBuilder where = new StringBuilder(" WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')");
@@ -586,6 +618,8 @@ public class panel_reportes extends JPanel {
           GROUP BY c.id_categoria, c.nombre
           ORDER BY importe DESC, categoria ASC
         """;
+
+        // lógica: ejecuta la consulta y llena la tabla de categorías
         queryFillTable(sql, params, rs -> mCat.addRow(new Object[]{
                 nvl(rs.getString("categoria"), "—"),
                 nf0(rs.getInt("unidades")),
@@ -593,6 +627,7 @@ public class panel_reportes extends JPanel {
         }));
     }
 
+    // lógica: carga de ventas agrupadas por proveedor
     private void cargarProv(String desde, String hasta, int idSuc, int idCat, int idProv){
         mProv.setRowCount(0);
         StringBuilder where = new StringBuilder(" WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')");
@@ -615,6 +650,8 @@ public class panel_reportes extends JPanel {
           GROUP BY pr.id_proveedor, pr.nombre
           ORDER BY importe DESC, proveedor ASC
         """;
+
+        // lógica: ejecuta la consulta y agrega resultados a la tabla de proveedores
         queryFillTable(sql, params, rs -> mProv.addRow(new Object[]{
                 nvl(rs.getString("proveedor"), "—"),
                 nf0(rs.getInt("unidades")),
@@ -623,6 +660,7 @@ public class panel_reportes extends JPanel {
         }));
     }
 
+    // lógica: carga de ventas agrupadas por sucursal
     private void cargarSuc(String desde, String hasta, int idSuc){
         mSuc.setRowCount(0);
         String where = " WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')";
@@ -641,6 +679,8 @@ public class panel_reportes extends JPanel {
           GROUP BY s.id_sucursal, s.nombre
           ORDER BY importe DESC, sucursal ASC
         """;
+
+        // lógica: llena la tabla de sucursales con los resultados
         queryFillTable(sql, params, rs -> mSuc.addRow(new Object[]{
                 nvl(rs.getString("sucursal"), "—"),
                 nf0(rs.getInt("tickets")),
@@ -649,6 +689,7 @@ public class panel_reportes extends JPanel {
         }));
     }
 
+    // lógica: carga el ranking de productos más vendidos
     private void cargarTop(String desde, String hasta, int idSuc, int idCat, int idProv){
         mTop.setRowCount(0);
         StringBuilder where = new StringBuilder(" WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')");
@@ -670,15 +711,20 @@ public class panel_reportes extends JPanel {
           ORDER BY unidades DESC, importe DESC
           LIMIT 15
         """;
+
+        // lógica: llena la tabla de top productos vendidos
         queryFillTable(sql, params, rs -> mTop.addRow(new Object[]{
                 "#"+rs.getInt("id_producto"),
                 rs.getString("nombre"),
                 nf0(rs.getInt("unidades")),
                 "$ " + nf2(rs.getDouble("importe"))
         }));
+
+        // visual: muestra mensaje si no hay datos
         if (mTop.getRowCount()==0) mTop.addRow(new Object[]{"","Sin datos.","",""});
     }
 
+    // lógica: carga productos sin ventas en el período
     private void cargarNoSale(String desde, String hasta, int idSuc, int idCat, int idProv){
         mNoSale.setRowCount(0);
         StringBuilder sql = new StringBuilder("""
@@ -705,14 +751,18 @@ public class panel_reportes extends JPanel {
         if (idSuc>0){ sql.append(" AND v.id_sucursal=?"); params.add(idSuc); }
         sql.append(") ORDER BY p.nombre ASC LIMIT 50");
 
+        // lógica: ejecuta consulta y llena la tabla de productos sin ventas
         queryFillTable(sql.toString(), params, rs -> mNoSale.addRow(new Object[]{
                 "#"+rs.getInt("id_producto"),
                 rs.getString("nombre"),
                 nf0(rs.getInt("stock_actual"))
         }));
+
+        // visual: muestra mensaje si no hay resultados
         if (mNoSale.getRowCount()==0) mNoSale.addRow(new Object[]{"","Todos tuvieron ventas o no hay datos.",""});
     }
 
+    // lógica: carga la rotación de productos (ventas y stock)
     private void cargarRot(String desde, String hasta, int idSuc, int idCat, int idProv){
         mRot.setRowCount(0);
         StringBuilder where = new StringBuilder(" WHERE v.fecha_hora BETWEEN CONCAT(?,' 00:00:00') AND CONCAT(?,' 23:59:59')");
@@ -737,6 +787,8 @@ public class panel_reportes extends JPanel {
           ORDER BY vendidas DESC
           LIMIT 50
         """;
+
+        // lógica: ejecuta la consulta y llena la tabla de rotación
         queryFillTable(sql, params, rs -> mRot.addRow(new Object[]{
                 "#"+rs.getInt("id_producto"),
                 rs.getString("nombre"),
@@ -744,9 +796,12 @@ public class panel_reportes extends JPanel {
                 nf0(rs.getInt("stock_actual")),
                 "$ " + nf2(rs.getDouble("importe"))
         }));
+
+        // visual: muestra mensaje si no hay datos
         if (mRot.getRowCount()==0) mRot.addRow(new Object[]{"","Sin datos.","","",""});
     }
 
+    // lógica: ejecuta consultas genéricas y agrega resultados a una tabla
     private void queryFillTable(String sql, List<Object> params, RowAdder adder){
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql)){
@@ -755,6 +810,7 @@ public class panel_reportes extends JPanel {
                 while (rs.next()){ adder.add(rs); }
             }
         } catch (Exception ex){
+            // visual: mensaje de error si falla la consulta
             JOptionPane.showMessageDialog(this, "Error consultando:\n"+ex.getMessage(),
                     "BD", JOptionPane.ERROR_MESSAGE);
         }
@@ -762,17 +818,23 @@ public class panel_reportes extends JPanel {
 
     /* ======================= Utils ======================= */
 
+    // lógica: interfaz funcional para llenar filas desde un ResultSet
     private interface RowAdder { void add(ResultSet rs) throws Exception; }
 
+    // lógica: estructura para ítems genéricos de los combos
     static class Item {
         private final int id; private final String nombre;
         Item(int id,String nombre){ this.id=id; this.nombre=nombre; }
         int id(){ return id; }
         @Override public String toString(){ return nombre; }
     }
+
+    // lógica: acceso simplificado a la conexión con la base de datos
     static class DB {
         static Connection get() throws Exception { return conexion_bd.getConnection(); }
     }
+
+    // lógica: asigna parámetros a una PreparedStatement según su tipo
     private static void bind(PreparedStatement ps, List<Object> params) throws Exception {
         for (int i=0;i<params.size();i++){
             Object v=params.get(i);
@@ -781,6 +843,8 @@ public class panel_reportes extends JPanel {
             else ps.setString(i+1, String.valueOf(v));
         }
     }
+
+    // lógica: utilidades de formato y valores nulos
     private static String nvl(String s, String alt){ return (s==null || s.isBlank())? alt : s; }
     private static String nf0(int n){ return String.format("%,d", n).replace(',', '.'); }
     private static String nf2(double n){
@@ -788,12 +852,12 @@ public class panel_reportes extends JPanel {
         return s.replace(',', 'X').replace('.', ',').replace('X','.');
     }
 
-    /* ======================= Mini Chart (sin libs) ======================= */
-
+        // visual: panel que dibuja el gráfico de líneas sin usar librerías externas
     static class LineChartPanel extends JPanel {
         private List<PuntoSerie> data = new ArrayList<>();
         private int hoverIdx = -1;
 
+        // visual: configuración inicial del panel y eventos del mouse
         LineChartPanel(){
             setBackground(Color.WHITE);
             setBorder(new CompoundBorder(
@@ -809,12 +873,14 @@ public class panel_reportes extends JPanel {
             });
         }
 
+        // visual: actualiza los datos del gráfico y repinta
         void setData(List<PuntoSerie> puntos){
             this.data = (puntos==null)? new ArrayList<>() : puntos;
             this.hoverIdx = -1;
             repaint();
         }
 
+        // lógica: determina el punto más cercano al cursor del mouse
         private int pickIndex(int mouseX){
             if (data.isEmpty()) return -1;
             Insets in = getInsets();
@@ -836,6 +902,7 @@ public class panel_reportes extends JPanel {
             return bestDist<=10? best : -1;
         }
 
+        // visual: dibuja el gráfico y sus elementos (series, ejes, etiquetas, tooltip)
         @Override protected void paintComponent(Graphics g){
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
@@ -850,11 +917,13 @@ public class panel_reportes extends JPanel {
             int y0 = H - in.bottom - bottom;
             int y1 = in.top + top;
 
+            // visual: fondo del área de dibujo
             g2.setColor(new Color(0xFB,0xF7,0xF0));
             g2.fillRect(x0, y1, (x1-x0), (y0-y1));
             g2.setColor(new Color(0xE5,0xD8,0xC2));
             g2.drawRect(x0, y1, (x1-x0), (y0-y1));
 
+            // visual: mensaje si no hay datos
             if (data.isEmpty()){
                 String s="Sin datos en el período.";
                 g2.setColor(new Color(120,120,120));
@@ -863,6 +932,7 @@ public class panel_reportes extends JPanel {
                 g2.dispose(); return;
             }
 
+            // lógica: obtiene valores máximos para escalar las series
             final double maxVentas = Math.max(1.0,
                     data.stream().mapToDouble(p->p.ventas).max().orElse(1.0));
             final double maxDer = Math.max(1.0, Math.max(
@@ -874,17 +944,20 @@ public class panel_reportes extends JPanel {
             int usableW = Math.max(1, x1-x0-6);
             int step = (n>1)? (usableW/(n-1)) : usableW;
 
+            // visual: líneas de guía del fondo
             g2.setColor(new Color(230,230,230));
             for (int i=0;i<5;i++){
                 int y = y1 + i*(y0-y1)/4;
                 g2.drawLine(x0, y, x1, y);
             }
 
+            // visual: dibuja ejes del gráfico
             g2.setColor(new Color(90,90,90));
             g2.drawLine(x0, y0, x1, y0);
             g2.drawLine(x0, y1, x0, y0);
             g2.drawLine(x1, y1, x1, y0);
 
+            // visual: etiquetas numéricas de los ejes
             g2.setFont(new Font("Arial", Font.PLAIN, 11));
             for (int i=0;i<=4;i++){
                 double v = maxVentas * (i/4.0);
@@ -903,6 +976,7 @@ public class panel_reportes extends JPanel {
             Stroke stroke = new BasicStroke(2f);
             g2.setStroke(stroke);
 
+            // visual: dibuja series de ventas, tickets y unidades
             g2.setColor(new Color(0x33,0x66,0xCC));
             drawSeries(g2, x0, y0, y1, step,
                     data.stream().map(d->d.ventas/maxVentas).collect(Collectors.toList()));
@@ -915,6 +989,7 @@ public class panel_reportes extends JPanel {
             drawSeriesRight(g2, x0, x1, y0, y1, step,
                     data.stream().map(d->d.unidades/(double)maxDer).collect(Collectors.toList()));
 
+            // visual: muestra tooltip al pasar el mouse sobre un punto
             if (hoverIdx>=0 && hoverIdx < n){
                 int px = x0 + hoverIdx*step;
                 g2.setColor(new Color(0,0,0,28));
@@ -932,6 +1007,8 @@ public class panel_reportes extends JPanel {
                 int h = lines.size()* (fm.getHeight()) + 10;
                 int tx = Math.min(Math.max(px+10, x0), x1-w);
                 int ty = y1 + 6;
+
+                // visual: caja y texto del tooltip
                 g2.setColor(new Color(255,255,255,235));
                 g2.fillRoundRect(tx, ty, w, h, 8, 8);
                 g2.setColor(new Color(180,180,180));
@@ -944,6 +1021,7 @@ public class panel_reportes extends JPanel {
                 }
             }
 
+            // visual: leyenda inferior
             String lg = "Ventas  •  Tickets  •  Unidades";
             g2.setColor(new Color(70,70,70));
             g2.drawString(lg, x0, y0+16);
@@ -951,6 +1029,7 @@ public class panel_reportes extends JPanel {
             g2.dispose();
         }
 
+        // visual: dibuja una serie sobre el gráfico principal (eje izquierdo)
         private void drawSeries(Graphics2D g2, int x0, int y0, int y1, int step, List<Double> norm){
             int n = norm.size();
             int prevX=-1, prevY=-1;
@@ -961,10 +1040,13 @@ public class panel_reportes extends JPanel {
                 prevX=x; prevY=y;
             }
         }
+
+        // visual: dibuja una serie usando el eje derecho
         private void drawSeriesRight(Graphics2D g2, int x0, int x1, int y0, int y1, int step, List<Double> norm){
             drawSeries(g2, x0, y0, y1, step, norm);
         }
 
+        // visual: genera texto del tooltip al pasar el mouse sobre un punto
         @Override public String getToolTipText(MouseEvent event) {
             if (data==null || data.isEmpty() || hoverIdx<0 || hoverIdx>=data.size()) return null;
             PuntoSerie p = data.get(hoverIdx);
@@ -972,14 +1054,18 @@ public class panel_reportes extends JPanel {
                     "<br>Tickets: "+p.tickets+"<br>Unidades: "+p.unidades+"</html>";
         }
 
+        // lógica: formatea valores numéricos con abreviaciones (k, M)
         private static String abrevia(double v){
             if (v>=1_000_000) return fmt1(v/1_000_000)+"M";
             if (v>=1_000) return fmt1(v/1_000)+"k";
             return fmt1(v);
         }
+
+        // lógica: formatos auxiliares para números
         private static String fmt1(double d){ return String.format(Locale.US, "%.1f", d); }
         private static String fmt2(double d){ return String.format(Locale.US, "%,.2f", d).replace(',', 'X').replace('.', ',').replace('X','.'); }
 
+        // lógica: constantes para suavizado de renderizado
         static class Renderings {
             static final RenderingHints.Key AA_K = RenderingHints.KEY_ANTIALIASING;
             static final Object              AA_V = RenderingHints.VALUE_ANTIALIAS_ON;
@@ -988,6 +1074,7 @@ public class panel_reportes extends JPanel {
         }
     }
 
+    // lógica: estructura que almacena los datos de cada punto de la serie
     static class PuntoSerie {
         final String etiqueta;
         final double ventas;
@@ -998,3 +1085,4 @@ public class panel_reportes extends JPanel {
         }
     }
 }
+
