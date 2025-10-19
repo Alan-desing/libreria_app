@@ -10,19 +10,20 @@ import java.util.List;
 
 public class crear {
 
-    // Opción simple para combos (id, nombre)
+    // lógica: clase interna para representar una opción genérica (id, nombre)
     static class Opcion {
         final int id; final String nombre;
         Opcion(int id, String nombre){ this.id=id; this.nombre=nombre; }
         @Override public String toString(){ return nombre; }
     }
 
+    // lógica: método principal para abrir el diálogo de creación
     public static void abrir(Component parent) {
         Window owner = parent==null ? null : SwingUtilities.getWindowAncestor(parent);
         JDialog dlg = new JDialog(owner, "Nuevo producto", Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        // Campos
+        // visual: campos del formulario
         JTextField tfNombre = new JTextField();
         JTextField tfCodigo = new JTextField();
         JTextArea  taDesc   = new JTextArea(3, 20);
@@ -34,7 +35,7 @@ public class crear {
         JComboBox<Opcion> cbSubcat   = new JComboBox<>();
         JComboBox<Opcion> cbProveedor= new JComboBox<>();
 
-        // Cargar combos (subcategoría y proveedor)
+        // BD: carga de opciones en combos de subcategoría y proveedor
         cargarOpciones(cbSubcat, "SELECT id_subcategoria, nombre FROM subcategoria ORDER BY nombre",
                 "id_subcategoria", "nombre");
         cargarOpciones(cbProveedor, "SELECT id_proveedor, nombre FROM proveedor ORDER BY nombre",
@@ -42,7 +43,7 @@ public class crear {
         cbSubcat.insertItemAt(new Opcion(0,"—"), 0); cbSubcat.setSelectedIndex(0);
         cbProveedor.insertItemAt(new Opcion(0,"—"), 0); cbProveedor.setSelectedIndex(0);
 
-        // Layout
+        // visual: armado del formulario con GridBagLayout
         JPanel form = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(6,6,6,6);
@@ -69,12 +70,13 @@ public class crear {
 
         c.gridx=0; c.gridy=y; c.gridwidth=2; form.add(cbActivo, c); y++;
 
-        // Botones
+        // visual: botones de acción
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCancelar = new JButton("Cancelar");
         actions.add(btnCancelar); actions.add(btnGuardar);
 
+        // lógica: comportamiento de los botones
         btnCancelar.addActionListener(e -> dlg.dispose());
         btnGuardar.addActionListener(e -> {
             String nombre = tfNombre.getText().trim();
@@ -83,6 +85,7 @@ public class crear {
                 tfNombre.requestFocus(); return;
             }
 
+            // lógica: obtención de valores del formulario
             String codigo = tfCodigo.getText().trim();
             String desc   = taDesc.getText().trim();
             double pc     = parseDouble(tfPC.getText(), 0);
@@ -92,6 +95,7 @@ public class crear {
             String ubi    = tfUbi.getText().trim();
             int activo    = cbActivo.isSelected()?1:0;
 
+            // BD: inserción del nuevo producto
             String sql = "INSERT INTO producto(nombre,descripcion,codigo,precio_compra,precio_venta,ubicacion,id_subcategoria,id_proveedor,activo,creado_en) " +
                          "VALUES (?,?,?,?,?,?,?,?,?,NOW())";
 
@@ -108,6 +112,7 @@ public class crear {
                 ps.setInt(9, activo);
                 ps.executeUpdate();
 
+                // lógica: obtención del id generado
                 int newId = 0;
                 try (ResultSet gk = ps.getGeneratedKeys()) { if (gk.next()) newId = gk.getInt(1); }
                 JOptionPane.showMessageDialog(dlg, "Producto creado (#"+newId+").");
@@ -118,7 +123,7 @@ public class crear {
             }
         });
 
-        // Contenedor
+        // visual: armado del contenedor raíz
         JPanel root = new JPanel(new BorderLayout(0,10));
         root.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
         root.add(form, BorderLayout.CENTER);
@@ -130,6 +135,7 @@ public class crear {
         dlg.setVisible(true);
     }
 
+    // helpers: agrega una fila al formulario con etiqueta y campo
     private static void fila(JPanel p, GridBagConstraints c, int y, String label, JComponent comp){
         c.gridx=0; c.gridy=y; c.gridwidth=1; c.weightx=0;
         p.add(new JLabel(label), c);
@@ -137,6 +143,7 @@ public class crear {
         p.add(comp, c);
     }
 
+    // BD: carga de datos para los JComboBox desde consultas SQL
     private static void cargarOpciones(JComboBox<Opcion> cb, String sql, String idCol, String txtCol){
         cb.removeAllItems();
         List<Opcion> ops = new ArrayList<>();
@@ -153,6 +160,7 @@ public class crear {
         for (Opcion o: ops) cb.addItem(o);
     }
 
+    // helpers: conversión segura de texto a double
     private static double parseDouble(String s, double def){
         try { return Double.parseDouble(s.replace(",", ".").trim()); } catch(Exception e){ return def; }
     }
