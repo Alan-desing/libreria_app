@@ -15,12 +15,14 @@ import java.util.List;
 
 public class crear extends JDialog {
 
+    // visual: campos y botones principales
     private JComboBox<Item> cbProveedor, cbSucursal, cbProductoTpl;
     private JTextField tfObs;
     private JTable tabla;
     private DefaultTableModel model;
     private JButton btnAgregarRenglon, btnGuardar, btnCancelar;
 
+    // lógica: control de guardado y pedido generado
     private boolean guardado = false;
     private int idPedidoCreado = 0;
 
@@ -32,6 +34,7 @@ public class crear extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
+        // visual: panel base
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14,14,14,14));
@@ -39,6 +42,7 @@ public class crear extends JDialog {
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
         gbc.fill=GridBagConstraints.BOTH; gbc.anchor=GridBagConstraints.PAGE_START;
 
+        // visual: tarjeta blanca principal
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -49,7 +53,7 @@ public class crear extends JDialog {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
 
-        // Header
+        // visual: encabezado
         JLabel h1 = new JLabel("Nuevo pedido");
         h1.setFont(new Font("Arial", Font.BOLD, 20));
         h1.setForeground(estilos.COLOR_TITULO);
@@ -59,7 +63,7 @@ public class crear extends JDialog {
         head.setBorder(new EmptyBorder(0,0,8,0));
         card.add(head);
 
-        // Fila combos
+        // visual: fila de combos (proveedor / sucursal)
         cbProveedor = new JComboBox<>();
         cbSucursal  = new JComboBox<>();
         estilos.estilizarCombo(cbProveedor);
@@ -71,14 +75,14 @@ public class crear extends JDialog {
         grid2.add(labeled("Sucursal", cbSucursal));
         card.add(grid2);
 
-        // Observación
+        // visual: campo de observación
         tfObs = new JTextField();
         estilos.estilizarCampo(tfObs);
         tfObs.setPreferredSize(new Dimension(0, 36));
         card.add(Box.createVerticalStrut(8));
         card.add(labeled("Observación", tfObs));
 
-        // Head renglones + agregar
+        // visual: encabezado de tabla + botón agregar
         JPanel headRows = new JPanel(new BorderLayout());
         headRows.setOpaque(false);
         JLabel h2 = new JLabel("Renglones");
@@ -90,7 +94,7 @@ public class crear extends JDialog {
         headRows.setBorder(new EmptyBorder(10,0,6,0));
         card.add(headRows);
 
-        // Tabla renglones
+        // visual: tabla de renglones
         String[] cols = {"Producto", "Cantidad", "Precio unit.", "—"};
         model = new DefaultTableModel(cols,0){
             @Override public boolean isCellEditable(int r,int c){ return true; }
@@ -115,12 +119,12 @@ public class crear extends JDialog {
         tabla.setGridColor(new Color(0xEDE3D2));
         tabla.setIntercellSpacing(new Dimension(0,1));
 
-        // Editor para producto con un combo (plantilla compartida)
+        // visual: editor de producto (combo plantilla)
         cbProductoTpl = new JComboBox<>();
         estilos.estilizarCombo(cbProductoTpl);
         tabla.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cbProductoTpl));
 
-        // Botón quitar por fila (renderer simple)
+        // visual: botón “Quitar” por fila
         tabla.getColumnModel().getColumn(3).setCellRenderer((t,val,sel,focus,row,col)-> estilos.botonSm("Quitar"));
         tabla.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(new JTextField()){
             @Override public Component getTableCellEditorComponent(JTable t, Object v, boolean isSelected, int row, int column){
@@ -142,7 +146,7 @@ public class crear extends JDialog {
         ));
         card.add(sc);
 
-        // Footer acciones
+        // visual: footer con botones de acción
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
         btnGuardar = estilos.botonBlanco("Guardar Borrador");
@@ -155,16 +159,17 @@ public class crear extends JDialog {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Eventos
+        // lógica: eventos
         btnAgregarRenglon.addActionListener(e -> addRow());
         btnCancelar.addActionListener(e -> dispose());
         btnGuardar.addActionListener(e -> onGuardar());
 
-        // Carga catálogos + fila default
+        // lógica: carga inicial de combos y fila por defecto
         cargarCombos();
         addRow();
     }
 
+    // visual: etiqueta + componente (usado en combos y campo)
     private JPanel labeled(String label, JComponent comp){
         JPanel p = new JPanel();
         p.setOpaque(false);
@@ -175,10 +180,12 @@ public class crear extends JDialog {
         return p;
     }
 
+    // lógica: agrega una fila nueva a la tabla
     private void addRow(){
         model.addRow(new Object[]{ (Item)cbProductoTpl.getItemAt(0), 1, 0.00, "Quitar" });
     }
 
+    // BD: carga de catálogos para combos
     private void cargarCombos(){
         DefaultComboBoxModel<Item> prov = new DefaultComboBoxModel<>();
         DefaultComboBoxModel<Item> suc  = new DefaultComboBoxModel<>();
@@ -208,14 +215,16 @@ public class crear extends JDialog {
         cbProductoTpl.setModel(prod);
     }
 
+    // lógica + BD: guarda el pedido y sus detalles
     private void onGuardar(){
-        // Validación básica
+        // lógica: validación básica
         Item prov = (Item) cbProveedor.getSelectedItem();
         Item suc  = (Item) cbSucursal.getSelectedItem();
         if (prov==null || suc==null){
             JOptionPane.showMessageDialog(this, "Proveedor y Sucursal son obligatorios.", "Validación", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         List<Row> det = new ArrayList<>();
         for (int i=0;i<model.getRowCount();i++){
             Object pObj = model.getValueAt(i,0);
@@ -234,12 +243,14 @@ public class crear extends JDialog {
 
         String obs = tfObs.getText()==null? "" : tfObs.getText().trim();
 
+        // BD: inserta pedido y sus renglones
         try (Connection cn = DB.get()){
             cn.setAutoCommit(false);
             try {
-                int idUsuario = nullUserId(cn); // si tenés sesión, reemplazalo
+                int idUsuario = nullUserId(cn);
                 int estadoBorrador = 1;
 
+                // inserta cabecera de pedido
                 try (PreparedStatement ins = cn.prepareStatement(
                         "INSERT INTO pedido (id_proveedor,id_sucursal,id_usuario,id_estado_pedido,fecha_creado,fecha_estado,observacion) " +
                         "VALUES (?,?,?,?,NOW(),NOW(),?)",
@@ -255,6 +266,7 @@ public class crear extends JDialog {
                     }
                 }
 
+                // inserta detalle de pedido
                 try (PreparedStatement d = cn.prepareStatement(
                         "INSERT INTO pedido_detalle (id_pedido,id_producto,cantidad_solicitada,precio_unitario) VALUES (?,?,?,?)")){
                     for (Row r : det){
@@ -283,13 +295,13 @@ public class crear extends JDialog {
         }
     }
 
-    private int nullUserId(Connection cn){ return 0; } // reemplazar si manejás usuario logueado
+    // lógica: ID de usuario (placeholder si no hay sesión)
+    private int nullUserId(Connection cn){ return 0; }
 
     public boolean fueGuardado(){ return guardado; }
     public int getIdPedidoCreado(){ return idPedidoCreado; }
 
-    /* helpers */
-
+    // utils: conversiones seguras
     private int toInt(Object o){
         try { return Integer.parseInt(String.valueOf(o).replaceAll("\\D","")); } catch(Exception e){ return 0; }
     }
@@ -297,8 +309,7 @@ public class crear extends JDialog {
         try { return Double.parseDouble(String.valueOf(o).replace(',','.')); } catch(Exception e){ return 0.0; }
     }
 
-    /* tipos */
-
+    // tipos auxiliares
     static class Row {
         final int idProd; final int cant; final double precio;
         Row(int idProd, int cant, double precio){ this.idProd=idProd; this.cant=cant; this.precio=precio; }
@@ -309,8 +320,7 @@ public class crear extends JDialog {
         @Override public String toString(){ return nombre; }
     }
 
-
-        // BD: helper local unificado
+    // BD: helper unificado de conexión
     static class DB {
         static java.sql.Connection get() throws Exception {
             return conexion_bd.getConnection();

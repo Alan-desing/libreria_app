@@ -17,37 +17,37 @@ import java.util.function.Consumer;
 
 public class panel_pedidos extends JPanel {
 
-    /* ====== UI ====== */
-    // KPIs
+    // visual: indicadores principales de estado y montos de pedidos
     private JLabel kpiBorrador, kpiPendientes, kpiRecibidosMes, kpiMontoMes;
 
-    // Chips de estado (0=Todos, 1=Borrador, 2=Aprobado, 3=Enviado, 4=Recibido, 5=Cancelado)
+    // visual/lógica: botones de filtro por estado (0=Todos, 1=Borrador, 2=Aprobado, 3=Enviado, 4=Recibido, 5=Cancelado)
     private final Map<Integer, JToggleButton> chipMap = new LinkedHashMap<>();
     private int estadoSel = 0;
 
-    // Filtros
+    // visual: filtros de búsqueda y fechas
     private PlaceholderTextField txtBuscar;
     private JComboBox<Item> cbProveedor;
     private JComboBox<Item> cbSucursal;
     private JTextField tfDesde, tfHasta;
     private JButton btnFiltrar;
 
-    // Acciones
+    // visual: acción para crear nuevo pedido
     private JButton btnNuevo;
 
-    // Tabla
+    // visual: tabla de pedidos
     private JTable tabla;
     private DefaultTableModel model;
 
-    // Catálogos (para combos)
+    // lógica: catálogos para combos de proveedor y sucursal
     private List<Item> proveedores = new ArrayList<>();
     private List<Item> sucursales  = new ArrayList<>();
 
-    // Estados (id → etiqueta)
+    // lógica: mapa con estados (id → etiqueta legible)
     private static final Map<Integer, String> ESTADOS = Map.of(
             1, "Borrador", 2, "Aprobado", 3, "Enviado", 4, "Recibido", 5, "Cancelado"
     );
 
+    // visual/lógica: constructor principal del panel
     public panel_pedidos() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
@@ -64,7 +64,7 @@ public class panel_pedidos extends JPanel {
         card.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* ====== Header ====== */
+        // visual: encabezado con título y botón de acción
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel h1 = new JLabel("Pedidos");
@@ -81,16 +81,16 @@ public class panel_pedidos extends JPanel {
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         card.add(header);
 
-        /* ====== KPIs (4) ====== */
+        // visual: fila de KPIs
         card.add(kpisFila());
 
-        /* ====== Chips de estado ====== */
+        // visual: chips de estado
         card.add(chipsFila());
 
-        /* ====== Barra de filtros ====== */
+        // visual: barra de filtros
         card.add(filtrosFila());
 
-        /* ====== Tabla ====== */
+        // visual: configuración de la tabla de pedidos
         String[] cols = {"ID", "Proveedor", "Sucursal", "Fecha", "Estado", "Renglones", "Monto total", "ver"};
         model = new DefaultTableModel(cols, 0){
             @Override public boolean isCellEditable(int r, int c){ return c==7; }
@@ -111,7 +111,7 @@ public class panel_pedidos extends JPanel {
         tabla.setIntercellSpacing(new Dimension(0,1));
         tabla.setRowMargin(0);
 
-        // Anchos
+        // visual: ajustes de ancho de columnas
         tabla.getColumnModel().getColumn(0).setPreferredWidth(70);
         tabla.getColumnModel().getColumn(1).setPreferredWidth(240);
         tabla.getColumnModel().getColumn(2).setPreferredWidth(180);
@@ -121,7 +121,7 @@ public class panel_pedidos extends JPanel {
         tabla.getColumnModel().getColumn(6).setPreferredWidth(160);
         tabla.getColumnModel().getColumn(7).setPreferredWidth(80);
 
-        // Render ID tipo "#4"
+        // visual: render personalizado para ID (prefijo con #)
         tabla.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer(){
             @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -131,17 +131,19 @@ public class panel_pedidos extends JPanel {
             }
         });
 
-        // Estado como badge
+        // visual: render para estado (badge)
         tabla.getColumnModel().getColumn(4).setCellRenderer(new EstadoBadgeRenderer());
-        // Monto total alineado derecha
+
+        // visual: monto total alineado a la derecha
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
         tabla.getColumnModel().getColumn(6).setCellRenderer(right);
 
-        // Botón Ver
+        // visual/lógica: botón “Ver” en la tabla
         tabla.getColumnModel().getColumn(7).setCellRenderer(new ButtonCellRenderer(false));
         tabla.getColumnModel().getColumn(7).setCellEditor(new ButtonCellEditor(tabla, id -> onVer(id), false));
 
+        // visual: scroll para la tabla con bordes y altura fija
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -149,29 +151,26 @@ public class panel_pedidos extends JPanel {
                 new LineBorder(estilos.COLOR_BORDE_CREMA, 1, true),
                 new EmptyBorder(6,6,6,6)
         ));
-        // === FIX: altura visible del scroll/tabla para que no quede colapsada ===
         sc.setPreferredSize(new Dimension(0, 420));
         sc.setMinimumSize(new Dimension(0, 300));
-        // ======================================================================
-
         card.add(sc);
 
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        /* ====== Eventos ====== */
+        // lógica: eventos principales de los controles
         btnNuevo.addActionListener(e -> onNuevo());
         btnFiltrar.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
 
-        // Chips
+        // lógica: eventos para cambiar el estado activo en los chips
         chipMap.forEach((k,btn)-> btn.addActionListener(e -> {
             estadoSel = k;
             marcarChipActivo(k);
             cargarTabla();
         }));
 
-        /* ====== Carga inicial ====== */
+        // lógica: carga inicial de filtros, combos y datos
         tfHasta.setText(LocalDate.now().toString());
         tfDesde.setText(LocalDate.now().minusDays(30).toString());
         cargarCombos();
@@ -179,8 +178,7 @@ public class panel_pedidos extends JPanel {
         cargarTabla();
     }
 
-    /* ====== Secciones UI helpers ====== */
-
+    // visual: genera la fila de indicadores KPI
     private JPanel kpisFila() {
         JPanel row = new JPanel(new GridLayout(1,4,16,16));
         row.setOpaque(false);
@@ -198,7 +196,7 @@ public class panel_pedidos extends JPanel {
         return row;
     }
 
-    // ====== CAMBIO: chips sin estilos.chip() ======
+    // visual: crea la fila de chips de estado
     private JPanel chipsFila() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setOpaque(false);
@@ -208,7 +206,7 @@ public class panel_pedidos extends JPanel {
 
         String[] labels = {"Todos","Borrador","Aprobado","Enviado","Recibido","Cancelado"};
         for (int i=0;i<labels.length;i++){
-            JToggleButton b = makeChip(labels[i]); // <- chip local (sin estilos.*)
+            JToggleButton b = makeChip(labels[i]);
             chipMap.put(i, b);
             chips.add(b);
         }
@@ -230,6 +228,7 @@ public class panel_pedidos extends JPanel {
         return wrap;
     }
 
+    // visual: construye la fila de filtros (texto, combos y fechas)
     private JPanel filtrosFila() {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
@@ -278,7 +277,7 @@ public class panel_pedidos extends JPanel {
         row.setBorder(new EmptyBorder(0,0,12,0));
         return row;
     }
-
+    // visual: crea una tarjeta individual de KPI con título, valor y subtítulo
     private JPanel kpiCard(String titulo, JLabel big, String sub){
         JPanel p = cardInner();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -297,6 +296,7 @@ public class panel_pedidos extends JPanel {
         return p;
     }
 
+    // visual: genera un label grande para mostrar valores KPI
     private JLabel kpiBig(){
         JLabel l = new JLabel("—");
         l.setFont(new Font("Arial", Font.BOLD, 26));
@@ -304,6 +304,7 @@ public class panel_pedidos extends JPanel {
         return l;
     }
 
+    // visual: crea el contenedor principal blanco con borde crema
     private JPanel cardShell(){
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -314,6 +315,8 @@ public class panel_pedidos extends JPanel {
         ));
         return p;
     }
+
+    // visual: crea un panel interno blanco con borde crema
     private JPanel cardInner(){
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -325,6 +328,7 @@ public class panel_pedidos extends JPanel {
         return p;
     }
 
+    // visual: aplica estilo uniforme a los campos de fecha
     private void estilizarFecha(JTextField f){
         f.setFont(new Font("Arial", Font.PLAIN, 14));
         f.setBorder(new CompoundBorder(
@@ -335,12 +339,14 @@ public class panel_pedidos extends JPanel {
         f.setToolTipText("AAAA-MM-DD");
     }
 
-    // ====== helpers locales para chips ======
+    // visual: helpers locales para creación y estilo de chips de estado
     private JToggleButton makeChip(String text) {
         JToggleButton b = new JToggleButton(text);
         styleChip(b);
         return b;
     }
+
+    // visual: define los colores y comportamiento de selección de un chip
     private void styleChip(JToggleButton b) {
         b.setFocusPainted(false);
         b.setContentAreaFilled(true);
@@ -369,6 +375,7 @@ public class panel_pedidos extends JPanel {
         });
     }
 
+    // lógica: marca como activo un chip de estado según su clave
     private void marcarChipActivo(int key){
         ButtonGroup bg = new ButtonGroup();
         chipMap.forEach((k,b)->{
@@ -377,11 +384,10 @@ public class panel_pedidos extends JPanel {
         });
     }
 
-    /* ====== Acciones ====== */
-
+    // lógica: acción para crear un nuevo pedido
     private void onNuevo(){
         Window owner = SwingUtilities.getWindowAncestor(this);
-        crear dlg = new crear(owner); // implementar en este paquete
+        crear dlg = new crear(owner);
         dlg.setVisible(true);
         if (dlg.fueGuardado()) {
             cargarKPIs();
@@ -389,9 +395,10 @@ public class panel_pedidos extends JPanel {
         }
     }
 
+    // lógica: acción para abrir un pedido existente
     private void onVer(int idPedido){
         Window owner = SwingUtilities.getWindowAncestor(this);
-        ver dlg = new ver(owner, idPedido); // implementar en este paquete
+        ver dlg = new ver(owner, idPedido);
         dlg.setVisible(true);
         if (dlg.huboCambios()){
             cargarKPIs();
@@ -399,8 +406,7 @@ public class panel_pedidos extends JPanel {
         }
     }
 
-    /* ====== Carga de datos ====== */
-
+    // lógica: carga de catálogos para combos de proveedor y sucursal
     private void cargarCombos() {
         proveedores.clear(); sucursales.clear();
         proveedores.add(new Item(0, "Todos los proveedores"));
@@ -428,6 +434,7 @@ public class panel_pedidos extends JPanel {
         cbSucursal.setModel(new DefaultComboBoxModel<>(sucursales.toArray(new Item[0])));
     }
 
+    // lógica: calcula los valores de los KPIs principales
     private void cargarKPIs(){
         int borr = 0, pend = 0, recMes = 0;
         double montoMes = 0.0;
@@ -455,6 +462,7 @@ public class panel_pedidos extends JPanel {
         kpiMontoMes.setText("$ " + nf2(montoMes));
     }
 
+    // lógica: carga los pedidos en la tabla aplicando filtros
     private void cargarTabla() {
         model.setRowCount(0);
 
@@ -523,12 +531,12 @@ public class panel_pedidos extends JPanel {
             model.addRow(new Object[]{"", "Sin resultados.", "", "", "", "", "", ""});
         }
     }
-
-    /* ====== Utils ====== */
-
+    // lógica: agrega condiciones al WHERE de forma acumulativa
     private void addWhere(StringBuilder w, String cond){
         w.append(w.length()==0 ? " WHERE " : " AND ").append(cond);
     }
+
+    // lógica: asigna parámetros a un PreparedStatement según su tipo
     private void bind(PreparedStatement ps, List<Object> params) throws Exception {
         for (int i=0;i<params.size();i++){
             Object v=params.get(i);
@@ -538,19 +546,23 @@ public class panel_pedidos extends JPanel {
         }
     }
 
+    // lógica: formatea enteros con puntos de miles
     private String nf0(int n){ return String.format("%,d", n).replace(',', '.'); }
+
+    // lógica: formatea decimales con coma
     private String nf2(double n){
         String s = String.format("%,.2f", n);
         return s.replace(',', 'X').replace('.', ',').replace('X','.');
     }
+
+    // lógica: devuelve el nombre del mes y año a partir de una fecha
     private String mesY(LocalDate d){
         String[] m = {"Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio",
                 "Agosto","Septiembre","Octubre","Noviembre","Diciembre"};
         return m[d.getMonthValue()-1]+" "+d.getYear();
     }
 
-    /* ====== Renderers y celdas ====== */
-
+    // visual: renderiza el estado de un pedido como una etiqueta tipo “badge”
     static class EstadoBadgeRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override
@@ -569,6 +581,7 @@ public class panel_pedidos extends JPanel {
         }
     }
 
+    // visual: componente personalizado con fondo redondeado para mostrar estados
     static class PillLabel extends JComponent {
         private String text=""; private Color bg=Color.LIGHT_GRAY,border=Color.GRAY,fg=Color.BLACK;
         private boolean selected=false;
@@ -594,6 +607,7 @@ public class panel_pedidos extends JPanel {
         }
     }
 
+    // visual: renderiza botones dentro de celdas de tabla
     static class ButtonCellRenderer extends JButton implements TableCellRenderer {
         private final boolean danger;
         ButtonCellRenderer(boolean danger){
@@ -608,6 +622,8 @@ public class panel_pedidos extends JPanel {
                           : estilos.botonSm(String.valueOf(value));
         }
     }
+
+    // lógica: editor para celdas con botones que ejecutan una acción
     static class ButtonCellEditor extends AbstractCellEditor implements TableCellEditor {
         private final JTable table; private final JButton button; private final Consumer<Integer> onClick;
         ButtonCellEditor(JTable table, Consumer<Integer> onClick, boolean danger){
@@ -632,9 +648,7 @@ public class panel_pedidos extends JPanel {
         }
     }
 
-    /* ====== DB helpers ====== */
-
-    // BD: helper local unificado
+    // BD: helpers de conexión y consultas rápidas
     static class DB {
         static java.sql.Connection get() throws Exception {
             return conexion_bd.getConnection();
@@ -649,8 +663,7 @@ public class panel_pedidos extends JPanel {
              ResultSet rs = ps.executeQuery()) { return rs.next()? rs.getDouble(1):0.0; }
     }
 
-    /* ====== Tipos auxiliares ====== */
-
+    // lógica: clase auxiliar para representar ítems de combo
     static class Item {
         private final int id; private final String nombre;
         Item(int id, String nombre){ this.id=id; this.nombre=nombre; }
@@ -658,8 +671,7 @@ public class panel_pedidos extends JPanel {
         @Override public String toString(){ return nombre; }
     }
 
-    /* ====== Inputs con placeholder ====== */
-
+    // visual: campo de texto con placeholder (idéntico al de otros paneles)
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
         PlaceholderTextField(String placeholder){

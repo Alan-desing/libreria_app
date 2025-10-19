@@ -15,12 +15,15 @@ import java.util.List;
 
 public class ver extends JDialog {
 
+    // lógica: identificador de pedido
     private final int idPedido;
+    // visual: campos informativos y tabla
     private JLabel lbProveedor, lbSucursal, lbEstado, lbCreado, lbFechaEstado, lbUsuario, lbObs, lbTotal;
     private JTable tabla;
     private DefaultTableModel model;
     private JButton btnAprobar, btnEnviar, btnRecibir, btnCancelar, btnCerrar;
 
+    // lógica: marca si hubo cambios
     private boolean cambios = false;
 
     public ver(Window owner, int idPedido) {
@@ -33,6 +36,7 @@ public class ver extends JDialog {
         getContentPane().setBackground(estilos.COLOR_FONDO);
         setLayout(new BorderLayout());
 
+        // visual: contenedor principal
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14,14,14,14));
@@ -40,6 +44,7 @@ public class ver extends JDialog {
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
         gbc.fill=GridBagConstraints.BOTH; gbc.anchor=GridBagConstraints.PAGE_START;
 
+        // visual: tarjeta blanca contenedora
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -50,6 +55,7 @@ public class ver extends JDialog {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
 
+        // visual: encabezado con título
         JLabel h1 = new JLabel("Pedido #"+idPedido);
         h1.setFont(new Font("Arial", Font.BOLD, 20));
         h1.setForeground(estilos.COLOR_TITULO);
@@ -59,7 +65,7 @@ public class ver extends JDialog {
         head.setBorder(new EmptyBorder(0,0,8,0));
         card.add(head);
 
-        // Datos
+        // visual: datos generales del pedido
         JPanel grid = new JPanel(new GridLayout(3,2,16,8));
         grid.setOpaque(false);
 
@@ -83,7 +89,7 @@ public class ver extends JDialog {
         card.add(labeled("Observación:", lbObs));
         card.add(Box.createVerticalStrut(8));
 
-        // Detalle
+        // visual: encabezado del detalle
         JLabel h2 = new JLabel("Renglones");
         h2.setFont(new Font("Arial", Font.BOLD, 18));
         h2.setForeground(estilos.COLOR_TITULO);
@@ -92,6 +98,7 @@ public class ver extends JDialog {
         head2.add(h2, BorderLayout.WEST);
         card.add(head2);
 
+        // visual: tabla de detalle
         String[] cols = {"Producto","Cantidad","Precio","Subtotal"};
         model = new DefaultTableModel(cols,0){
             @Override public boolean isCellEditable(int r,int c){ return false; }
@@ -117,7 +124,7 @@ public class ver extends JDialog {
         ));
         card.add(sc);
 
-        // Total
+        // visual: total
         lbTotal = new JLabel("$ 0,00");
         lbTotal.setFont(new Font("Arial", Font.BOLD, 18));
         lbTotal.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -128,7 +135,7 @@ public class ver extends JDialog {
         totalRow.setBorder(new EmptyBorder(6,0,6,0));
         card.add(totalRow);
 
-        // Acciones
+        // visual: botones de acción
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT,8,0));
         actions.setOpaque(false);
         btnAprobar = estilos.botonBlanco("Aprobar");
@@ -147,17 +154,18 @@ public class ver extends JDialog {
         shell.add(card, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Eventos
+        // lógica: eventos de botones
         btnCerrar.addActionListener(e -> dispose());
         btnAprobar.addActionListener(e -> doAccion("aprobar"));
         btnEnviar.addActionListener(e -> doAccion("enviar"));
         btnRecibir.addActionListener(e -> doAccion("recibir"));
         btnCancelar.addActionListener(e -> doAccion("cancelar"));
 
-        // Cargar datos
+        // lógica: carga inicial
         cargar();
     }
 
+    // visual: componente etiqueta + campo
     private JPanel labeled(String t, JComponent c){
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
@@ -167,6 +175,7 @@ public class ver extends JDialog {
         return p;
     }
 
+    // lógica + BD: carga datos del pedido y detalle
     private void cargar(){
         model.setRowCount(0);
         try (Connection cn = DB.get()){
@@ -192,7 +201,7 @@ public class ver extends JDialog {
             }
             lbTotal.setText("Total   $ "+nf2(total));
 
-            // Habilitar acciones según estado
+            // lógica: habilita botones según estado
             btnAprobar.setEnabled(ped.idEstado==1);
             btnEnviar.setEnabled(ped.idEstado==2);
             btnRecibir.setEnabled(ped.idEstado==3);
@@ -203,19 +212,21 @@ public class ver extends JDialog {
         }
     }
 
+    // lógica + BD: ejecuta acción de cambio de estado
     private void doAccion(String accion){
         try (Connection cn = DB.get()){
             cn.setAutoCommit(false);
             try {
                 Pedido ped = getPedido(cn, idPedido);
                 if (ped==null) throw new Exception("Pedido inexistente.");
-                // Permisos por estado (como la web)
+
+                // lógica: reglas por estado
                 if (accion.equals("aprobar") && ped.idEstado==1){
                     updateEstado(cn, 2);
                 } else if (accion.equals("enviar") && ped.idEstado==2){
                     updateEstado(cn, 3);
                 } else if (accion.equals("recibir") && ped.idEstado==3){
-                    // actualizar inventario por sucursal/producto
+                    // lógica + BD: actualiza inventario
                     for (ItemRow r : getDetalle(cn, idPedido)){
                         actualizarInventario(cn, ped.idSucursal, r.idProducto, r.cantidad);
                     }
@@ -240,6 +251,7 @@ public class ver extends JDialog {
         }
     }
 
+    // BD: actualización de estado del pedido
     private void updateEstado(Connection cn, int nuevo) throws Exception {
         try (PreparedStatement up = cn.prepareStatement(
                 "UPDATE pedido SET id_estado_pedido=?, fecha_estado=NOW() WHERE id_pedido=?")){
@@ -249,8 +261,8 @@ public class ver extends JDialog {
         }
     }
 
+    // BD: actualización o creación de inventario
     private void actualizarInventario(Connection cn, int idSucursal, int idProducto, int cant) throws Exception {
-        // Busca registro inventario; si existe suma, si no crea
         try (PreparedStatement sel = cn.prepareStatement(
                 "SELECT id_inventario, stock_actual FROM inventario WHERE id_sucursal=? AND id_producto=? LIMIT 1")){
             sel.setInt(1, idSucursal);
@@ -286,6 +298,7 @@ public class ver extends JDialog {
 
     /* ====== Query helpers ====== */
 
+    // BD: obtiene pedido con joins
     private Pedido getPedido(Connection cn, int id) throws Exception {
         String sql = """
             SELECT p.*, pr.nombre AS proveedor, s.nombre AS sucursal, u.nombre AS usuario,
@@ -317,6 +330,7 @@ public class ver extends JDialog {
         }
     }
 
+    // BD: obtiene detalle de productos
     private List<ItemRow> getDetalle(Connection cn, int id) throws Exception {
         List<ItemRow> out = new ArrayList<>();
         String sql = """
@@ -341,6 +355,7 @@ public class ver extends JDialog {
         return out;
     }
 
+    // lógica: formato de número con coma
     private String nf2(double n){
         String s = String.format("%,.2f", n);
         return s.replace(',', 'X').replace('.', ',').replace('X','.');
@@ -359,7 +374,7 @@ public class ver extends JDialog {
         }
     }
 
-        // BD: helper local unificado
+    // BD: helper local unificado
     static class DB {
         static java.sql.Connection get() throws Exception {
             return conexion_bd.getConnection();
