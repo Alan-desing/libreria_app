@@ -10,12 +10,12 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class conexion_bd {
 
-    // ====== CONFIG REMOTA (Hostinger) ======
+    // CONFIG REMOTA (Hostinger) 
     private static final String HOST = "srv804.hstgr.io";
     private static final String PORT = "3306";
     private static final String DB   = "u156482620_libreria";
     private static final String USER = "u156482620_Zava";
-    private static final String PASS = "Zava4567"; // tu pass
+    private static final String PASS = "Zava4567"; 
 
     // Si tu servidor exige SSL estricto, poné requireSSL=true.
     // allowPublicKeyRetrieval=true ayuda si el server está con caching de keys.
@@ -92,7 +92,7 @@ public class conexion_bd {
         }
     }
 
-    // === Test rápido: ejecutalo para verificar conexión y contar productos ===
+    //  Test rápido: ejecutalo para verificar conexión y contar productos 
     public static void main(String[] args) {
         try (Connection cn = getConnection()) {
             if (cn == null) throw new SQLException("Conexión nula");
