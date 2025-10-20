@@ -8,12 +8,18 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.*;
 
+/** 
+ * Ventana modal para ver el detalle de una alerta específica.
+ * Permite marcarla como atendida, reabrirla o eliminarla directamente desde la interfaz.
+ */
 public class ver extends JDialog {
     private final int idAlerta;
-    private boolean cambios=false;
+    private boolean cambios=false; // indica si hubo modificaciones
 
+    // etiquetas visuales para mostrar los datos de la alerta
     private JLabel lbTipo, lbProducto, lbCodigo, lbSucursal, lbProveedor, lbEstado, lbCreada, lbAtendida, lbAtendidaPor, lbStock;
 
+    // visual: constructor principal, arma la interfaz y define acciones
     public ver(Window owner, int idAlerta){
         super(owner, "Alerta #"+idAlerta, ModalityType.APPLICATION_MODAL);
         this.idAlerta = idAlerta;
@@ -23,12 +29,14 @@ public class ver extends JDialog {
         root.setBorder(new EmptyBorder(14,14,14,14));
         root.setBackground(Color.WHITE);
 
+        // encabezado
         JLabel h = new JLabel("Detalle de alerta");
         h.setFont(new Font("Arial", Font.BOLD, 18));
         h.setAlignmentX(Component.LEFT_ALIGNMENT);
         root.add(h);
         root.add(Box.createVerticalStrut(8));
 
+        // panel con los datos de la alerta en formato clave-valor
         JPanel grid = new JPanel(new GridLayout(4,2,8,8));
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
         lbTipo=new JLabel(); lbProducto=new JLabel(); lbCodigo=new JLabel(); lbSucursal=new JLabel();
@@ -50,36 +58,46 @@ public class ver extends JDialog {
         root.add(lblPair("Stock:", lbStock));
         root.add(Box.createVerticalStrut(12));
 
+        // visual: barra de botones de acción
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
         JButton btnAtender = estilos.botonSm("Marcar atendida");
         JButton btnReabrir = estilos.botonSm("Reabrir");
         JButton btnEliminar = estilos.botonSmDanger("Eliminar");
         JButton btnCerrar = estilos.botonSm("Cerrar");
 
-        actions.add(btnAtender); actions.add(btnReabrir); actions.add(btnEliminar); actions.add(btnCerrar);
+        actions.add(btnAtender); 
+        actions.add(btnReabrir); 
+        actions.add(btnEliminar); 
+        actions.add(btnCerrar);
         root.add(actions);
 
+        // configuración general del diálogo
         setContentPane(root);
         setSize(640, 360);
         setLocationRelativeTo(owner);
 
+        // eventos de botones
         btnCerrar.addActionListener(e -> dispose());
         btnAtender.addActionListener(e -> { cambiarEstado(true); });
         btnReabrir.addActionListener(e -> { cambiarEstado(false); });
         btnEliminar.addActionListener(e -> { eliminar(); });
 
-        cargar();
+        cargar(); // carga los datos iniciales
     }
 
+    // visual: genera un panel con una etiqueta y su valor alineados
     private JPanel lblPair(String k, JLabel v){
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
-        JLabel lk = new JLabel(k); lk.setFont(new Font("Arial", Font.BOLD, 14));
+        JLabel lk = new JLabel(k); 
+        lk.setFont(new Font("Arial", Font.BOLD, 14));
         v.setFont(new Font("Arial", Font.PLAIN, 14));
-        p.add(lk, BorderLayout.WEST); p.add(v, BorderLayout.CENTER);
+        p.add(lk, BorderLayout.WEST); 
+        p.add(v, BorderLayout.CENTER);
         return p;
     }
 
+    // BD + lógica: carga los datos completos de la alerta desde la base
     private void cargar(){
         String sql = """
             SELECT a.*, ta.nombre_tipo,
@@ -117,30 +135,46 @@ public class ver extends JDialog {
         }
     }
 
+    // lógica: devuelve texto o “—” si está vacío o nulo
     private String nv(String s){ return (s==null || s.isEmpty())? "—" : s; }
 
+    // BD + lógica: cambia el estado de la alerta (atender o reabrir)
     private void cambiarEstado(boolean atender){
         String sql = atender
                 ? "UPDATE alerta SET atendida=1, fecha_atendida=NOW(), atendida_por=NULL WHERE id_alerta=? AND atendida=0"
                 : "UPDATE alerta SET atendida=0, fecha_atendida=NULL, atendida_por=NULL WHERE id_alerta=?";
-        try (Connection cn = conexion_bd.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)){
-            ps.setInt(1, idAlerta); int n = ps.executeUpdate();
-            if (n>0){ cambios=true; JOptionPane.showMessageDialog(this, atender?"Marcada como atendida.":"Reabierta."); cargar(); }
+        try (Connection cn = conexion_bd.getConnection(); 
+             PreparedStatement ps = cn.prepareStatement(sql)){
+            ps.setInt(1, idAlerta); 
+            int n = ps.executeUpdate();
+            if (n>0){ 
+                cambios=true; 
+                JOptionPane.showMessageDialog(this, atender?"Marcada como atendida.":"Reabierta."); 
+                cargar(); // refresca los datos
+            }
         } catch (Exception ex){
             JOptionPane.showMessageDialog(this, "No se pudo actualizar:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // BD + lógica: elimina la alerta actual previa confirmación
     private void eliminar(){
         int ok = JOptionPane.showConfirmDialog(this, "¿Eliminar alerta?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (ok!=JOptionPane.YES_OPTION) return;
-        try (Connection cn = conexion_bd.getConnection(); PreparedStatement ps = cn.prepareStatement("DELETE FROM alerta WHERE id_alerta=?")){
-            ps.setInt(1, idAlerta); int n = ps.executeUpdate();
-            if (n>0){ cambios=true; JOptionPane.showMessageDialog(this, "Eliminada."); dispose(); }
+        try (Connection cn = conexion_bd.getConnection(); 
+             PreparedStatement ps = cn.prepareStatement("DELETE FROM alerta WHERE id_alerta=?")){
+            ps.setInt(1, idAlerta); 
+            int n = ps.executeUpdate();
+            if (n>0){ 
+                cambios=true; 
+                JOptionPane.showMessageDialog(this, "Eliminada."); 
+                dispose(); 
+            }
         } catch (Exception ex){
             JOptionPane.showMessageDialog(this, "No se pudo eliminar:\n"+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // lógica: permite saber si hubo cambios al cerrar el diálogo
     public boolean huboCambios(){ return cambios; }
 }
