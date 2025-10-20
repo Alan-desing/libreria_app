@@ -14,17 +14,17 @@ import java.time.LocalDate;
 
 public class panel_inicio extends JPanel {
 
-    //  labels
+    // visual: etiquetas KPI (métricas principales)
     private JLabel kpiProdTotal, kpiProdSin;
     private JLabel kpiCatTotal, kpiSubcatTotal;
     private JLabel kpiProvTotal, kpiStockTotal;
     private JLabel kpiVentasHoy, kpiBajoStock;
 
-    // fecha
+    // visual: campos de rango de fechas
     private JTextField tfDesde, tfHasta;
     private JButton btnAplicar, btnLimpiar;
 
-
+    // visual: modelos de tabla para cada card
     private DefaultTableModel mdlVentasMes;
     private DefaultTableModel mdlTopProd;
     private DefaultTableModel mdlVentasRec;
@@ -34,19 +34,19 @@ public class panel_inicio extends JPanel {
     private DefaultTableModel mdlMovRec;
     private DefaultTableModel mdlAlertas;
 
+    // lógica: constructor principal del panel de inicio
     public panel_inicio() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
+        // visual: contenedor principal con scroll
         JPanel content = new JPanel();
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
-        // ancho máximo 
         content.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
         content.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // scroll
         JScrollPane scroll = new JScrollPane(
                 content,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -63,30 +63,22 @@ public class panel_inicio extends JPanel {
         scroll.getViewport().setBackground(crema);
         scroll.setBackground(crema);
 
-        
-        content.add(crearFilaKPIs());
-
-        /*  Filtro  */
-        content.add(crearFiltroRango());
-
-        /*  filas */
+        // visual: secciones del panel
+        content.add(crearFilaKPIs());           // resumen general
+        content.add(crearFiltroRango());        // filtro de fechas
         content.add(crearFilaDos(crearCardVentasMes(), crearCardTopProd()));
-       
         content.add(crearFilaDos(crearCardVentasRec(), crearCardStockCat()));
-       
         content.add(crearFilaDos(crearCardLowList(), crearCardPedPend()));
-        
         content.add(crearFilaDos(crearCardMovRec(), crearCardAlertas()));
-        /* Acciones */
-        content.add(crearCardAcciones());
-        content.add(Box.createVerticalStrut(12)); 
+        content.add(crearCardAcciones());       // acciones rápidas
+        content.add(Box.createVerticalStrut(12));
 
-        // Fechas 
+        // lógica: valores por defecto de rango
         LocalDate hoy = LocalDate.now();
         tfHasta.setText(hoy.toString());
         tfDesde.setText(hoy.minusDays(30).toString());
 
-        // Eventos
+        // eventos: botones de rango
         btnAplicar.addActionListener(e -> cargarTodo());
         btnLimpiar.addActionListener(e -> {
             tfHasta.setText(LocalDate.now().toString());
@@ -94,31 +86,31 @@ public class panel_inicio extends JPanel {
             cargarTodo();
         });
 
-        // Carga inicial
+        // lógica: carga inicial de datos
         cargarTodo();
     }
 
-
+    // visual: fila superior con tarjetas KPI
     private JPanel crearFilaKPIs() {
         JPanel fila = new JPanel(new GridLayout(1,4,16,16));
         fila.setOpaque(false);
 
-        // Productos
+        // KPI productos
         kpiProdTotal = big();
         kpiProdSin   = smallMuted();
         JPanel c1 = cardKPISimple("Productos", kpiProdTotal, "Sin stock: ", kpiProdSin);
 
-        // Categorías
+        // KPI categorías
         kpiCatTotal    = big();
         kpiSubcatTotal = smallMuted();
         JPanel c2 = cardKPISimple("Categorías", kpiCatTotal, "Subcategorías: ", kpiSubcatTotal);
 
-        // Proveedores
+        // KPI proveedores
         kpiProvTotal  = big();
         kpiStockTotal = smallMuted();
         JPanel c3 = cardKPISimple("Proveedores", kpiProvTotal, "Stock total: ", kpiStockTotal);
 
-        // Ventas hoy
+        // KPI ventas
         kpiVentasHoy = big();
         kpiBajoStock = smallMutedRed();
         JPanel c4 = cardKPISimple("Ventas hoy", kpiVentasHoy, "Bajo stock: ", kpiBajoStock);
@@ -128,6 +120,7 @@ public class panel_inicio extends JPanel {
         return fila;
     }
 
+    // visual: card de filtro de fechas
     private JPanel crearFiltroRango() {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
@@ -164,6 +157,7 @@ public class panel_inicio extends JPanel {
         return row;
     }
 
+    // visual: helper para crear filas de dos cards
     private JPanel crearFilaDos(JPanel leftCard, JPanel rightCard) {
         JPanel fila = new JPanel(new GridLayout(1,2,16,16));
         fila.setOpaque(false);
@@ -173,54 +167,63 @@ public class panel_inicio extends JPanel {
         return fila;
     }
 
+    // visual: card de ventas por mes
     private JPanel crearCardVentasMes() {
         String[] cols = {"Mes", "Total $"};
-        mdlVentasMes = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlVentasMes = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlVentasMes);
         setColWidth(t,0,240);
         return makeCard("Ventas por mes (últimos 12)", null, tableWrap(t));
     }
 
+    // visual: card de productos más vendidos
     private JPanel crearCardTopProd() {
         String[] cols = {"Producto", "Unid.", "Ingresos $"};
-        mdlTopProd = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlTopProd = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlTopProd);
-        setColWidth(t,1,120); setColWidth(t,2,140);
+        setColWidth(t,1,120);
+        setColWidth(t,2,140);
         JLabel r = new JLabel(); // derecha vacía
         return makeCard("Top productos", r, tableWrap(t));
     }
 
+    // visual: card de ventas recientes
     private JPanel crearCardVentasRec() {
         String[] cols = {"#", "Fecha/Hora", "Total $"};
-        mdlVentasRec = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlVentasRec = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlVentasRec);
-        setColWidth(t,0,70); setColWidth(t,2,140);
+        setColWidth(t,0,70);
+        setColWidth(t,2,140);
         return makeCard("Ventas recientes", null, tableWrap(t));
     }
 
+    // visual: card de stock agrupado por categoría
     private JPanel crearCardStockCat() {
         String[] cols = {"Categoría", "Stock total"};
-        mdlStockCat = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlStockCat = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlStockCat);
         setColWidth(t,1,140);
         return makeCard("Stock por categoría", null, tableWrap(t));
     }
 
+    // visual: card de productos con bajo stock
     private JPanel crearCardLowList() {
         String[] cols = {"Producto", "Stock", "Mínimo"};
-        mdlLowList = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlLowList = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlLowList);
-        // badge rojo en "Stock"
-        t.getColumnModel().getColumn(1).setCellRenderer(new BadgeNoRenderer());
-        setColWidth(t,1,90); setColWidth(t,2,100);
+        t.getColumnModel().getColumn(1).setCellRenderer(new BadgeNoRenderer()); // badge rojo
+        setColWidth(t,1,90);
+        setColWidth(t,2,100);
         return makeCard("Alertas: bajo stock", null, tableWrap(t));
     }
 
+    // visual: card de pedidos pendientes
     private JPanel crearCardPedPend() {
         String[] cols = {"#", "Proveedor", "Estado"};
-        mdlPedPend = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlPedPend = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlPedPend);
-        setColWidth(t,0,70); setColWidth(t,2,140);
+        setColWidth(t,0,70);
+        setColWidth(t,2,140);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         right.setOpaque(false);
@@ -229,35 +232,42 @@ public class panel_inicio extends JPanel {
         return makeCard("Pedidos pendientes", right, tableWrap(t));
     }
 
+    // visual: card de movimientos de inventario recientes
     private JPanel crearCardMovRec() {
         String[] cols = {"#", "Tipo", "Unidades"};
-        mdlMovRec = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlMovRec = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlMovRec);
-        setColWidth(t,0,70); setColWidth(t,2,120);
+        setColWidth(t,0,70);
+        setColWidth(t,2,120);
         return makeCard("Movimientos de stock (recientes)", null, tableWrap(t));
     }
 
+    // visual: card de alertas registradas
     private JPanel crearCardAlertas() {
         String[] cols = {"#", "Tipo", "Producto", "Atendida"};
-        mdlAlertas = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        mdlAlertas = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         JTable t = buildTable(mdlAlertas);
-        setColWidth(t,0,70); setColWidth(t,3,120);
+        setColWidth(t,0,70);
+        setColWidth(t,3,120);
         return makeCard("Alertas (tabla)", null, tableWrap(t));
     }
 
+    // visual: card de accesos rápidos del panel
     private JPanel crearCardAcciones() {
         JPanel body = new JPanel(new GridLayout(1,3,16,0));
         body.setOpaque(false);
         JButton b1 = estilos.botonRedondeado("+ Nuevo producto");
         JButton b2 = estilos.botonRedondeado("+ Ingreso de stock");
         JButton b3 = estilos.botonRedondeado("Venta rápida");
-        body.add(b1); body.add(b2); body.add(b3);
+        body.add(b1);
+        body.add(b2);
+        body.add(b3);
         return makeCard("Acciones rápidas", null, body);
     }
 
-    /*  Carga de datos */
-
+        /* Carga de datos — lógica principal */
     private void cargarTodo() {
+        // lógica: ejecuta todos los métodos de carga de secciones
         cargarKPIs();
         cargarVentasMes();
         cargarTopProd();
@@ -269,8 +279,11 @@ public class panel_inicio extends JPanel {
         cargarAlertas();
     }
 
+    /* KPIs — métrica general del sistema */
     private void cargarKPIs() {
         try (Connection cn = DB.get()) {
+
+            // BD: consultas de totales y conteos
             int prodTotal = getInt(cn, "SELECT COUNT(*) n FROM producto", null);
             int prodSin   = getInt(cn, """
                     SELECT COUNT(*) n FROM (
@@ -285,11 +298,13 @@ public class panel_inicio extends JPanel {
             int subcTotal = getInt(cn, "SELECT COUNT(*) n FROM subcategoria", null);
             int provTotal = getInt(cn, "SELECT COUNT(*) n FROM proveedor", null);
             int stockTot  = getInt(cn, "SELECT COALESCE(SUM(stock_actual),0) n FROM inventario", null);
+
             double ventasHoy = getDouble(cn, """
                     SELECT COALESCE(SUM(v.total),0) total
                     FROM venta v
                     WHERE DATE(v.fecha_hora)=CURDATE()
                     """, null);
+
             int bajo = getInt(cn, """
                     SELECT COUNT(*) n FROM (
                       SELECT p.id_producto
@@ -300,24 +315,24 @@ public class panel_inicio extends JPanel {
                     ) t
                     """, null);
 
+            // visual: actualización de los valores en las etiquetas KPI
             kpiProdTotal.setText(nf0(prodTotal));
             kpiProdSin.setText(nf0(prodSin));
-
             kpiCatTotal.setText(nf0(catTotal));
             kpiSubcatTotal.setText(nf0(subcTotal));
-
             kpiProvTotal.setText(nf0(provTotal));
             kpiStockTotal.setText(nf0(stockTot));
-
             kpiVentasHoy.setText("$ " + nf2(ventasHoy));
             kpiBajoStock.setText(nf0(bajo));
+
         } catch (Exception ex) {
-            showErr(ex);
+            showErr(ex); // UX: muestra mensaje de error si ocurre un fallo
         }
     }
 
+    /* Ventas por mes — resumen de los últimos 12 meses */
     private void cargarVentasMes() {
-        mdlVentasMes.setRowCount(0);
+        mdlVentasMes.setRowCount(0); // lógica: limpiar tabla antes de cargar
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("""
                     SELECT DATE_FORMAT(v.fecha_hora,'%b %Y') etiqueta,
@@ -327,6 +342,8 @@ public class panel_inicio extends JPanel {
                     GROUP BY DATE_FORMAT(v.fecha_hora,'%Y-%m'), etiqueta
                     ORDER BY DATE_FORMAT(v.fecha_hora,'%Y-%m')
                     """)) {
+
+            // BD: ejecución de consulta
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlVentasMes.addRow(new Object[]{
@@ -336,17 +353,24 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlVentasMes.getRowCount()==0) mdlVentasMes.addRow(new Object[]{"Sin datos.", ""});
+
+        // UX: si no hay datos, muestra fila indicativa
+        if (mdlVentasMes.getRowCount()==0)
+            mdlVentasMes.addRow(new Object[]{"Sin datos.", ""});
     }
 
+    /* Top de productos vendidos — según rango de fechas */
     private void cargarTopProd() {
-        mdlTopProd.setRowCount(0);
+        mdlTopProd.setRowCount(0); // lógica: reinicio de tabla
+
+        // lógica: validación del rango de fechas
         String d = tfDesde.getText().trim();
         String h = tfHasta.getText().trim();
         if (d.isEmpty() || h.isEmpty()) {
             d = LocalDate.now().minusDays(30).toString();
             h = LocalDate.now().toString();
         }
+
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("""
                     SELECT p.nombre,
@@ -360,8 +384,12 @@ public class panel_inicio extends JPanel {
                     ORDER BY unidades DESC
                     LIMIT 10
                     """)) {
+
+            // BD: configuración de parámetros
             ps.setString(1, d);
             ps.setString(2, h);
+
+            // BD: recorrido de resultados
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlTopProd.addRow(new Object[]{
@@ -372,9 +400,13 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlTopProd.getRowCount()==0) mdlTopProd.addRow(new Object[]{"Sin ventas en el rango.", "", ""});
+
+        // UX: mensaje si no hubo resultados
+        if (mdlTopProd.getRowCount()==0)
+            mdlTopProd.addRow(new Object[]{"Sin ventas en el rango.", "", ""});
     }
 
+    /* Ventas recientes — últimas 10 registradas */
     private void cargarVentasRec() {
         mdlVentasRec.setRowCount(0);
         try (Connection cn = DB.get();
@@ -384,6 +416,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY v.fecha_hora DESC
                     LIMIT 10
                     """)) {
+
+            // BD: ejecución y llenado de tabla
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlVentasRec.addRow(new Object[]{
@@ -394,9 +428,12 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlVentasRec.getRowCount()==0) mdlVentasRec.addRow(new Object[]{"", "Sin ventas registradas.", ""});
+
+        if (mdlVentasRec.getRowCount()==0)
+            mdlVentasRec.addRow(new Object[]{"", "Sin ventas registradas.", ""});
     }
 
+    /* Stock por categoría — resumen agrupado */
     private void cargarStockCat() {
         mdlStockCat.setRowCount(0);
         try (Connection cn = DB.get();
@@ -410,6 +447,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY cant DESC, categoria ASC
                     LIMIT 8
                     """)) {
+
+            // BD: ejecución de consulta
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlStockCat.addRow(new Object[]{
@@ -419,9 +458,12 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlStockCat.getRowCount()==0) mdlStockCat.addRow(new Object[]{"Sin datos.", ""});
+
+        if (mdlStockCat.getRowCount()==0)
+            mdlStockCat.addRow(new Object[]{"Sin datos.", ""});
     }
 
+    /* Lista de productos con bajo stock */
     private void cargarLowList() {
         mdlLowList.setRowCount(0);
         try (Connection cn = DB.get();
@@ -436,6 +478,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY st ASC, p.nombre ASC
                     LIMIT 10
                     """)) {
+
+            // BD: resultados de productos críticos
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlLowList.addRow(new Object[]{
@@ -446,9 +490,12 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlLowList.getRowCount()==0) mdlLowList.addRow(new Object[]{"Sin alertas.", "", ""});
+
+        if (mdlLowList.getRowCount()==0)
+            mdlLowList.addRow(new Object[]{"Sin alertas.", "", ""});
     }
 
+    /* Pedidos pendientes — últimos registrados */
     private void cargarPedPend() {
         mdlPedPend.setRowCount(0);
         try (Connection cn = DB.get();
@@ -461,6 +508,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY p.id_pedido DESC
                     LIMIT 10
                     """)) {
+
+            // BD: ejecución y carga en tabla
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlPedPend.addRow(new Object[]{
@@ -471,11 +520,13 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlPedPend.getRowCount()==0) mdlPedPend.addRow(new Object[]{"", "No hay pedidos pendientes.", ""});
-    }
 
+        if (mdlPedPend.getRowCount()==0)
+            mdlPedPend.addRow(new Object[]{"", "No hay pedidos pendientes.", ""});
+    }
+    /* Movimientos recientes — últimas acciones de stock */
     private void cargarMovRec() {
-        mdlMovRec.setRowCount(0);
+        mdlMovRec.setRowCount(0); // lógica: limpiar tabla antes de recargar
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement("""
                     SELECT m.id_movimiento, tm.nombre_tipo AS tipo,
@@ -487,6 +538,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY m.id_movimiento DESC
                     LIMIT 10
                     """)) {
+
+            // BD: ejecución de consulta y recorrido del resultado
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     mdlMovRec.addRow(new Object[]{
@@ -497,9 +550,13 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlMovRec.getRowCount()==0) mdlMovRec.addRow(new Object[]{"", "Sin movimientos.", ""});
+
+        // UX: mostrar mensaje si no hay movimientos registrados
+        if (mdlMovRec.getRowCount()==0)
+            mdlMovRec.addRow(new Object[]{"", "Sin movimientos.", ""});
     }
 
+    /* Alertas del sistema — últimas registradas */
     private void cargarAlertas() {
         mdlAlertas.setRowCount(0);
         try (Connection cn = DB.get();
@@ -511,6 +568,8 @@ public class panel_inicio extends JPanel {
                     ORDER BY a.id_alerta DESC
                     LIMIT 10
                     """)) {
+
+            // BD: procesar filas y mostrar estado "atendida"
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String atendida = (rs.getObject("atendida")==null) ? "—"
@@ -524,9 +583,12 @@ public class panel_inicio extends JPanel {
                 }
             }
         } catch (Exception ex) { showErr(ex); }
-        if (mdlAlertas.getRowCount()==0) mdlAlertas.addRow(new Object[]{"", "Sin alertas registradas.", "", ""});
+
+        if (mdlAlertas.getRowCount()==0)
+            mdlAlertas.addRow(new Object[]{"", "Sin alertas registradas.", "", ""});
     }
 
+    /* UI helpers — creación de estructuras visuales */
     private JPanel cardShell() {
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -537,24 +599,33 @@ public class panel_inicio extends JPanel {
         ));
         return p;
     }
+
+    // visual: contenedor general de card con título y cuerpo
     private JPanel makeCard(String titulo, JComponent right, JComponent body){
         JPanel card = cardShell();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
+
         JLabel h = new JLabel(titulo);
         h.setFont(new Font("Arial", Font.BOLD, 18));
         h.setForeground(estilos.COLOR_TITULO);
         head.add(h, BorderLayout.WEST);
+
         if (right!=null) head.add(right, BorderLayout.EAST);
         head.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+
         card.add(head);
         card.add(body);
         return card;
     }
+
+    // visual: card específica para KPIs simples (número + subtítulo)
     private JPanel cardKPISimple(String titulo, JLabel big, String sub, JLabel small){
         JPanel card = cardShell();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+
         JLabel h = new JLabel(titulo);
         h.setFont(new Font("Arial", Font.BOLD, 18));
         h.setForeground(estilos.COLOR_TITULO);
@@ -581,6 +652,7 @@ public class panel_inicio extends JPanel {
         return card;
     }
 
+    // visual: scroll con borde y margen para tablas
     private JScrollPane tableWrap(JTable t){
         JScrollPane sc = new JScrollPane(t,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -592,27 +664,36 @@ public class panel_inicio extends JPanel {
         return sc;
     }
 
+    // visual: configuración base de tablas
     private JTable buildTable(DefaultTableModel m){
         JTable t = new JTable(m);
         t.setFont(new Font("Arial", Font.PLAIN, 16));
         t.setRowHeight(30);
+
         JTableHeader th = t.getTableHeader();
         th.setFont(new Font("Arial", Font.BOLD, 16));
         th.setReorderingAllowed(false);
         th.setBackground(new Color(0xFF,0xF3,0xD9));
+
         t.setShowVerticalLines(false);
         t.setShowHorizontalLines(true);
         t.setGridColor(new Color(0xEDE3D2));
         t.setIntercellSpacing(new Dimension(0,1));
+
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         t.setDefaultRenderer(Object.class, left);
         return t;
     }
+
+    // visual: ajuste de ancho de columna en tablas
     private void setColWidth(JTable t, int col, int w){
         TableColumn c = t.getColumnModel().getColumn(col);
-        c.setPreferredWidth(w); c.setMinWidth(60);
+        c.setPreferredWidth(w);
+        c.setMinWidth(60);
     }
+
+    // visual: estilo general de campos de texto
     private void estilizarInput(JTextField f){
         f.setFont(new Font("Arial", Font.PLAIN, 14));
         f.setBorder(new CompoundBorder(
@@ -621,6 +702,8 @@ public class panel_inicio extends JPanel {
         ));
         f.setBackground(Color.WHITE);
     }
+
+    // visual: estilos de etiquetas grandes y pequeñas
     private JLabel big(){
         JLabel l = new JLabel("—");
         l.setFont(new Font("Arial", Font.BOLD, 26));
@@ -640,42 +723,54 @@ public class panel_inicio extends JPanel {
         return l;
     }
 
+    /* Renderer personalizado — etiqueta de tipo “píldora” para valores numéricos */
     static class BadgeNoRenderer implements TableCellRenderer {
         private final PillLabel lbl = new PillLabel();
         @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                                  boolean hasFocus, int row, int column) {
-            int v = 0; try { v = Integer.parseInt(String.valueOf(value).replaceAll("\\D","")); } catch(Exception ignore){}
+            int v = 0;
+            try { v = Integer.parseInt(String.valueOf(value).replaceAll("\\D","")); } catch(Exception ignore){}
             lbl.configure(String.valueOf(v),
                     estilos.BADGE_NO_BG, estilos.BADGE_NO_BORDER, estilos.BADGE_NO_FG);
             lbl.setSelection(isSelected);
             return lbl;
         }
     }
+
+    /* Componente visual — “píldora” redondeada para celdas numéricas */
     static class PillLabel extends JComponent {
-        private String text=""; private Color bg=Color.LIGHT_GRAY,border=Color.GRAY,fg=Color.BLACK;
+        private String text="";
+        private Color bg=Color.LIGHT_GRAY, border=Color.GRAY, fg=Color.BLACK;
         private boolean selected=false;
+
         void configure(String t, Color bg, Color border, Color fg){
             this.text=t; this.bg=bg; this.border=border; this.fg=fg;
             setPreferredSize(new Dimension(60,22));
         }
         void setSelection(boolean b){ this.selected=b; }
+
         @Override protected void paintComponent(Graphics g){
             Graphics2D g2=(Graphics2D)g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int w=getWidth(),h=getHeight(); int arc=h;
+            int w=getWidth(), h=getHeight(), arc=h;
+
             g2.setColor(selected?new Color(bg.getRed(),bg.getGreen(),bg.getBlue(),230):bg);
             g2.fillRoundRect(4,(h-18)/2,w-8,18,arc,arc);
             g2.setColor(border);
             g2.drawRoundRect(4,(h-18)/2,w-8,18,arc,arc);
+
             g2.setColor(fg);
             g2.setFont(getFont().deriveFont(Font.BOLD,12f));
             FontMetrics fm=g2.getFontMetrics();
-            int tw=fm.stringWidth(text); int tx=(w-tw)/2; int ty=h/2+fm.getAscent()/2-3;
+            int tw=fm.stringWidth(text);
+            int tx=(w-tw)/2;
+            int ty=h/2+fm.getAscent()/2-3;
             g2.drawString(text, Math.max(8,tx), ty);
             g2.dispose();
         }
     }
 
+    /* Métodos auxiliares — consultas rápidas y formato */
     private static int getInt(Connection cn, String sql, Object[] params) throws Exception {
         try (PreparedStatement ps = cn.prepareStatement(sql)) {
             if (params!=null) for (int i=0;i<params.length;i++) ps.setObject(i+1, params[i]);
@@ -688,6 +783,8 @@ public class panel_inicio extends JPanel {
             try (ResultSet rs = ps.executeQuery()) { return rs.next()? rs.getDouble(1):0.0; }
         }
     }
+
+    // formato numérico y manejo de errores
     private String nf0(int n){ return String.format("%,d", n).replace(',', '.'); }
     private String nf2(double n){
         String s = String.format("%,.2f", n);
@@ -697,7 +794,7 @@ public class panel_inicio extends JPanel {
         JOptionPane.showMessageDialog(this, "Error: "+ex.getMessage(), "BD", JOptionPane.ERROR_MESSAGE);
     }
 
-        // BD: helper local unificado
+    /* Helper local — acceso unificado a la conexión de base de datos */
     static class DB {
         static java.sql.Connection get() throws Exception {
             return conexion_bd.getConnection();
