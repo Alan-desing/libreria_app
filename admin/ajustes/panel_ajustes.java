@@ -17,6 +17,11 @@ import java.sql.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Panel de administración de ajustes generales del sistema.
+ * Permite editar parámetros globales, datos de empresa,
+ * estados de pedidos y tipos de movimientos de inventario.
+ */
 public class panel_ajustes extends JPanel {
 
     /* ====== Inputs: Parámetros globales ====== */
@@ -34,11 +39,12 @@ public class panel_ajustes extends JPanel {
     /* ====== Add rows ====== */
     private JTextField inNuevoEstado, inNuevoTipo;
 
+    // visual: constructor principal, crea toda la interfaz y secciones
     public panel_ajustes() {
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
-        // Shell con márgenes
+        // Shell general con márgenes y layout flexible
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(new EmptyBorder(14, 14, 14, 14));
@@ -48,7 +54,7 @@ public class panel_ajustes extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.PAGE_START;
 
-        // Card principal
+        // Card principal (contenedor blanco central)
         JPanel card = new JPanel();
         card.setOpaque(true);
         card.setBackground(Color.WHITE);
@@ -60,7 +66,7 @@ public class panel_ajustes extends JPanel {
         card.setMaximumSize(new Dimension(1100, Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Encabezado
+        // Header: título y botón de restauración
         JPanel head = new JPanel(new BorderLayout());
         head.setOpaque(false);
         JLabel h1 = new JLabel("Ajustes");
@@ -75,7 +81,7 @@ public class panel_ajustes extends JPanel {
         head.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(head);
 
-        // Secciones
+        // Secciones principales del panel (cada una en su card interna)
         card.add(sectionCard("Parámetros globales", "Stock mínimo, impuestos y moneda", buildParametrosPanel()));
         card.add(Box.createVerticalStrut(10));
         card.add(sectionCard("Datos de la empresa", "Información usada en reportes, comprobantes y pie del sistema", buildEmpresaPanel()));
@@ -85,7 +91,7 @@ public class panel_ajustes extends JPanel {
         card.add(sectionCard("Tipos de movimiento de inventario", null, buildTiposPanel()));
         card.add(Box.createVerticalStrut(6));
 
-        // Scroll de toda la card
+        // Scroll general que contiene toda la card
         JPanel scrollContent = new JPanel();
         scrollContent.setOpaque(false);
         scrollContent.setLayout(new BoxLayout(scrollContent, BoxLayout.Y_AXIS));
@@ -102,10 +108,10 @@ public class panel_ajustes extends JPanel {
         shell.add(allScroll, gbc);
         add(shell, BorderLayout.CENTER);
 
-        // Eventos
+        // eventos: botón de restaurar base de datos
         btnRestaurar.addActionListener(e -> onRestaurar());
 
-        // Carga inicial
+        // carga inicial de datos desde BD
         cargarOpciones();
         cargarEstados();
         cargarTipos();
@@ -113,6 +119,7 @@ public class panel_ajustes extends JPanel {
 
     /* ====================== UI builders ====================== */
 
+    // visual: genera una tarjeta (sección) con título, subtítulo y contenido
     private JPanel sectionCard(String titulo, String subtitulo, JComponent content) {
         JPanel sc = new JPanel();
         sc.setOpaque(true);
@@ -150,6 +157,7 @@ public class panel_ajustes extends JPanel {
         return sc;
     }
 
+    // visual: formulario para los parámetros globales
     private JPanel buildParametrosPanel() {
         JPanel g = grid2cols();
 
@@ -159,18 +167,21 @@ public class panel_ajustes extends JPanel {
         tfMonedaSimbolo = new JTextField("$");
         tfMonedaCodigo = new JTextField("ARS");
 
+        // agrega los campos con sus etiquetas
         int i = 0;
         addField(g, i++, "Stock mínimo general", wrapField(spStockMin));
         addField(g, i++, "Impuesto IVA (%)", wrapField(tfIVA));
         addField(g, i++, "Símbolo moneda", wrapField(tfMonedaSimbolo));
         addField(g, i++, "Código moneda (ISO 4217)", wrapField(tfMonedaCodigo));
 
+        // botón de guardar
         JButton btn = estilos.botonRedondeado("Guardar");
         btn.addActionListener(e -> onGuardarParametros());
         GridBagConstraints c = gbcBase();
         c.gridx = 0; c.gridy = (i + 1) / 2; c.gridwidth = 2; c.weightx = 1;
         g.add(btn, c);
 
+        // aplica estilo a los campos
         styleField(spStockMin.getEditor());
         styleField(tfIVA);
         styleField(tfMonedaSimbolo);
@@ -179,6 +190,7 @@ public class panel_ajustes extends JPanel {
         return g;
     }
 
+    // visual: formulario con los datos generales de la empresa
     private JPanel buildEmpresaPanel() {
         JPanel g = grid2cols();
 
@@ -199,12 +211,14 @@ public class panel_ajustes extends JPanel {
         addField(g, i++, "Email", wrapField(tfEmpEmail));
         addField(g, i++, "Sitio web", wrapField(tfEmpWeb));
 
+        // botón de guardar
         JButton btn = estilos.botonRedondeado("Guardar");
         btn.addActionListener(e -> onGuardarEmpresa());
         GridBagConstraints c = gbcBase();
         c.gridx = 0; c.gridy = (i + 1) / 2; c.gridwidth = 2; c.weightx = 1;
         g.add(btn, c);
 
+        // aplica estilo a cada campo
         styleField(tfEmpNombre);
         styleField(tfEmpRazon);
         styleField(tfEmpCUIT);
@@ -216,10 +230,12 @@ public class panel_ajustes extends JPanel {
         return g;
     }
 
+    // visual: sección de gestión de estados de pedido
     private JPanel buildEstadosPanel() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setOpaque(false);
 
+        // parte superior con campo + botón agregar
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actions.setOpaque(false);
         inNuevoEstado = new JTextField();
@@ -230,6 +246,7 @@ public class panel_ajustes extends JPanel {
         actions.add(btnAdd);
         wrap.add(actions, BorderLayout.NORTH);
 
+        // modelo y tabla de estados
         modelEstados = new DefaultTableModel(new String[]{"ID", "Nombre", "Guardar", "Eliminar"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c >= 2; }
             @Override public Class<?> getColumnClass(int c) { return (c >= 2) ? JButton.class : Object.class; }
@@ -244,6 +261,7 @@ public class panel_ajustes extends JPanel {
         JScrollPane sc = scrollFor(tablaEstados);
         wrap.add(sc, BorderLayout.CENTER);
 
+        // acción del botón agregar
         btnAdd.addActionListener(e -> {
             String nombre = inNuevoEstado.getText().trim();
             if (nombre.isEmpty()) return;
@@ -258,11 +276,12 @@ public class panel_ajustes extends JPanel {
 
         return wrap;
     }
-
+    // visual: sección de gestión de tipos de movimiento de inventario
     private JPanel buildTiposPanel() {
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setOpaque(false);
 
+        // parte superior: campo + botón agregar
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actions.setOpaque(false);
         inNuevoTipo = new JTextField();
@@ -273,11 +292,13 @@ public class panel_ajustes extends JPanel {
         actions.add(btnAdd);
         wrap.add(actions, BorderLayout.NORTH);
 
+        // tabla de tipos: columnas con ID, nombre y botones
         modelTipos = new DefaultTableModel(new String[]{"ID", "Nombre", "Guardar", "Eliminar"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c >= 2; }
+            @Override public boolean isCellEditable(int r, int c) { return c >= 2; } // solo columnas de botones
             @Override public Class<?> getColumnClass(int c) { return (c >= 2) ? JButton.class : Object.class; }
         };
 
+        // configuración de la tabla
         tablaTipos = tableBase(modelTipos);
         tablaTipos.getColumnModel().getColumn(2).setCellRenderer(new BtnCellRenderer(false));
         tablaTipos.getColumnModel().getColumn(3).setCellRenderer(new BtnCellRenderer(true));
@@ -287,6 +308,7 @@ public class panel_ajustes extends JPanel {
         JScrollPane sc = scrollFor(tablaTipos);
         wrap.add(sc, BorderLayout.CENTER);
 
+        // acción del botón agregar
         btnAdd.addActionListener(e -> {
             String nombre = inNuevoTipo.getText().trim();
             if (nombre.isEmpty()) return;
@@ -304,12 +326,14 @@ public class panel_ajustes extends JPanel {
 
     /* ===== Helpers de layout ===== */
 
+    // visual: panel base con GridBag para formularios en dos columnas
     private JPanel grid2cols() {
         JPanel g = new JPanel(new GridBagLayout());
         g.setOpaque(false);
         return g;
     }
 
+    // visual: configuración base para celdas de GridBag
     private GridBagConstraints gbcBase() {
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(6, 6, 6, 6);
@@ -318,14 +342,15 @@ public class panel_ajustes extends JPanel {
         return c;
     }
 
-    /** ÚNICA variante “auto”: coloca por índice en 2 columnas. */
+    // visual: helper que ubica un campo por índice (dos columnas automáticas)
     private void addField(JPanel g, int idx, String label, JComponent field) {
         GridBagConstraints c = gbcBase();
-        c.gridx = (idx % 2 == 0) ? 0 : 1;
-        c.gridy = idx / 2;
+        c.gridx = (idx % 2 == 0) ? 0 : 1; // columna 0 o 1
+        c.gridy = idx / 2; // fila
         g.add(makeLabeled(label, field), c);
     }
 
+    // visual: envuelve un campo con su etiqueta superior
     private JPanel makeLabeled(String label, JComponent field) {
         JLabel l = new JLabel(label);
         l.setFont(new Font("Arial", Font.BOLD, 14));
@@ -340,6 +365,7 @@ public class panel_ajustes extends JPanel {
         return p;
     }
 
+    // visual: aplica estilo y tamaño uniforme a un input
     private JComponent wrapField(JComponent comp) {
         JPanel w = new JPanel(new BorderLayout());
         w.setOpaque(false);
@@ -350,6 +376,7 @@ public class panel_ajustes extends JPanel {
         return w;
     }
 
+    // visual: aplica el estilo “estilos.estilizarCampo” a distintos tipos de campo
     private void styleField(JComponent c) {
         if (c instanceof JTextComponent tc) {
             estilos.estilizarCampo(tc);
@@ -364,6 +391,7 @@ public class panel_ajustes extends JPanel {
         }
     }
 
+    // visual: configuración base de todas las tablas de este panel
     private JTable tableBase(DefaultTableModel model) {
         JTable t = new JTable(model);
         t.setFont(new Font("Arial", Font.PLAIN, 17));
@@ -382,10 +410,12 @@ public class panel_ajustes extends JPanel {
         t.setSelectionBackground(new Color(0xF2, 0xE7, 0xD6));
         t.setSelectionForeground(new Color(0x33, 0x33, 0x33));
 
+        // alineación izquierda por defecto
         DefaultTableCellRenderer left = new DefaultTableCellRenderer();
         left.setHorizontalAlignment(SwingConstants.LEFT);
         t.setDefaultRenderer(Object.class, left);
 
+        // define anchos de columnas estándar
         if (t.getColumnCount() >= 4) {
             t.getColumnModel().getColumn(0).setPreferredWidth(70);
             t.getColumnModel().getColumn(1).setPreferredWidth(380);
@@ -395,6 +425,7 @@ public class panel_ajustes extends JPanel {
         return t;
     }
 
+    // visual: crea el scroll estilizado para tablas
     private JScrollPane scrollFor(JTable tabla) {
         JScrollPane sc = new JScrollPane(
                 tabla,
@@ -410,6 +441,7 @@ public class panel_ajustes extends JPanel {
 
     /* ====================== Eventos ====================== */
 
+    // lógica: guarda los parámetros globales en BD
     private void onGuardarParametros() {
         try {
             Map<String, String> m = new LinkedHashMap<>();
@@ -419,13 +451,14 @@ public class panel_ajustes extends JPanel {
             m.put("impuesto_iva", String.format(java.util.Locale.US, "%.2f", iva.doubleValue()));
             m.put("moneda_simbolo", tfMonedaSimbolo.getText().trim());
             m.put("moneda_codigo", tfMonedaCodigo.getText().trim());
-            acciones.saveOpts(m);
+            acciones.saveOpts(m); // guarda mediante helper
             ok("Parámetros guardados.");
         } catch (Exception ex) {
             error("Error guardando parámetros:\n" + ex.getMessage());
         }
     }
 
+    // lógica: guarda los datos de la empresa
     private void onGuardarEmpresa() {
         try {
             Map<String, String> m = new LinkedHashMap<>();
@@ -443,6 +476,7 @@ public class panel_ajustes extends JPanel {
         }
     }
 
+    // lógica: guarda una fila existente de la tabla “estados”
     private void onGuardarEstado(int viewRow) {
         int mr = tablaEstados.convertRowIndexToModel(viewRow);
         int id = parseInt(modelEstados.getValueAt(mr, 0));
@@ -456,7 +490,7 @@ public class panel_ajustes extends JPanel {
             error("Error actualizando estado:\n" + ex.getMessage());
         }
     }
-
+    // lógica: eliminar un estado de pedido desde la tabla
     private void onEliminarEstado(int viewRow) {
         int mr = tablaEstados.convertRowIndexToModel(viewRow);
         int id = parseInt(modelEstados.getValueAt(mr, 0));
@@ -466,10 +500,13 @@ public class panel_ajustes extends JPanel {
             try {
                 acciones.delEstado(id);
                 cargarEstados();
-            } catch (Exception ex) { error("Error eliminando estado:\n" + ex.getMessage()); }
+            } catch (Exception ex) {
+                error("Error eliminando estado:\n" + ex.getMessage());
+            }
         }
     }
 
+    // lógica: guardar cambios en un tipo de movimiento
     private void onGuardarTipo(int viewRow) {
         int mr = tablaTipos.convertRowIndexToModel(viewRow);
         int id = parseInt(modelTipos.getValueAt(mr, 0));
@@ -484,6 +521,7 @@ public class panel_ajustes extends JPanel {
         }
     }
 
+    // lógica: eliminar un tipo de movimiento desde la tabla
     private void onEliminarTipo(int viewRow) {
         int mr = tablaTipos.convertRowIndexToModel(viewRow);
         int id = parseInt(modelTipos.getValueAt(mr, 0));
@@ -493,10 +531,13 @@ public class panel_ajustes extends JPanel {
             try {
                 acciones.delTipo(id);
                 cargarTipos();
-            } catch (Exception ex) { error("Error eliminando tipo:\n" + ex.getMessage()); }
+            } catch (Exception ex) {
+                error("Error eliminando tipo:\n" + ex.getMessage());
+            }
         }
     }
 
+    // lógica: restaurar base de datos desde un archivo .sql
     private void onRestaurar() {
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Seleccioná un .sql para restaurar");
@@ -515,10 +556,10 @@ public class panel_ajustes extends JPanel {
         }
     }
 
-    /* ====================== Carga de datos ====================== */
-
+    // lógica: carga general de valores guardados (opciones del sistema)
     private void cargarOpciones() {
         Map<String, String> def = new LinkedHashMap<>();
+        // valores por defecto
         def.put("stock_minimo_general", "5");
         def.put("impuesto_iva", "21.00");
         def.put("moneda_simbolo", "$");
@@ -531,6 +572,7 @@ public class panel_ajustes extends JPanel {
         def.put("empresa_email", "");
         def.put("empresa_web", "");
 
+        // BD: leer tabla ajuste si existe
         try (Connection cn = conexion_bd.getConnection()) {
             ensureAjusteTable(cn);
             try (PreparedStatement ps = cn.prepareStatement("SELECT clave, valor FROM ajuste");
@@ -539,6 +581,7 @@ public class panel_ajustes extends JPanel {
             }
         } catch (Exception ignore) { }
 
+        // asignar valores a los campos
         try { spStockMin.setValue(Integer.parseInt(def.get("stock_minimo_general"))); } catch (Exception ignore) { }
         try { tfIVA.setValue(Double.parseDouble(def.get("impuesto_iva"))); } catch (Exception ignore) { }
         tfMonedaSimbolo.setText(def.get("moneda_simbolo"));
@@ -552,6 +595,7 @@ public class panel_ajustes extends JPanel {
         tfEmpWeb.setText(def.get("empresa_web"));
     }
 
+    // lógica: carga de estados de pedido desde BD
     private void cargarEstados() {
         modelEstados.setRowCount(0);
         try (Connection cn = conexion_bd.getConnection();
@@ -564,9 +608,11 @@ public class panel_ajustes extends JPanel {
         } catch (Exception ex) {
             error("Error cargando estados:\n" + ex.getMessage());
         }
-        if (modelEstados.getRowCount() == 0) modelEstados.addRow(new Object[]{"", "Sin estados.", "", ""});
+        if (modelEstados.getRowCount() == 0)
+            modelEstados.addRow(new Object[]{"", "Sin estados.", "", ""});
     }
 
+    // lógica: carga de tipos de movimiento desde BD
     private void cargarTipos() {
         modelTipos.setRowCount(0);
         try (Connection cn = conexion_bd.getConnection();
@@ -579,11 +625,11 @@ public class panel_ajustes extends JPanel {
         } catch (Exception ex) {
             error("Error cargando tipos:\n" + ex.getMessage());
         }
-        if (modelTipos.getRowCount() == 0) modelTipos.addRow(new Object[]{"", "Sin tipos.", "", ""});
+        if (modelTipos.getRowCount() == 0)
+            modelTipos.addRow(new Object[]{"", "Sin tipos.", "", ""});
     }
 
-    /* ====================== Utils ====================== */
-
+    // BD: asegura que exista la tabla “ajuste”
     private static void ensureAjusteTable(Connection cn) throws Exception {
         try (Statement st = cn.createStatement()) {
             st.execute("""
@@ -596,12 +642,21 @@ public class panel_ajustes extends JPanel {
         }
     }
 
-    private int parseInt(Object o) { try { return Integer.parseInt(String.valueOf(o)); } catch (Exception e) { return -1; } }
+    // utilidad: parse seguro a int
+    private int parseInt(Object o) {
+        try { return Integer.parseInt(String.valueOf(o)); }
+        catch (Exception e) { return -1; }
+    }
 
-    private void ok(String s) { JOptionPane.showMessageDialog(this, s, "Ajustes", JOptionPane.INFORMATION_MESSAGE); }
-    private void error(String s) { JOptionPane.showMessageDialog(this, s, "Ajustes", JOptionPane.ERROR_MESSAGE); }
+    // visual: mensajes estándar
+    private void ok(String s) {
+        JOptionPane.showMessageDialog(this, s, "Ajustes", JOptionPane.INFORMATION_MESSAGE);
+    }
+    private void error(String s) {
+        JOptionPane.showMessageDialog(this, s, "Ajustes", JOptionPane.ERROR_MESSAGE);
+    }
 
-    /* ====== Renderers / Editors de botones ====== */
+    // visual: render de celda tipo botón (GUARDAR / ELIMINAR)
     static class BtnCellRenderer extends JButton implements javax.swing.table.TableCellRenderer {
         private final boolean danger;
         BtnCellRenderer(boolean danger) {
@@ -612,10 +667,13 @@ public class panel_ajustes extends JPanel {
         }
         @Override
         public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
-            return danger ? estilos.botonSmDanger(String.valueOf(v)) : estilos.botonSm(String.valueOf(v));
+            return danger
+                    ? estilos.botonSmDanger(String.valueOf(v))
+                    : estilos.botonSm(String.valueOf(v));
         }
     }
 
+    // lógica + visual: editor de celda con botón interactivo
     static class BtnCellEditor extends AbstractCellEditor implements javax.swing.table.TableCellEditor {
         private final JTable table;
         private final JButton btn;
@@ -624,14 +682,16 @@ public class panel_ajustes extends JPanel {
         BtnCellEditor(JTable table, java.util.function.IntConsumer onClick, boolean danger) {
             this.table = table;
             this.onClick = onClick;
-            this.btn = danger ? estilos.botonSmDanger("ELIMINAR") : estilos.botonSm("GUARDAR");
+            this.btn = danger
+                    ? estilos.botonSmDanger("ELIMINAR")
+                    : estilos.botonSm("GUARDAR");
+
+            // acción del botón dentro de la celda
             this.btn.addActionListener(e -> {
-                // 1) guardo la fila vista
-                final int vr = this.table.getEditingRow();
-                // 2) cierro edición primero (evita AIOOBE en JTable.editingStopped)
-                fireEditingStopped();
-                // 3) corro el callback luego de cerrar el editor
-                if (vr >= 0) SwingUtilities.invokeLater(() -> this.onClick.accept(vr));
+                final int vr = this.table.getEditingRow(); // fila actual
+                fireEditingStopped(); // detiene edición antes del callback
+                if (vr >= 0)
+                    SwingUtilities.invokeLater(() -> this.onClick.accept(vr)); // ejecuta callback
             });
         }
 
