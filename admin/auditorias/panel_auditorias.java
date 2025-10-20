@@ -16,7 +16,7 @@ import java.util.List;
 
 public class panel_auditorias extends JPanel {
 
-    /* ====== Filtros ====== */
+    // filtros: campos y controles superiores
     private PlaceholderTextField txtBuscar;
     private JComboBox<Item> cbUsuario;
     private JComboBox<String> cbAccion;
@@ -24,11 +24,11 @@ public class panel_auditorias extends JPanel {
     private JTextField tfDesde, tfHasta;
     private JButton btnFiltrar;
 
-    /* ====== Tabla ====== */
+    // tabla principal: muestra auditorías
     private JTable tabla;
     private DefaultTableModel model;
 
-    /* ====== Catálogos ====== */
+    // catálogos: listas predefinidas de usuarios, acciones y entidades
     private final List<Item> usuarios = new ArrayList<>();
     private static final String[] ACCIONES = {
             "", "ALTA","MODIFICACION","BAJA","CAMBIO_ESTADO",
@@ -39,24 +39,27 @@ public class panel_auditorias extends JPanel {
             "", "producto","usuario","pedido","movimiento","inventario_mov","venta","alerta"
     };
 
+    // constructor principal del panel
     public panel_auditorias(){
         setLayout(new BorderLayout());
         setBackground(estilos.COLOR_FONDO);
 
+        // visual: estructura base del contenido
         JPanel shell = new JPanel(new GridBagLayout());
         shell.setOpaque(false);
         shell.setBorder(BorderFactory.createEmptyBorder(14,14,14,14));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=1; gbc.weighty=1;
-        gbc.fill=GridBagConstraints.BOTH; // <- para que el card crezca en alto
+        gbc.fill=GridBagConstraints.BOTH;
         gbc.anchor=GridBagConstraints.PAGE_START;
 
+        // visual: tarjeta principal con encabezado, filtros y tabla
         JPanel card = cardShell();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setMaximumSize(new Dimension(1100,Integer.MAX_VALUE));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* ====== Header ====== */
+        // encabezado del panel
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel h1 = new JLabel("Panel administrativo — Auditorías");
@@ -66,10 +69,10 @@ public class panel_auditorias extends JPanel {
         header.setBorder(new EmptyBorder(0,0,8,0));
         card.add(header);
 
-        /* ====== Filtros (2 filas) ====== */
+        // bloque de filtros (dos filas)
         card.add(filtrosBloque());
 
-        /* ====== Tabla ====== */
+        // visual: configuración de la tabla principal
         String[] cols = {"Fecha","Usuario","Acción","Entidad","ID","Detalle"};
         model = new DefaultTableModel(cols,0){ @Override public boolean isCellEditable(int r,int c){ return false; } };
         tabla = new JTable(model);
@@ -84,9 +87,10 @@ public class panel_auditorias extends JPanel {
         tabla.setGridColor(new Color(0xEDE3D2));
         tabla.setIntercellSpacing(new Dimension(0,1));
 
-        // Acción como badge
+        // visual: render de la columna “Acción” como badge
         tabla.getColumnModel().getColumn(2).setCellRenderer(new AccionBadgeRenderer());
 
+        // visual: scroll con bordes suaves
         JScrollPane sc = new JScrollPane(tabla,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -94,7 +98,6 @@ public class panel_auditorias extends JPanel {
                 new LineBorder(estilos.COLOR_BORDE_CREMA,1,true),
                 new EmptyBorder(6,6,6,6)
         ));
-        // Altura visible para que no quede colapsada
         sc.setPreferredSize(new Dimension(0, 420));
         sc.setMinimumSize(new Dimension(0, 320));
         sc.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
@@ -103,18 +106,18 @@ public class panel_auditorias extends JPanel {
         shell.add(card,gbc);
         add(shell,BorderLayout.CENTER);
 
-        /* ====== Eventos ====== */
+        // eventos: búsqueda y filtrado
         btnFiltrar.addActionListener(e -> cargarTabla());
         txtBuscar.addActionListener(e -> cargarTabla());
 
-        /* ====== Carga inicial ====== */
+        // carga inicial de datos al abrir el panel
         tfHasta.setText(LocalDate.now().toString());
         tfDesde.setText(LocalDate.now().minusDays(30).toString());
         cargarUsuarios();
         cargarTabla();
     }
 
-    /* ====== Bloque de filtros (dos filas) ====== */
+    // visual: bloque completo de filtros (buscador, combos y fechas)
     private JPanel filtrosBloque(){
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setOpaque(false);
@@ -128,7 +131,7 @@ public class panel_auditorias extends JPanel {
         ));
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
-        // Fila 1: buscar, usuario, acción, entidad
+        // primera fila: buscador, usuario, acción, entidad
         JPanel row1 = new JPanel(new GridBagLayout());
         row1.setOpaque(false);
 
@@ -157,7 +160,7 @@ public class panel_auditorias extends JPanel {
         g1.gridx=x++;                row1.add(cbAccion,g1);
         g1.gridx=x++;                row1.add(cbEntidad,g1);
 
-        // Fila 2: desde, hasta, FILTRAR
+        // segunda fila: fechas desde/hasta y botón de filtro
         JPanel row2 = new JPanel(new GridBagLayout());
         row2.setOpaque(false);
 
@@ -175,8 +178,7 @@ public class panel_auditorias extends JPanel {
         int y=0;
         g2.gridx=y++; g2.weightx=0; row2.add(labelWrap("Desde", tfDesde), g2);
         g2.gridx=y++;               row2.add(labelWrap("Hasta", tfHasta), g2);
-        g2.gridx=y;   g2.weightx=1; // empuja el botón a la derecha
-        row2.add(new JPanel(){ { setOpaque(false); } }, g2);
+        g2.gridx=y;   g2.weightx=1; row2.add(new JPanel(){ { setOpaque(false); } }, g2);
         g2.gridx=y+1; g2.weightx=0; row2.add(btnFiltrar, g2);
 
         box.add(row1);
@@ -188,6 +190,7 @@ public class panel_auditorias extends JPanel {
         return wrap;
     }
 
+    // visual: envoltorio con etiqueta sobre un campo
     private JPanel labelWrap(String label, JComponent field){
         JPanel p = new JPanel(new BorderLayout(6,2));
         p.setOpaque(false);
@@ -199,7 +202,7 @@ public class panel_auditorias extends JPanel {
         return p;
     }
 
-    /* ====== Datos ====== */
+    // lógica + BD: carga de usuarios en el combo
     private void cargarUsuarios(){
         usuarios.clear();
         usuarios.add(new Item(0,"Todos los usuarios"));
@@ -212,10 +215,11 @@ public class panel_auditorias extends JPanel {
         }
         cbUsuario.setModel(new DefaultComboBoxModel<>(usuarios.toArray(new Item[0])));
     }
-
+    // lógica + BD: construcción y ejecución del listado de auditorías
     private void cargarTabla(){
         model.setRowCount(0);
 
+        // lectura de filtros activos
         String q = txtBuscar.getText()==null ? "" : txtBuscar.getText().trim();
         Item usr = (Item) cbUsuario.getSelectedItem();
         String accion  = (String) cbAccion.getSelectedItem();
@@ -223,6 +227,8 @@ public class panel_auditorias extends JPanel {
         String desde = tfDesde.getText().trim();
         String hasta = tfHasta.getText().trim();
 
+        // BD: consulta unificada (UNION ALL) que combina registros de múltiples tablas
+        //     cada bloque representa una acción registrada sobre una entidad
         String unionSql = """
           SELECT CAST(p.creado_en AS DATETIME) AS fecha, NULL AS id_usuario,
                  CAST('ALTA' AS CHAR) AS accion, CAST('producto' AS CHAR) AS entidad,
@@ -330,6 +336,7 @@ public class panel_auditorias extends JPanel {
           WHERE a.atendida = 1 AND a.fecha_atendida IS NOT NULL
         """;
 
+        // construcción final del SELECT principal con filtros dinámicos
         StringBuilder sql = new StringBuilder();
         sql.append("""
             SELECT a.*, u.nombre AS usuario_nombre
@@ -340,6 +347,8 @@ public class panel_auditorias extends JPanel {
         """);
 
         List<Object> params = new ArrayList<>();
+
+        // aplicación de filtros condicionales
         if (!q.isEmpty())      { sql.append(" AND a.detalle LIKE ?"); params.add("%"+q+"%"); }
         if (usr!=null && usr.id()>0) { sql.append(" AND a.id_usuario = ?"); params.add(usr.id()); }
         if (accion!=null && !accion.isEmpty()) { sql.append(" AND a.accion = ?"); params.add(accion); }
@@ -348,6 +357,7 @@ public class panel_auditorias extends JPanel {
         if (!hasta.isEmpty())  { sql.append(" AND a.fecha <= ?"); params.add(hasta+" 23:59:59"); }
         sql.append(" ORDER BY a.fecha DESC LIMIT 200");
 
+        // ejecución del query
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(sql.toString())) {
             bind(ps, params);
@@ -368,12 +378,13 @@ public class panel_auditorias extends JPanel {
                     "BD", JOptionPane.ERROR_MESSAGE);
         }
 
+        // mensaje por defecto si no hay registros
         if (model.getRowCount()==0){
             model.addRow(new Object[]{"Sin resultados.","","","","",""});
         }
     }
 
-    /* ====== Helpers ====== */
+    // visual: estilo de campo de fecha (borde + tipografía + tooltip)
     private void estilizarFecha(JTextField f){
         f.setFont(new Font("Arial",Font.PLAIN,14));
         f.setBorder(new CompoundBorder(
@@ -383,6 +394,8 @@ public class panel_auditorias extends JPanel {
         f.setBackground(Color.WHITE);
         f.setToolTipText("AAAA-MM-DD");
     }
+
+    // lógica: asigna los valores de parámetros al PreparedStatement
     private void bind(PreparedStatement ps, List<Object> params) throws Exception{
         for (int i=0;i<params.size();i++){
             Object v=params.get(i);
@@ -390,6 +403,8 @@ public class panel_auditorias extends JPanel {
             else ps.setString(i+1, String.valueOf(v));
         }
     }
+
+    // visual: tarjeta contenedora general con borde y fondo blanco
     private JPanel cardShell(){
         JPanel p=new JPanel();
         p.setOpaque(true);
@@ -401,7 +416,7 @@ public class panel_auditorias extends JPanel {
         return p;
     }
 
-    /* ====== Renderers ====== */
+    // visual: renderizador para mostrar las acciones como badges de color
     static class AccionBadgeRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table,Object value,boolean isSelected,
@@ -411,6 +426,8 @@ public class panel_auditorias extends JPanel {
             l.setHorizontalAlignment(SwingConstants.CENTER);
             l.setFont(l.getFont().deriveFont(Font.BOLD,12f));
             l.setOpaque(true);
+
+            // asignación de color según tipo de acción
             Color bg=new Color(0xDF,0xEF,0xFD), fg=new Color(0x22,0x44,0x66);
             if("ALTA".equalsIgnoreCase(txt) || "VENTA".equalsIgnoreCase(txt) || "ALERTA_ATENDIDA".equalsIgnoreCase(txt)){
                 bg=new Color(0xE6,0xFF,0xEA); fg=new Color(0x23,0x7A,0x36);
@@ -422,16 +439,21 @@ public class panel_auditorias extends JPanel {
         }
     }
 
-    /* ====== Aux ====== */
+    // lógica auxiliar: elemento del combo (id + nombre)
     static class Item {
         private final int id; private final String nombre;
         Item(int id,String nombre){ this.id=id; this.nombre=nombre; }
         int id(){ return id; }
         @Override public String toString(){ return nombre; }
     }
+
+    // visual: campo de texto con placeholder gris cuando está vacío
     static class PlaceholderTextField extends JTextField {
         private final String placeholder;
-        PlaceholderTextField(String placeholder){ this.placeholder=placeholder; setFont(new Font("Arial",Font.PLAIN,14)); }
+        PlaceholderTextField(String placeholder){ 
+            this.placeholder=placeholder; 
+            setFont(new Font("Arial",Font.PLAIN,14)); 
+        }
         @Override protected void paintComponent(Graphics g){
             super.paintComponent(g);
             if(getText().isEmpty() && !isFocusOwner()){
@@ -447,6 +469,10 @@ public class panel_auditorias extends JPanel {
         }
     }
 
-    /* ====== DB helper ====== */
-    static class DB { static Connection get() throws Exception { return conexion_bd.getConnection(); } }
+    // BD: helper unificado para obtener conexión
+    static class DB { 
+        static Connection get() throws Exception { 
+            return conexion_bd.getConnection(); 
+        } 
+    }
 }
